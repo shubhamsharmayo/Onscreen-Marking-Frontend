@@ -338,7 +338,7 @@ const Dashboard = () => {
             className="w-11/12 max-w-4xl rounded-lg bg-white p-6 dark:bg-navy-800"
             onClick={(e) => e.stopPropagation()}
           >
-            {expandedChart === "bar" && <BarChart />}
+            {expandedChart === "bar" && <BarChart user={user} analytical={analytical} analyticEval={analyticEval}/>}
             {expandedChart === "doughnut" && (
               <div className="flex items-center justify-center sm:mx-auto md:mx-auto md:w-1/2 lg:mx-auto lg:w-1/2">
                 <DoughnutChart arr={arr} val={val} />

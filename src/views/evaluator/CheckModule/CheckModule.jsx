@@ -246,38 +246,36 @@ const CheckModule = () => {
     "/pageicons/green.png",
     "/pageicons/yellow.png",
   ];
-  console.log(answerImageDetails);
-  const Imgicons = answerImageDetails.map((item, index) => {
-    // console.log(item)
-    const svgIcon =
-      item.status === "notVisited"
-        ? "red"
-        : item.status === "submitted"
-        ? "green"
-        : "#FFFC00";
-    const active =
-      item.name.split("_")[1].split(".")[0] === evaluatorState.currentIndex
-        ? `bg-[${svgIcon}] text-gray-400 border rounded`
-        : "";
-    return (
-      <div
-        key={index}
-        className={`border-black my-1 flex h-[8rem] w-[5rem] cursor-pointer flex-wrap items-center justify-center rounded border border-[4px] py-2 text-center hover:bg-gray-300  ${active}`}
-        onClick={() => {
-          handleUpdateImageDetail(item, index);
-        }}
-      >
-        {/* <img
-          src={svgFiles[svgIcon]}
-          width={50}
-          height={50}
-          alt="icon"
-          className="mx-auto"
-        /> */}
-        <div>{index + 1}</div>
-      </div>
-    );
-  });
+ const Imgicons = answerImageDetails.map((item, index) => {
+  const isActive =
+    String(item.name.split("_")[1].split(".")[0]) ===
+    String(evaluatorState.currentIndex);
+
+  const statusBgMap = {
+    notVisited: "bg-red-200",
+    visited: "bg-yellow-200",
+    submitted: "bg-green-200",
+  };
+
+  const bgClass = statusBgMap[item.status] || "bg-gray-200";
+
+  return (
+    <div
+      key={index}
+      onClick={() => handleUpdateImageDetail(item, index)}
+      className={`
+        my-1 flex h-[8rem] w-[5rem] cursor-pointer
+        flex-wrap items-center justify-center rounded
+        py-2 text-center transition-colors duration-200
+
+        ${bgClass}
+        ${isActive ? "border-[4px] border-gray-800" : "border border-gray-300"}
+      `}
+    >
+      <div>{index + 1}</div>
+    </div>
+  );
+});
 
   const handleUpdateImageDetail = async (item, index) => {
     console.log(item, currentIndex);
