@@ -56,6 +56,7 @@ const Schema = () => {
     queryFn: () => getAllSchemas(token),
     enabled: !!token,
   });
+  console.log(schemaData)
 
   // Delete schema mutation
   const deleteMutation = useMutation({
@@ -88,6 +89,7 @@ const Schema = () => {
 
   const handleUpdate = (id, updatedData) => {
     updateMutation.mutate({ id, data: updatedData, token });
+    
     setEditShowModal(false);
   };
 
@@ -99,7 +101,9 @@ const Schema = () => {
     minMarks: data.minMarks,
     totalQuestions: data.totalQuestions,
     compulsoryQuestions: data.compulsoryQuestions,
-    evaluationTime: data.evaluationTime,
+    // evaluationTime: data.evaluationTime,
+    minTime:data.minTime,
+    maxTime: data.maxTime,
     numberOfPage: data.numberOfPage,
     hiddenPage: data?.hiddenPage.map((item) => parseInt(item) + 1),
   }));
@@ -108,9 +112,11 @@ const Schema = () => {
     { field: "name", headerName: "Schema", flex: 1 },
     { field: "maxMarks", headerName: "Max Marks", flex: 1 },
     { field: "minMarks", headerName: "Min Marks", flex: 1 },
+    { field: "minTime", headerName: "Min Time", flex: 1 },
+    { field: "maxTime", headerName: "Max Time", flex: 1 },
     { field: "totalQuestions", headerName: "Primary Qs", flex: 1 },
     { field: "compulsoryQuestions", headerName: "Compulsory Qs", flex: 1 },
-    { field: "evaluationTime", headerName: "Eval Time", flex: 1 },
+    // { field: "evaluationTime", headerName: "Eval Time", flex: 1 },
     { field: "numberOfPage", headerName: "No. of Pages Booklets", flex: 1 },
     { field: "hiddenPage", headerName: "Hidden Page", flex: 1 },
     {

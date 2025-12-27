@@ -36,7 +36,7 @@ import html2canvas from "html2canvas";
 import { submitImageById } from "components/Helper/Evaluator/EvalRoute";
 import useAnnotationSync from "../../hook/useAnnotationSync";
 
-const IconsData = [{ imgUrl: "/blank.jpg" }];
+const IconsData = [{ imgUrl: "/blank.jpg" },{imgUrl: "/not_attempt.png"}];
 
 const preprocessImage = (canvas) => {
   const context = canvas.getContext("2d");
@@ -559,7 +559,7 @@ const ImageContainer = (props) => {
         dispatch(setRerender());
       }, 1000);
 
-      if (currentIcon !== "/blank.jpg") {
+      if (currentIcon !== "/blank.jpg" && currentIcon !== "/not_attempt.png") {
         const iconBody = {
           answerPdfImageId: currentAnswerImageId,
           questionDefinitionId: currentQuestionDefinitionId,
@@ -1006,7 +1006,7 @@ const ImageContainer = (props) => {
                           <span
                             className={`ml-1 inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-gray-50 p-1 font-extrabold ${checkClass}`}
                           >
-                            {`${icon?.mark}`}
+                            {`${icon?.mark?icon?.mark:0}`}
                           </span>
                         </div>
 

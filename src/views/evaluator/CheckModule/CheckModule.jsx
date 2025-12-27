@@ -278,7 +278,7 @@ const CheckModule = () => {
 });
 
   const handleUpdateImageDetail = async (item, index) => {
-    console.log(item, currentIndex);
+    // console.log(item, currentIndex);
     try {
       if (item.status === "notVisited") {
         await updateAnswerPdfById(item._id, "visited");

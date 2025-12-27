@@ -16,11 +16,13 @@ const SchemaEditModal = ({
     maxMarks: "",
     minMarks: "",
     compulsoryQuestions: "",
-    evaluationTime: "",
+    // evaluationTime: "",
     isActive: true,
     status: false,
     numberOfPage: "",
     hiddenPage: [],
+    minTime: "",
+    maxTime: "",
   });
 
   useEffect(() => {
@@ -31,7 +33,9 @@ const SchemaEditModal = ({
         minMarks: selectedSchema.minMarks || "",
         totalQuestions: selectedSchema.totalQuestions || "",
         compulsoryQuestions: selectedSchema.compulsoryQuestions || "",
-        evaluationTime: selectedSchema.evaluationTime || "",
+        // evaluationTime: selectedSchema.evaluationTime || "",
+        minTime: selectedSchema.minTime || "",
+        maxTime: selectedSchema.maxTime || "",
         isActive: selectedSchema.isActive || true,
         status: false,
         numberOfPage: selectedSchema.numberOfPage || "",
@@ -82,7 +86,9 @@ const SchemaEditModal = ({
       !formData.minMarks ||
       !formData.totalQuestions ||
       !formData.compulsoryQuestions ||
-      !formData.evaluationTime ||
+      // !formData.evaluationTime ||
+      !formData.minTime ||
+      !formData.maxTime ||
       !formData.numberOfPage ||
       formData?.hiddenPage?.length === 0
     ) {
@@ -131,8 +137,16 @@ const SchemaEditModal = ({
       return;
     }
 
-    if (!formData.evaluationTime || Number(formData?.evaluationTime) < 0) {
-      toast.error("Evaluation Time must be a postive number.");
+    // if (!formData.evaluationTime || Number(formData?.evaluationTime) < 0) {
+    //   toast.error("Evaluation Time must be a postive number.");
+    //   return;
+    // }
+    if (Number(formData?.minTime) <= 0) {
+      toast.error("Min Time must be positive.");
+      return;
+    }
+    if (Number(formData?.maxTime) <= 0) {
+      toast.error("Max Time must be positive.");
       return;
     }
 
@@ -166,7 +180,7 @@ const SchemaEditModal = ({
         >
           <GiCrossMark />
         </button>
-        <h2 className="mb-2 sm:mb-6 text-center text-xl font-semibold text-indigo-600 dark:text-white sm:text-3xl">
+        <h2 className="mb-2 text-center text-xl font-semibold text-indigo-600 dark:text-white sm:mb-6 sm:text-3xl">
           Edit Schema
         </h2>
 
@@ -181,7 +195,7 @@ const SchemaEditModal = ({
               name="name"
               value={formData?.name}
               onChange={handleInputChange}
-              className="w-72 rounded-md border border-gray-300 px-2 py-0.5 shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:p-3 text-sm sm:text-md"
+              className="sm:text-md w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:p-3"
             />
           </div>
           {/* Input for Maximum Marks */}
@@ -195,7 +209,7 @@ const SchemaEditModal = ({
                 name="maxMarks"
                 value={formData?.maxMarks}
                 onChange={handleInputChange}
-                className="w-full rounded-md border border-gray-300 px-2 py-0.5 shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-3 text-sm sm:text-md"
+                className="sm:text-md w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-3"
               />
             </div>
             <div className="mb-2 sm:mb-0">
@@ -207,7 +221,7 @@ const SchemaEditModal = ({
                 name="minMarks"
                 value={formData?.minMarks}
                 onChange={handleInputChange}
-                className="w-full rounded-md border border-gray-300 px-2 py-0.5 shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-3 text-sm sm:text-md"
+                className="sm:text-md w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-3"
               />
             </div>
           </div>
@@ -222,7 +236,7 @@ const SchemaEditModal = ({
                 name="totalQuestions"
                 value={formData?.totalQuestions}
                 onChange={handleInputChange}
-                className="w-full rounded-md border border-gray-300 px-2 py-0.5 shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-3 text-sm sm:text-md"
+                className="sm:text-md w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-3"
               />
             </div>
             {/* Input for Compulsory Questions */}
@@ -235,7 +249,35 @@ const SchemaEditModal = ({
                 name="compulsoryQuestions"
                 value={formData?.compulsoryQuestions}
                 onChange={handleInputChange}
-                className="w-full rounded-md border border-gray-300 px-2 py-0.5 shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-3 text-sm sm:text-md"
+                className="sm:text-md w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-3"
+              />
+            </div>
+          </div>
+          <div className="flex flex-col justify-between sm:flex-row">
+            <div className="mb-2 sm:mb-0">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg">
+                Min Time (in minutes):
+              </label>
+              <input
+                type="number"
+                name="minTime"
+                value={formData?.minTime}
+                onChange={handleInputChange}
+                className="sm:text-md w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-3"
+              />
+            </div>
+            {/* Input for Compulsory Questions */}
+            <div className="mb-2 sm:mb-0">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg">
+                 Max Time (in minutes):
+              </label>
+              <input
+               type="number"
+                
+                name="maxTime"
+                value={formData?.maxTime}
+                onChange={handleInputChange}
+                className="sm:text-md w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-3"
               />
             </div>
           </div>
@@ -255,7 +297,7 @@ const SchemaEditModal = ({
                 name="numberOfPage"
                 value={formData?.numberOfPage}
                 onChange={handleInputChange}
-                className="w-72 rounded-md border border-gray-300 px-2 py-0.5 shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2 text-sm sm:text-md"
+                className="sm:text-md w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2"
               />
             </div>
 
@@ -275,7 +317,7 @@ const SchemaEditModal = ({
                   handleInputChange(e);
                   // console.log("Selected Value:", e.target.value); // Logs the selected value
                 }}
-                className="max-h-10 w-72 rounded-md border border-gray-300 px-2 py-0.5 shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2 text-sm sm:text-md"
+                className="sm:text-md max-h-10 w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2"
               >
                 <option value="" className="px-2 text-sm text-gray-400">
                   Select Hidden Pages
@@ -305,7 +347,7 @@ const SchemaEditModal = ({
             </div>
           )}
           {/* Input for Evaluation Time */}
-          <div className="mb-2 sm:mb-0">
+          {/* <div className="mb-2 sm:mb-0">
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg">
               Evaluation Time (minutes)
             </label>
@@ -314,16 +356,16 @@ const SchemaEditModal = ({
               name="evaluationTime"
               value={formData.evaluationTime}
               onChange={handleInputChange}
-              className="w-full rounded-md border border-gray-300 px-2 py-0.5 shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-3 text-sm sm:text-md"
+              className="sm:text-md w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-3"
             />
-          </div>
+          </div> */}
         </div>
 
         {/* Update button */}
-        <div className="sm:mt-6 flex justify-end">
+        <div className="flex justify-end sm:mt-6">
           {loading ? (
             <div
-              className={`flex justify-center items-center rounded-md px-3 py-1.5 text-white transition-colors sm:px-6 sm:py-3 ${
+              className={`flex items-center justify-center rounded-md px-3 py-1.5 text-white transition-colors sm:px-6 sm:py-3 ${
                 loading ? "bg-indigo-400" : "bg-indigo-600"
               }`}
             >
@@ -351,14 +393,14 @@ const SchemaEditModal = ({
             </div>
           ) : (
             <button
-            onClick={() => {
-              validationCheck();
-            }}
-            disabled={loading}
-            className="rounded-md bg-indigo-600 px-3 py-1.5 text-white transition-colors hover:bg-indigo-700 sm:px-6 sm:py-3"
-          >
-            Update Schema
-          </button>
+              onClick={() => {
+                validationCheck();
+              }}
+              disabled={loading}
+              className="rounded-md bg-indigo-600 px-3 py-1.5 text-white transition-colors hover:bg-indigo-700 sm:px-6 sm:py-3"
+            >
+              Update Schema
+            </button>
           )}
         </div>
       </div>

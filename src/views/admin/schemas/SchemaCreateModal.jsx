@@ -3,20 +3,22 @@ import React, { useState } from "react";
 import { toast } from "react-toastify";
 import { GiCrossMark } from "react-icons/gi";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getAllSchemas} from "./schemaApi";
+import { getAllSchemas } from "./schemaApi";
 
 const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
-   const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState({
     name: "",
     totalQuestions: "",
     maxMarks: "",
     minMarks: "",
     compulsoryQuestions: "",
-    evaluationTime: "",
+    // evaluationTime: "",
     isActive: true,
     status: false,
     numberOfPage: "",
     hiddenPage: [],
+    minTime: "",
+    maxTime: "",
   });
 
   const token = localStorage.getItem("token");
@@ -56,6 +58,7 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
   // ✅ 1. Mutation for creating schema
   const createSchemaMutation = useMutation({
     mutationFn: async (data) => {
+      console.log(data)
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/api/schemas/create/schema`,
         data,
@@ -70,6 +73,7 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
     onSuccess: () => {
       // ✅ 2. Refetch schema list automatically
       queryClient.invalidateQueries(["schemas"]);
+      
       toast.success("Schema created successfully!");
       setFormData({
         name: "",
@@ -77,10 +81,12 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
         maxMarks: "",
         minMarks: "",
         compulsoryQuestions: "",
-        evaluationTime: "",
+        // evaluationTime: "",
         isActive: true,
         numberOfPage: "",
         hiddenPage: [],
+        minTime: "",
+        maxTime: "",
       });
       setCreateShowModal(false);
     },
@@ -99,9 +105,11 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
       !formData.minMarks ||
       !formData.totalQuestions ||
       !formData.compulsoryQuestions ||
-      !formData.evaluationTime ||
+      // !formData.evaluationTime ||
       !formData.numberOfPage ||
-      formData?.hiddenPage?.length === 0
+      formData?.hiddenPage?.length === 0 ||
+      !formData?.minTime ||
+      !formData?.maxTime
     ) {
       toast.error("All fields are required.");
       return;
@@ -125,13 +133,23 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
       return;
     }
 
-    if (Number(formData?.compulsoryQuestions) > Number(formData?.totalQuestions)) {
+    if (
+      Number(formData?.compulsoryQuestions) > Number(formData?.totalQuestions)
+    ) {
       toast.error("Compulsory Questions cannot exceed Total Questions.");
       return;
     }
 
-    if (Number(formData?.evaluationTime) <= 0) {
-      toast.error("Evaluation Time must be positive.");
+    // if (Number(formData?.evaluationTime) <= 0) {
+    //   toast.error("Evaluation Time must be positive.");
+    //   return;
+    // }
+    if (Number(formData?.minTime) <= 0) {
+      toast.error("Min Time must be positive.");
+      return;
+    }
+    if (Number(formData?.maxTime) <= 0) {
+      toast.error("Max Time must be positive.");
       return;
     }
 
@@ -140,8 +158,6 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
   };
 
   const loading = createSchemaMutation.isPending;
-
-  
 
   return (
     <div
@@ -183,7 +199,7 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="w-72 rounded-md border border-gray-300 px-2 py-0.5 shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2 text-sm sm:text-md"
+              className="sm:text-md w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2"
             />
           </div>
           {/* Total Questions */}
@@ -201,7 +217,7 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
                 name="totalQuestions"
                 value={formData.totalQuestions}
                 onChange={handleChange}
-                className="w-72 rounded-md border border-gray-300 px-2 py-0.5 shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2 text-sm sm:text-md"
+                className="sm:text-md w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2"
               />
             </div>
             <div className="mb-2 sm:mb-0">
@@ -217,7 +233,41 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
                 name="maxMarks"
                 value={formData.maxMarks}
                 onChange={handleChange}
-                className="w-72 rounded-md border border-gray-300 px-2 py-0.5 shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2 text-sm sm:text-md"
+                className="sm:text-md w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2"
+              />
+            </div>
+          </div>
+          <div className="flex flex-col justify-between sm:flex-row">
+            <div className="mb-2 sm:mb-0">
+              <label
+                className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg"
+                htmlFor="totalQuestions"
+              >
+                Min Time (in minutes):
+              </label>
+              <input
+                type="number"
+                id="minTime"
+                name="minTime"
+                value={formData.minTime}
+                onChange={handleChange}
+                className="sm:text-md w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2"
+              />
+            </div>
+            <div className="mb-2 sm:mb-0">
+              <label
+                className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg"
+                htmlFor="maxMarks"
+              >
+                Max Time (in minutes):
+              </label>
+              <input
+                type="number"
+                id="maxTime"
+                name="maxTime"
+                value={formData.maxTime}
+                onChange={handleChange}
+                className="sm:text-md w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2"
               />
             </div>
           </div>
@@ -237,7 +287,7 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
                 name="numberOfPage"
                 value={formData.numberOfPage}
                 onChange={handleChange}
-                className="w-72 rounded-md border border-gray-300 px-2 py-0.5 shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2 text-sm sm:text-md"
+                className="sm:text-md w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2"
               />
             </div>
 
@@ -257,7 +307,7 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
                   handleChange(e);
                   // console.log("Selected Value:", e.target.value); // Logs the selected value
                 }}
-                className="max-h-10 w-72 rounded-md border border-gray-300 px-2 py-0.5 shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2 text-sm sm:text-md"
+                className="sm:text-md max-h-10 w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2"
               >
                 <option value="" className="px-2 text-sm text-gray-400">
                   Select Hidden Pages
@@ -301,7 +351,7 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
                 name="minMarks"
                 value={formData.minMarks}
                 onChange={handleChange}
-                className="w-72 rounded-md border border-gray-300 px-2 py-0.5 shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2 text-sm sm:text-md"
+                className="sm:text-md w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2"
               />
             </div>
             <div className="mb-2 sm:mb-0">
@@ -317,11 +367,11 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
                 name="compulsoryQuestions"
                 value={formData.compulsoryQuestions}
                 onChange={handleChange}
-                className="w-72 rounded-md border border-gray-300 px-2 py-0.5 shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2 text-sm sm:text-md"
+                className="sm:text-md w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2"
               />
             </div>
           </div>
-          <div className="mb-2 sm:mb-0">
+          {/* <div className="mb-2 sm:mb-0">
             <label
               className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg"
               htmlFor="evaluationTime"
@@ -336,7 +386,7 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
               onChange={handleChange}
               className="w-72 rounded-md border border-gray-300 px-2 py-0.5 shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2 text-sm sm:text-md"
             />
-          </div>
+          </div> */}
           {/* Submit Button */}
           <div className="mt-4 sm:mt-6">
             {loading ? (
@@ -370,7 +420,7 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
             ) : (
               <button
                 type="submit"
-                className="mt-2 p-2 shadow-lg duration-300 focus:ring-opacity-50 w-full rounded-md bg-indigo-600 py-1.5 font-medium text-white transition-colors hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:py-3"
+                className="mt-2 w-full rounded-md bg-indigo-600 p-2 py-1.5 font-medium text-white shadow-lg transition-colors duration-300 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 sm:py-3"
                 disabled={loading}
               >
                 Create Schema
