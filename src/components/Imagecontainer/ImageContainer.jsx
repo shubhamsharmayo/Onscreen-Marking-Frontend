@@ -821,7 +821,7 @@ const ImageContainer = (props) => {
           {/* Render the canvas for drawing */}
 
           <div
-            className="flex justify-center "
+            className="flex justify-center"
             style={{
               width: `${dimensions.width}px`,
               height: `${dimensions.height}px`,
@@ -841,6 +841,7 @@ const ImageContainer = (props) => {
               onLoad={() => {
                 setImageLoaded(true); // mark image as loaded
               }}
+              style={{pointerEvents:'none'}}
               // width={"70vw"}
             />
             <canvas
