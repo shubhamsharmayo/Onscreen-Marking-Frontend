@@ -94,14 +94,15 @@ const CreateSchemaStructure = () => {
     fetchData();
   }, [id, token, schemaData, setSavedQuestionData, parentId]);
 
-  const extractParentId = (key, arrayOfObjects) => {
-    for (let obj of arrayOfObjects) {
-      if (obj.hasOwnProperty(key)) {
-        return obj[key];
-      }
-    }
-    return null;
-  };
+  // const extractParentId = (key, arrayOfObjects) => {
+  //   for (let obj of arrayOfObjects) {
+  //     if (obj.hasOwnProperty(key)) {
+  //       console.log(obj[key])
+  //       return obj[key];
+  //     }
+  //   }
+  //   return null;
+  // };
 
   const generateFolders = (count) => {
     const folders = [];
@@ -207,6 +208,19 @@ const CreateSchemaStructure = () => {
         prev.filter((item) => item._id !== questionToDelete._id)
       );
 
+      // Update subQuestionMap if it's a sub-question
+      if (level > 0 && parentFolderId) {
+        setSubQuestionMap((prev) => {
+          const updated = { ...prev };
+          if (updated[parentFolderId]) {
+            updated[parentFolderId] = updated[parentFolderId].filter(
+              (sq) => sq._id !== questionToDelete._id
+            );
+          }
+          return updated;
+        });
+      }
+
       // Update subQuestionMap if it's a parent with sub-questions
       if (level === 0 && folder.children?.length > 0) {
         setSubQuestionMap((prev) => {
@@ -243,70 +257,90 @@ const CreateSchemaStructure = () => {
     }
   };
 
-  const handleSubQuestionsChange = async (folder, _, level) => {
+  const handleSubQuestionsChange = async (folder, _, level, parentFolderId = null) => {
     const folderId = folder.id;
     setCurrentQuesNo(folderId);
+    console.log(_)
 
     if (savingStatus[folderId]) return;
 
-    if (error)
-      return toast.error(
-        `Marks cannot be greater than remaining marks in Question: ${folderId}`
-      );
+    // if (error)
+    //   return toast.error(
+    //     `Marks cannot be greater than remaining marks in Question: ${folderId}`
+    //   );
 
-    const currentQ =
-      savedQuestionData &&
-      savedQuestionData?.filter(
+    // Determine if this is a parent question or sub-question
+    let currentQ = [];
+    let currentSQ = [];
+
+    if (level === 0) {
+      currentQ = savedQuestionData.filter(
         (item) => parseInt(item.questionsName) === folderId
       );
+    } else if (level > 0 && parentFolderId) {
+      const parentSubQuestions = subQuestionMap[parentFolderId] || [];
+      currentSQ = parentSubQuestions.filter(
+        (item) => item.questionsName === String(folderId)
+      );
+    }
 
-    setCurrentQuestion(currentQ);
+    let parentQuestionId = null;
+    if (level > 0 && parentFolderId) {
+      // Find the parent question from savedQuestionData
+      const parentQuestion = savedQuestionData.find(
+        (item) => parseInt(item.questionsName) === parentFolderId
+      );
+      parentQuestionId = parentQuestion?._id || existingQuestion?.parentQuestionId || null;
+    }
+
+    const existingQuestion = level > 0 && currentSQ.length > 0 ? currentSQ[0] : currentQ[0];
 
     const minMarks =
       formRefs?.current[`${folderId}-minMarks`] ||
-      (currentQ && currentQ[0]?.minMarks);
+      (existingQuestion && existingQuestion?.minMarks);
     const maxMarks =
       formRefs?.current[`${folderId}-maxMarks`] ||
-      (currentQ && currentQ[0]?.maxMarks);
+      (existingQuestion && existingQuestion?.maxMarks);
     const bonusMarks =
       formRefs?.current[`${folderId}-bonusMarks`] ||
-      (currentQ && currentQ[0]?.bonusMarks);
+      (existingQuestion && existingQuestion?.bonusMarks);
     const marksDifference =
       formRefs.current[`${folderId}-marksDifference`] ||
-      (currentQ && currentQ[0]?.marksDifference);
+      (existingQuestion && existingQuestion?.marksDifference);
 
-    if (!minMarks || !maxMarks || !bonusMarks || !marksDifference) {
-      toast.error("Please fill all the required fields");
-      return;
-    }
+    // if (!minMarks || !maxMarks || !bonusMarks || !marksDifference) {
+    //   toast.error("Please fill all the required fields");
+    //   return;
+    // }
 
     let numberOfSubQuestions = "";
     let compulsorySubQuestions = "";
+    
 
     if (folder.isSubQuestion) {
       numberOfSubQuestions += formRefs?.current[
         `${folderId}-numberOfSubQuestions`
       ]
         ? formRefs?.current[`${folderId}-numberOfSubQuestions`]
-        : currentQ?.length > 0 || currentQ !== undefined
-        ? currentQ[0]?.numberOfSubQuestions
+        : existingQuestion
+        ? existingQuestion?.numberOfSubQuestions
         : "";
 
       compulsorySubQuestions += formRefs?.current[
         `${folderId}-compulsorySubQuestions`
       ]
         ? formRefs?.current[`${folderId}-compulsorySubQuestions`]
-        : currentQ?.length > 0 || currentQ !== undefined
-        ? currentQ[0]?.compulsorySubQuestions
+        : existingQuestion
+        ? existingQuestion?.compulsorySubQuestions
         : "";
 
-      if (!numberOfSubQuestions || !compulsorySubQuestions) {
-        toast.error("Please fill all sub-question related fields");
-        return;
-      }
+      // if (!numberOfSubQuestions || !compulsorySubQuestions) {
+      //   toast.error("Please fill all sub-question related fields");
+      //   return;
+      // }
     }
 
-    if (maxMarks > remainingMarks)
+    if (maxMarks > remainingMarks && level<0)
       return toast.error("Max Marks cannot be greater than remaining marks");
 
     if (minMarks > remainingMarks || minMarks > maxMarks)
@@ -324,24 +358,28 @@ const CreateSchemaStructure = () => {
 
     const updatedQuestionData = {
       schemaId: id,
-      questionsName: folderId,
+      questionsName: String(folderId),
       isSubQuestion: folder.isSubQuestion,
       minMarks,
       maxMarks,
       bonusMarks,
       marksDifference,
-      numberOfSubQuestions: parseInt(numberOfSubQuestions),
-      compulsorySubQuestions: parseInt(compulsorySubQuestions),
-      parentQuestionId: extractParentId(level, parentId) || null,
+      numberOfSubQuestions: parseInt(numberOfSubQuestions) || 0,
+      compulsorySubQuestions: parseInt(compulsorySubQuestions) || 0,
+      parentQuestionId: parentQuestionId,
     };
+
+    console.log(updatedQuestionData)
+    console.log(level)
 
     setSavingStatus((prev) => ({ ...prev, [folderId]: true }));
 
     try {
-      if (currentQ && currentQ.length > 0) {
-        console.log("put");
+      if (existingQuestion && existingQuestion._id) {
+        // UPDATE existing question
+        console.log("Updating question:", existingQuestion._id);
         const response = await axios.put(
-          `${process.env.REACT_APP_API_URL}/api/schemas/update/questiondefinition/${currentQ[0]?._id}`,
+          `${process.env.REACT_APP_API_URL}/api/schemas/update/questiondefinition/${existingQuestion._id}`,
           updatedQuestionData,
           {
             headers: {
@@ -350,19 +388,68 @@ const CreateSchemaStructure = () => {
           }
         );
 
-        setSavedQuestionData((prev) => {
-          const newData = Array.isArray(response.data.data)
-            ? response.data.data
-            : [response.data.data];
-          return [...prev, ...newData];
-        });
+        toast.success(response?.data?.message || "Question updated successfully");
 
-        toast.success(response?.data?.message);
+        const updatedData = response.data.data;
 
-        const obj = { [level + 1]: response.data.data._id };
-        setParentId([...parentId, obj]);
+        // Update savedQuestionData - REPLACE the existing question instead of adding
+        if (level === 0) {
+          setSavedQuestionData((prev) =>
+            prev.map((item) =>
+              item._id === existingQuestion._id ? updatedData : item
+            )
+          );
+        } else if (level > 0 && parentFolderId) {
+          // Update sub-question in the map
+          setSubQuestionMap((prev) => {
+            const updated = { ...prev };
+            if (updated[parentFolderId]) {
+              updated[parentFolderId] = updated[parentFolderId].map((sq) =>
+                sq._id === existingQuestion._id ? updatedData : sq
+              );
+            }
+            return updated;
+          });
+        }
+
+        // Update parentId if needed for sub-questions
+        if (level === 0 && folder.isSubQuestion) {
+          const obj = { [level + 1]: updatedData._id };
+          setParentId((prev) => {
+            const filtered = prev.filter((p) => !p[level + 1]);
+            return [...filtered, obj];
+          });
+        }
+
+        // Update folders if sub-questions count changed
+        if (folder.isSubQuestion && numberOfSubQuestions) {
+          const updatedFolders = (folders) => {
+            return folders.map((item) => {
+              if (item.id === folderId) {
+                const children = Array.from(
+                  { length: numberOfSubQuestions },
+                  (_, i) => ({
+                    id: `${folderId}-${i + 1}`,
+                    name: `Q. ${folderId}.${i + 1}`,
+                    children: [],
+                    showInputs: false,
+                  })
+                );
+                return { ...item, children };
+              }
+              if (item.children && item.children.length > 0) {
+                return { ...item, children: updatedFolders(item.children) };
+              }
+              return item;
+            });
+          };
+
+          setFolders((prevFolders) => updatedFolders(prevFolders));
+        }
+
       } else {
-        console.log("post");
+        // CREATE new question
+        console.log("Creating new question");
         const response = await axios.post(
           `${process.env.REACT_APP_API_URL}/api/schemas/create/questiondefinition`,
           updatedQuestionData,
@@ -372,43 +459,54 @@ const CreateSchemaStructure = () => {
             },
           }
         );
-        toast.success(response?.data?.message);
-        setSavedQuestionData((prev) => {
-          const newData = Array.isArray(response.data.data)
-            ? response.data.data
-            : [response.data.data];
-          return [...prev, ...newData];
-        });
+        
+        toast.success(response?.data?.message || "Question created successfully");
+        
+        const newData = response.data.data;
 
-        const obj = { [level + 1]: response.data.data._id };
-        setParentId([...parentId, obj]);
+        // Add to savedQuestionData or subQuestionMap
+        if (level === 0) {
+          setSavedQuestionData((prev) => [...prev, newData]);
+        } else if (level > 0 && parentFolderId) {
+          setSubQuestionMap((prev) => ({
+            ...prev,
+            [parentFolderId]: [...(prev[parentFolderId] || []), newData],
+          }));
+        }
+
+        // Set parentId for potential sub-questions
+        const obj = { [level + 1]: newData._id };
+        setParentId((prev) => [...prev, obj]);
+
+        // Update folders if sub-questions were specified
+        if (folder.isSubQuestion && numberOfSubQuestions) {
+          const updatedFolders = (folders) => {
+            return folders.map((item) => {
+              if (item.id === folderId) {
+                const children = Array.from(
+                  { length: numberOfSubQuestions },
+                  (_, i) => ({
+                    id: `${folderId}-${i + 1}`,
+                    name: `Q. ${folderId}.${i + 1}`,
+                    children: [],
+                    showInputs: false,
+                  })
+                );
+                return { ...item, children };
+              }
+              if (item.children && item.children.length > 0) {
+                return { ...item, children: updatedFolders(item.children) };
+              }
+              return item;
+            });
+          };
+
+          setFolders((prevFolders) => updatedFolders(prevFolders));
+        }
       }
-
-      const updatedFolders = (folders) => {
-        return folders.map((item) => {
-          if (item.id === folderId) {
-            const children = Array.from(
-              { length: numberOfSubQuestions },
-              (_, i) => ({
-                id: `${folderId}-${i + 1}`,
-                name: `Q. ${folderId}.${i + 1}`,
-                children: [],
-                showInputs: false,
-              })
-            );
-            return { ...item, children };
-          }
-          if (item.children && item.children.length > 0) {
-            return { ...item, children: updatedFolders(item.children) };
-          }
-          return item;
-        });
-      };
-
-      setFolders((prevFolders) => updatedFolders(prevFolders));
     } catch (error) {
-      console.error("Error creating questions:", error);
-      toast.error("Failed to save the question data.");
+      console.error("Error saving question:", error);
+      toast.error(error?.response?.data?.message || "Failed to save the question data.");
     } finally {
       setSavingStatus((prev) => ({ ...prev, [folderId]: false }));
     }
@@ -418,7 +516,7 @@ const CreateSchemaStructure = () => {
     console.log(folderId);
     const currentQuestionInfo =
       savedQuestionData?.filter((item) =>
-        item.questionsName.startsWith(folderId)
+        item.questionsName.startsWith(String(folderId))
       ) || [];
 
     if (currentQuestionInfo.length === 0) {
@@ -509,17 +607,15 @@ const CreateSchemaStructure = () => {
     const folderStyle = `relative ml-${level * 4} mt-3`;
     const color = level % 2 === 0 ? "bg-[#f4f4f4]" : "bg-[#fafafa]";
 
-    console.log("folderId", folderId);
-
     const handleMarkChange = (inputBoxName, inputValue) => {
       if (inputBoxName.includes("maxMarks")) {
-        if (inputValue > remainingMarks) {
+        if (inputValue > remainingMarks && level<0) {
           toast.error("Max Marks cannot be greater than remaining marks");
           setError(true);
           return;
         }
       } else if (inputBoxName.includes("marksDifference")) {
-        if (inputValue > remainingMarks) {
+        if (inputValue > remainingMarks && level<0) {
           toast.error(
             "Marks Difference cannot be greater than remaining marks"
           );
@@ -532,29 +628,21 @@ const CreateSchemaStructure = () => {
       setError(false);
     };
 
-    let currentQ = [];
-    let currentSQ = [];
-
-    if (savedQuestionData && savedQuestionData.length > 0) {
-      currentQ = savedQuestionData.filter(
+    // Get the correct data to display
+    let displayData = [];
+    
+    if (level === 0) {
+      // Parent question
+      displayData = savedQuestionData.filter(
         (item) => parseInt(item.questionsName) === folderId
       );
-    }
-
-    if (level > 0 && parentFolderId) {
+    } else if (level > 0 && parentFolderId) {
+      // Sub-question
       const parentSubQuestions = subQuestionMap[parentFolderId] || [];
-      currentSQ = parentSubQuestions.filter(
+      displayData = parentSubQuestions.filter(
         (item) => item.questionsName === String(folderId)
       );
     }
-
-    console.log("Level:", level);
-    console.log("FolderId:", folderId);
-    console.log("ParentFolderId:", parentFolderId);
-    console.log("currentQ:", currentQ);
-    console.log("currentSQ:", currentSQ);
-
-    const displayData = level > 0 && currentSQ.length > 0 ? currentSQ : currentQ;
 
     return (
       <div
@@ -666,13 +754,14 @@ const CreateSchemaStructure = () => {
                   handleSubQuestionsChange(
                     folder,
                     countRef?.current?.value,
-                    level
+                    level,
+                    parentFolderId
                   )
                 }
               >
                 {isSaving
                   ? "Saving..."
-                  : displayData[0]?.marksDifference
+                  : displayData[0]?._id
                   ? "Update"
                   : "Save"}
               </button>

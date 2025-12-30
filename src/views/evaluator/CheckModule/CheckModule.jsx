@@ -128,7 +128,7 @@ const CheckModule = () => {
     });
 
     newSocket.on("start-timer-update", (data) => {
-      // console.log("⏱ Received start-timer-update:", data);
+      console.log("⏱ Received start-timer-update:", data);
 
       remainingSecondsRef.current = data.remainingTime * 60;
 
