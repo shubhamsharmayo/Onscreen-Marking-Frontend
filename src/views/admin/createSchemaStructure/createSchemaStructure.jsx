@@ -94,15 +94,19 @@ const CreateSchemaStructure = () => {
     fetchData();
   }, [id, token, schemaData, setSavedQuestionData, parentId]);
 
-  // const extractParentId = (key, arrayOfObjects) => {
-  //   for (let obj of arrayOfObjects) {
-  //     if (obj.hasOwnProperty(key)) {
-  //       console.log(obj[key])
-  //       return obj[key];
-  //     }
-  //   }
-  //   return null;
-  // };
+  // NEW: Helper function to calculate total marks of sub-questions
+  const calculateSubQuestionsTotalMarks = (parentFolderId) => {
+    const subQuestions = subQuestionMap[parentFolderId] || [];
+    return subQuestions.reduce((total, sq) => total + (sq.maxMarks || 0), 0);
+  };
+
+  // NEW: Helper function to get parent question max marks
+  const getParentMaxMarks = (parentFolderId) => {
+    const parentQuestion = savedQuestionData.find(
+      (item) => parseInt(item.questionsName) === parentFolderId
+    );
+    return parentQuestion?.maxMarks || 0;
+  };
 
   const generateFolders = (count) => {
     const folders = [];
@@ -142,7 +146,6 @@ const CreateSchemaStructure = () => {
     
     if (deletingStatus[folderId]) return;
 
-    // Confirm deletion
     const confirmDelete = window.confirm(
       `Are you sure you want to delete ${folder.name}? ${
         folder.children?.length > 0 
@@ -159,7 +162,6 @@ const CreateSchemaStructure = () => {
       let currentQ = [];
       let currentSQ = [];
 
-      // Find the question to delete
       if (level === 0) {
         currentQ = savedQuestionData.filter(
           (item) => parseInt(item.questionsName) === folderId
@@ -176,7 +178,6 @@ const CreateSchemaStructure = () => {
       if (!questionToDelete || !questionToDelete._id) {
         toast.warning("No saved question to delete");
         
-        // Remove from folders structure only
         const removeFolderFromStructure = (folders) => {
           return folders.filter(f => f.id !== folderId).map((folder) => {
             if (folder.children && folder.children.length > 0) {
@@ -191,7 +192,6 @@ const CreateSchemaStructure = () => {
         return;
       }
 
-      // Delete from backend
       const response = await axios.delete(
         `${process.env.REACT_APP_API_URL}/api/schemas/delete/questiondefinition/${questionToDelete._id}`,
         {
@@ -203,12 +203,10 @@ const CreateSchemaStructure = () => {
 
       toast.success(response?.data?.message || "Question deleted successfully");
 
-      // Update savedQuestionData
       setSavedQuestionData((prev) => 
         prev.filter((item) => item._id !== questionToDelete._id)
       );
 
-      // Update subQuestionMap if it's a sub-question
       if (level > 0 && parentFolderId) {
         setSubQuestionMap((prev) => {
           const updated = { ...prev };
@@ -221,7 +219,6 @@ const CreateSchemaStructure = () => {
         });
       }
 
-      // Update subQuestionMap if it's a parent with sub-questions
       if (level === 0 && folder.children?.length > 0) {
         setSubQuestionMap((prev) => {
           const updated = { ...prev };
@@ -230,7 +227,6 @@ const CreateSchemaStructure = () => {
         });
       }
 
-      // Remove from folders structure
       const removeFolderFromStructure = (folders) => {
         return folders.filter(f => f.id !== folderId).map((folder) => {
           if (folder.children && folder.children.length > 0) {
@@ -242,7 +238,6 @@ const CreateSchemaStructure = () => {
 
       setFolders((prevFolders) => removeFolderFromStructure(prevFolders));
 
-      // Recalculate remaining marks and questions
       const totalMarksUsed = savedQuestionData
         .filter(item => item._id !== questionToDelete._id)
         .reduce((acc, question) => acc + (question?.maxMarks || 0), 0);
@@ -264,12 +259,6 @@ const CreateSchemaStructure = () => {
 
     if (savingStatus[folderId]) return;
 
-    // if (error)
-    //   return toast.error(
-    //     `Marks cannot be greater than remaining marks in Question: ${folderId}`
-    //   );
-
-    // Determine if this is a parent question or sub-question
     let currentQ = [];
     let currentSQ = [];
 
@@ -286,7 +275,6 @@ const CreateSchemaStructure = () => {
 
     let parentQuestionId = null;
     if (level > 0 && parentFolderId) {
-      // Find the parent question from savedQuestionData
       const parentQuestion = savedQuestionData.find(
         (item) => parseInt(item.questionsName) === parentFolderId
       );
@@ -308,11 +296,6 @@ const CreateSchemaStructure = () => {
       formRefs.current[`${folderId}-marksDifference`] ||
       (existingQuestion && existingQuestion?.marksDifference);
 
-    // if (!minMarks || !maxMarks || !bonusMarks || !marksDifference) {
-    //   toast.error("Please fill all the required fields");
-    //   return;
-    // }
-
     let numberOfSubQuestions = "";
     let compulsorySubQuestions = "";
     
@@ -333,14 +316,26 @@ const CreateSchemaStructure = () => {
         : existingQuestion
         ? existingQuestion?.compulsorySubQuestions
         : "";
-
-      // if (!numberOfSubQuestions || !compulsorySubQuestions) {
-      //   toast.error("Please fill all sub-question related fields");
-      //   return;
-      // }
     }
 
-    if (maxMarks > remainingMarks && level<0)
+    // NEW: Validation for sub-questions - check if sum exceeds parent max marks
+    if (level > 0 && parentFolderId) {
+      const parentMaxMarks = getParentMaxMarks(parentFolderId);
+      const currentSubQuestionsTotal = calculateSubQuestionsTotalMarks(parentFolderId);
+      
+      // Calculate what the new total would be
+      const existingSubQuestionMarks = existingQuestion?.maxMarks || 0;
+      const newTotal = currentSubQuestionsTotal - existingSubQuestionMarks + parseFloat(maxMarks);
+      
+      if (newTotal > parentMaxMarks) {
+        toast.error(
+          `Sub-questions total marks (${newTotal}) cannot exceed parent question marks (${parentMaxMarks}). Current sub-questions total: ${currentSubQuestionsTotal}`
+        );
+        return;
+      }
+    }
+
+    if (maxMarks > remainingMarks && level < 0)
       return toast.error("Max Marks cannot be greater than remaining marks");
 
     if (minMarks > remainingMarks || minMarks > maxMarks)
@@ -376,7 +371,6 @@ const CreateSchemaStructure = () => {
 
     try {
       if (existingQuestion && existingQuestion._id) {
-        // UPDATE existing question
         console.log("Updating question:", existingQuestion._id);
         const response = await axios.put(
           `${process.env.REACT_APP_API_URL}/api/schemas/update/questiondefinition/${existingQuestion._id}`,
@@ -392,7 +386,6 @@ const CreateSchemaStructure = () => {
 
         const updatedData = response.data.data;
 
-        // Update savedQuestionData - REPLACE the existing question instead of adding
         if (level === 0) {
           setSavedQuestionData((prev) =>
             prev.map((item) =>
@@ -400,7 +393,6 @@ const CreateSchemaStructure = () => {
             )
           );
         } else if (level > 0 && parentFolderId) {
-          // Update sub-question in the map
           setSubQuestionMap((prev) => {
             const updated = { ...prev };
             if (updated[parentFolderId]) {
@@ -412,7 +404,6 @@ const CreateSchemaStructure = () => {
           });
         }
 
-        // Update parentId if needed for sub-questions
         if (level === 0 && folder.isSubQuestion) {
           const obj = { [level + 1]: updatedData._id };
           setParentId((prev) => {
@@ -421,7 +412,6 @@ const CreateSchemaStructure = () => {
           });
         }
 
-        // Update folders if sub-questions count changed
         if (folder.isSubQuestion && numberOfSubQuestions) {
           const updatedFolders = (folders) => {
             return folders.map((item) => {
@@ -448,7 +438,6 @@ const CreateSchemaStructure = () => {
         }
 
       } else {
-        // CREATE new question
         console.log("Creating new question");
         const response = await axios.post(
           `${process.env.REACT_APP_API_URL}/api/schemas/create/questiondefinition`,
@@ -464,7 +453,6 @@ const CreateSchemaStructure = () => {
         
         const newData = response.data.data;
 
-        // Add to savedQuestionData or subQuestionMap
         if (level === 0) {
           setSavedQuestionData((prev) => [...prev, newData]);
         } else if (level > 0 && parentFolderId) {
@@ -474,11 +462,9 @@ const CreateSchemaStructure = () => {
           }));
         }
 
-        // Set parentId for potential sub-questions
         const obj = { [level + 1]: newData._id };
         setParentId((prev) => [...prev, obj]);
 
-        // Update folders if sub-questions were specified
         if (folder.isSubQuestion && numberOfSubQuestions) {
           const updatedFolders = (folders) => {
             return folders.map((item) => {
@@ -609,13 +595,13 @@ const CreateSchemaStructure = () => {
 
     const handleMarkChange = (inputBoxName, inputValue) => {
       if (inputBoxName.includes("maxMarks")) {
-        if (inputValue > remainingMarks && level<0) {
+        if (inputValue > remainingMarks && level < 0) {
           toast.error("Max Marks cannot be greater than remaining marks");
           setError(true);
           return;
         }
       } else if (inputBoxName.includes("marksDifference")) {
-        if (inputValue > remainingMarks && level<0) {
+        if (inputValue > remainingMarks && level < 0) {
           toast.error(
             "Marks Difference cannot be greater than remaining marks"
           );
@@ -628,21 +614,23 @@ const CreateSchemaStructure = () => {
       setError(false);
     };
 
-    // Get the correct data to display
     let displayData = [];
     
     if (level === 0) {
-      // Parent question
       displayData = savedQuestionData.filter(
         (item) => parseInt(item.questionsName) === folderId
       );
     } else if (level > 0 && parentFolderId) {
-      // Sub-question
       const parentSubQuestions = subQuestionMap[parentFolderId] || [];
       displayData = parentSubQuestions.filter(
         (item) => item.questionsName === String(folderId)
       );
     }
+
+    // NEW: Calculate and display remaining marks for parent questions with sub-questions
+    const showSubQuestionMarksInfo = level === 0 && displayData[0]?.isSubQuestion;
+    const subQuestionsTotal = showSubQuestionMarksInfo ? calculateSubQuestionsTotalMarks(folderId) : 0;
+    const remainingSubMarks = showSubQuestionMarksInfo ? (displayData[0]?.maxMarks || 0) - subQuestionsTotal : 0;
 
     return (
       <div
@@ -777,6 +765,16 @@ const CreateSchemaStructure = () => {
               </button>
             </div>
           </div>
+
+          {/* NEW: Show sub-question marks summary for parent questions */}
+          {showSubQuestionMarksInfo && (
+            <div className="ml-12 mt-2 flex items-center gap-4 text-sm">
+              <span className={`font-medium ${remainingSubMarks < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                Sub-questions: {subQuestionsTotal}/{displayData[0]?.maxMarks || 0} marks used
+                {remainingSubMarks < 0 && ' ⚠️ EXCEEDED!'}
+              </span>
+            </div>
+          )}
 
           {folder.showInputs && (
             <div className="ml-12 mt-4 flex items-center gap-4">

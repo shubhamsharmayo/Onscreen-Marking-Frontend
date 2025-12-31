@@ -27,6 +27,7 @@ const SelectCoordinates = () => {
   const [questionId, setQuestionId] = useState("");
   const [questionDone, setQuestionDone] = useState([]);
   const [filterOutQuestionDone, setFilterOutQuestionDone] = useState([]);
+    const [subQuestionMap, setSubQuestionMap] = useState({});
   const [formData, setFormData] = useState({
     courseSchemaRelationId: "",
     questionId: "",
@@ -106,7 +107,7 @@ const SelectCoordinates = () => {
         setQuestionDone(response?.data);
       } catch (error) {
         console.log(error);
-        // toast.error(error?.response?.data?.message);
+        toast.error(error?.response?.data?.message);
       }
     };
     fetchedData();
@@ -321,11 +322,9 @@ const SelectCoordinates = () => {
 
   const handleFolderClick = async (folderId) => {
     const currentQuestionInfo =
-      savedQuestionData &&
-      savedQuestionData.length > 0 &&
-      savedQuestionData.filter((item) =>
-        item.questionsName.startsWith(folderId)
-      );
+      savedQuestionData?.filter((item) =>
+        item.questionsName.startsWith(String(folderId))
+      ) || [];
 
     // console.log(currentQuestionInfo);
 
@@ -343,47 +342,42 @@ const SelectCoordinates = () => {
           },
         }
       );
-      // console.log(response?.data?.data);
+      console.log(response?.data?.data);
       toggleInputsVisibility(folderId);
       const subQuestionsNumber =
-        response?.data?.data?.parentQuestion.numberOfSubQuestions || [];
+        Number(response?.data?.data?.parentQuestion?.numberOfSubQuestions) || 0;
+
+        setSubQuestionMap((prev) => ({
+        ...prev,
+        [folderId]: response?.data?.data?.subQuestions || []
+      }));
 
       setSubQuestionsFirst(response?.data?.data?.subQuestions || []);
 
-      const updateFolders = (folders) =>
-        folders.map((folder) => {
-          if (folder.id === folderId) {
-            const isCollapsed = folder.isCollapsed || false;
+      setFolders((prevFolders) =>
+        prevFolders.map((folder) => {
+          if (folder.id !== folderId) return folder;
 
-            // Ensure subQuestions is a number and generate an array based on its value
-            const validSubQuestionsCount =
-              typeof subQuestionsNumber === "number" ? subQuestionsNumber : 0;
-
-            return {
-              ...folder,
-              children: isCollapsed
-                ? [] // Collapse the folder by clearing children
-                : Array.from({ length: validSubQuestionsCount }, (_, i) => ({
+          return {
+            ...folder,
+            isCollapsed: !folder.isCollapsed,
+            showInputs: !folder.isCollapsed,
+            children:
+              folder.children?.length > 0
+                ? folder.children
+                : Array.from({ length: subQuestionsNumber }, (_, i) => ({
                     id: `${folderId}-${i + 1}`,
-                    name: `Q. ${folderId}.${i + 1}`, // You can format this as needed
+                    name: `Q. ${folderId}.${i + 1}`,
                     children: [],
                     showInputs: false,
+                    isSubQuestion: true,
                   })),
-              isCollapsed: !isCollapsed, // Toggle collapsed state
-              showInputs: !folder.showInputs, // Toggle input visibility
-              isSubQuestion: !folder.isSubQuestion, // Toggle isSubQuestion
-            };
-          }
-
-          if (folder.children && folder.children.length > 0) {
-            return { ...folder, children: updateFolders(folder.children) };
-          }
-
-          return folder;
-        });
+          };
+        })
+      );
 
       toggleInputsVisibility(folderId);
-      setFolders((prevFolders) => updateFolders(prevFolders));
+      // setFolders((prevFolders) => updateFolders(prevFolders));
     } catch (error) {
       // console.log(error);
       toast.error(error.response.data.message);
@@ -427,7 +421,7 @@ const SelectCoordinates = () => {
 
   // console.log(formData);
 
-  const renderFolder = (folder, level = 0, isLastChild = false) => {
+  const renderFolder = (folder, level = 0, isLastChild = false , parentFolderId = null) => {
     const folderId = folder.id;
     const isSaving = savingStatus[folderId] || false; // Check saving status for this folder
     const folderStyle = `relative ml-${level * 4} mt-3`;
@@ -435,11 +429,16 @@ const SelectCoordinates = () => {
 
     let currentQ = [];
 
-    currentQ =
-      savedQuestionData &&
-      savedQuestionData?.filter(
+    if (level === 0) {
+      currentQ = savedQuestionData.filter(
         (item) => parseInt(item.questionsName) === folderId
       );
+    } else if (level > 0 && parentFolderId) {
+      const parentSubQuestions = subQuestionMap[parentFolderId] || [];
+      currentQ = parentSubQuestions.filter(
+        (item) => item.questionsName === String(folderId)
+      );
+    }
 
     folder.originalId = currentQ[0]?._id;
 
@@ -580,7 +579,7 @@ const SelectCoordinates = () => {
 
         {/* Render children (sub-questions) recursively */}
         {folder.children?.map((child, index) =>
-          renderFolder(child, level + 1, index === folder?.children?.length - 1)
+          renderFolder(child, level + 1, index === folder?.children?.length - 1 , level === 0 ? folder.id : parentFolderId)
         )}
       </div>
     );
