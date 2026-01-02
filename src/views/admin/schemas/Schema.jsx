@@ -28,11 +28,15 @@ const Schema = () => {
   // Check dark mode
   useEffect(() => {
     const htmlElement = document.body;
-    const checkDarkMode = () => setIsDarkMode(htmlElement.classList.contains("dark"));
+    const checkDarkMode = () =>
+      setIsDarkMode(htmlElement.classList.contains("dark"));
 
     checkDarkMode();
     const observer = new MutationObserver(checkDarkMode);
-    observer.observe(htmlElement, { attributes: true, attributeFilter: ["class"] });
+    observer.observe(htmlElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
 
     return () => observer.disconnect();
   }, []);
@@ -51,12 +55,16 @@ const Schema = () => {
   }, [navigate, token]);
 
   // Fetch schemas
-  const { data: schemaData = [], isLoading, isError } = useQuery({
+  const {
+    data: schemaData = [],
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["schemas"],
     queryFn: () => getAllSchemas(token),
     enabled: !!token,
   });
-  console.log(schemaData)
+  console.log(schemaData);
 
   // Delete schema mutation
   const deleteMutation = useMutation({
@@ -78,9 +86,15 @@ const Schema = () => {
   // Update schema mutation
   const updateMutation = useMutation({
     mutationFn: updateSchema,
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       toast.success("Schema updated successfully");
       queryClient.invalidateQueries(["schemas"]);
+
+      // ✅ CLOSE MODAL
+      setEditShowModal(false);
+
+      // ✅ NAVIGATE TO STRUCTURE PAGE
+      navigate(`/admin/schema/create/structure/${variables.id}`);
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || "Update failed");
@@ -89,8 +103,6 @@ const Schema = () => {
 
   const handleUpdate = (id, updatedData) => {
     updateMutation.mutate({ id, data: updatedData, token });
-    
-    setEditShowModal(false);
   };
 
   // Grid rows
@@ -102,7 +114,7 @@ const Schema = () => {
     totalQuestions: data.totalQuestions,
     compulsoryQuestions: data.compulsoryQuestions,
     // evaluationTime: data.evaluationTime,
-    minTime:data.minTime,
+    minTime: data.minTime,
     maxTime: data.maxTime,
     numberOfPage: data.numberOfPage,
     hiddenPage: data?.hiddenPage.map((item) => parseInt(item) + 1),
@@ -142,6 +154,7 @@ const Schema = () => {
           className="mt-1 flex cursor-pointer justify-center rounded px-3 py-2 text-center font-medium text-indigo-400"
           onClick={() => {
             setEditShowModal(true);
+            setSchemaId(params.row.id);
             setSelectedSchema(params.row);
           }}
         >
@@ -166,8 +179,12 @@ const Schema = () => {
     },
   ];
 
-  if (isLoading) return <div className="text-center p-4">Loading schemas...</div>;
-  if (isError) return <div className="text-center p-4 text-red-500">Failed to load schemas</div>;
+  if (isLoading)
+    return <div className="p-4 text-center">Loading schemas...</div>;
+  if (isError)
+    return (
+      <div className="p-4 text-center text-red-500">Failed to load schemas</div>
+    );
 
   return (
     <div className="mt-8 grid grid-cols-1 gap-4 p-4 lg:grid-cols-3 lg:gap-8">
@@ -196,17 +213,30 @@ const Schema = () => {
                     backgroundColor: "rgba(255, 255, 255, 0.1)",
                     color: "#ffffff",
                   },
-                  "& .MuiDataGrid-cell": { fontSize: "0.80rem", color: "#ffffff" },
-                  "& .MuiDataGrid-row:hover": { backgroundColor: "rgba(255, 255, 255, 0.1)" },
+                  "& .MuiDataGrid-cell": {
+                    fontSize: "0.80rem",
+                    color: "#ffffff",
+                  },
+                  "& .MuiDataGrid-row:hover": {
+                    backgroundColor: "rgba(255, 255, 255, 0.1)",
+                  },
                   "& .MuiTablePagination-root": { color: "#ffffff" },
-                  "& .MuiDataGrid-footerContainer": { backgroundColor: "#111c44", color: "#ffffff" },
-                  "& .MuiDataGrid-toolbarContainer button": { color: "#ffffff" },
+                  "& .MuiDataGrid-footerContainer": {
+                    backgroundColor: "#111c44",
+                    color: "#ffffff",
+                  },
+                  "& .MuiDataGrid-toolbarContainer button": {
+                    color: "#ffffff",
+                  },
                   "& .MuiDataGrid-toolbarContainer svg": { fill: "#ffffff" },
                 }}
               />
             </ThemeProvider>
           ) : (
-            <div style={{ maxHeight: "600px", width: "100%" }} className="dark:bg-navy-700">
+            <div
+              style={{ maxHeight: "600px", width: "100%" }}
+              className="dark:bg-navy-700"
+            >
               <DataGrid
                 rows={rows}
                 columns={columns}
@@ -219,8 +249,13 @@ const Schema = () => {
                     borderBottom: "1px solid rgba(0, 0, 0, 0.2)",
                   },
                   "& .MuiTablePagination-root": { color: "#000000" },
-                  "& .MuiDataGrid-cell": { fontSize: "0.80rem", color: "#000000" },
-                  "& .MuiDataGrid-row:hover": { backgroundColor: "rgba(255, 255, 255, 0.1)" },
+                  "& .MuiDataGrid-cell": {
+                    fontSize: "0.80rem",
+                    color: "#000000",
+                  },
+                  "& .MuiDataGrid-row:hover": {
+                    backgroundColor: "rgba(255, 255, 255, 0.1)",
+                  },
                 }}
               />
             </div>

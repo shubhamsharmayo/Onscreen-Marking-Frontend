@@ -27,7 +27,7 @@ const SelectCoordinates = () => {
   const [questionId, setQuestionId] = useState("");
   const [questionDone, setQuestionDone] = useState([]);
   const [filterOutQuestionDone, setFilterOutQuestionDone] = useState([]);
-    const [subQuestionMap, setSubQuestionMap] = useState({});
+  const [subQuestionMap, setSubQuestionMap] = useState({});
   const [formData, setFormData] = useState({
     courseSchemaRelationId: "",
     questionId: "",
@@ -347,9 +347,9 @@ const SelectCoordinates = () => {
       const subQuestionsNumber =
         Number(response?.data?.data?.parentQuestion?.numberOfSubQuestions) || 0;
 
-        setSubQuestionMap((prev) => ({
+      setSubQuestionMap((prev) => ({
         ...prev,
-        [folderId]: response?.data?.data?.subQuestions || []
+        [folderId]: response?.data?.data?.subQuestions || [],
       }));
 
       setSubQuestionsFirst(response?.data?.data?.subQuestions || []);
@@ -421,7 +421,12 @@ const SelectCoordinates = () => {
 
   // console.log(formData);
 
-  const renderFolder = (folder, level = 0, isLastChild = false , parentFolderId = null) => {
+  const renderFolder = (
+    folder,
+    level = 0,
+    isLastChild = false,
+    parentFolderId = null
+  ) => {
     const folderId = folder.id;
     const isSaving = savingStatus[folderId] || false; // Check saving status for this folder
     const folderStyle = `relative ml-${level * 4} mt-3`;
@@ -431,7 +436,9 @@ const SelectCoordinates = () => {
 
     if (level === 0) {
       currentQ = savedQuestionData.filter(
-        (item) => parseInt(item.questionsName) === folderId
+        (item) =>
+          item.questionsName === String(folderId) ||
+          item.questionsName.startsWith(`${folderId}-`)
       );
     } else if (level > 0 && parentFolderId) {
       const parentSubQuestions = subQuestionMap[parentFolderId] || [];
@@ -443,7 +450,7 @@ const SelectCoordinates = () => {
     folder.originalId = currentQ[0]?._id;
 
     const isAvailable = filterOutQuestionDone.find(
-      (item) => parseInt(item.questionsName) === folderId
+      (item) => item.questionsName === String(folderId)
     );
 
     // console.log(filterOutQuestionDone.length,folders.length);
@@ -478,7 +485,7 @@ const SelectCoordinates = () => {
             <span className="relative w-32 cursor-pointer rounded-md border bg-white px-2 py-1 text-center text-sm font-medium shadow-md transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg dark:bg-navy-700 dark:text-white">
               Max Marks :{" "}
               {currentQ?.length > 0 || currentQ !== undefined
-                ? parseInt(currentQ[0]?.questionsName) === folderId
+                ? currentQ[0]?.questionsName === String(folderId)
                   ? currentQ[0]?.maxMarks
                   : "0"
                 : "0"}
@@ -487,7 +494,7 @@ const SelectCoordinates = () => {
             <span className="lg relative w-32 cursor-pointer rounded-md border bg-white px-2 py-1 text-center text-sm font-medium shadow-md transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg dark:bg-navy-700 dark:text-white">
               Min Marks :{" "}
               {currentQ?.length > 0 || currentQ !== undefined
-                ? parseInt(currentQ[0]?.questionsName) === folderId
+                ? currentQ[0]?.questionsName === String(folderId)
                   ? currentQ[0]?.minMarks
                   : "0"
                 : "0"}
@@ -496,7 +503,7 @@ const SelectCoordinates = () => {
             <span className="lg relative w-32 cursor-pointer rounded-md border bg-white px-2 py-1 text-center text-sm font-medium shadow-md transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg dark:bg-navy-700 dark:text-white">
               Bonus Marks :{" "}
               {currentQ?.length > 0 || currentQ !== undefined
-                ? parseInt(currentQ[0]?.questionsName) === folderId
+                ? currentQ[0]?.questionsName === String(folderId)
                   ? currentQ[0]?.bonusMarks
                   : "0"
                 : "0"}
@@ -505,7 +512,7 @@ const SelectCoordinates = () => {
             <span className="lg relative w-44 cursor-pointer rounded-md border bg-white px-2 py-1 text-center text-sm font-medium shadow-md transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg dark:bg-navy-700 dark:text-white">
               Marks Difference :{" "}
               {currentQ?.length > 0 || currentQ !== undefined
-                ? parseInt(currentQ[0]?.questionsName) === folderId
+                ? currentQ[0]?.questionsName === String(folderId)
                   ? currentQ[0]?.marksDifference
                   : "0"
                 : "0"}
@@ -517,7 +524,7 @@ const SelectCoordinates = () => {
               disabled={true}
               checked={
                 (currentQ?.length > 0 || currentQ !== undefined) &&
-                parseInt(currentQ[0]?.questionsName) === folderId
+                currentQ[0]?.questionsName === String(folderId)
                   ? currentQ[0]?.isSubQuestion
                   : false
               }
@@ -538,7 +545,11 @@ const SelectCoordinates = () => {
             </button>
 
             <button
-              className={`font-md w-24 rounded-lg py-1.5 text-white ${!isAvailable?"bg-green-400 cursor-not-allowed":"bg-green-600 hover:bg-green-700"}`}
+              className={`font-md w-24 rounded-lg py-1.5 text-white ${
+                !isAvailable
+                  ? "cursor-not-allowed bg-green-400"
+                  : "bg-green-600 hover:bg-green-700"
+              }`}
               onClick={() => handleAllSelectedImage(folder)}
               disabled={!isAvailable}
             >
@@ -549,26 +560,30 @@ const SelectCoordinates = () => {
           {/* Sub Questions Input Fields */}
           {folder.showInputs && (
             <div className="ml-12 mt-4 flex items-center gap-4">
-              <label className={`ml-2 text-sm font-bold  ${"text-gray-700"} dark:text-white `}>
+              <label
+                className={`ml-2 text-sm font-bold  ${"text-gray-700"} dark:text-white `}
+              >
                 No. of Sub-Questions:
               </label>
               <span
                 className={`px-2 py-1 text-sm font-bold ${"text-gray-700"} dark:text-white`}
               >
                 {currentQ?.length > 0 || currentQ !== undefined
-                  ? parseInt(currentQ[0]?.questionsName) === folderId
+                  ? currentQ[0]?.questionsName === String(folderId)
                     ? currentQ[0]?.numberOfSubQuestions
                     : "0"
                   : "0"}
               </span>
-              <label className={`ml-2 text-sm font-bold ${"text-gray-700"} dark:text-white`}>
+              <label
+                className={`ml-2 text-sm font-bold ${"text-gray-700"} dark:text-white`}
+              >
                 No. of compulsory Sub-Questions:
               </label>
               <span
                 className={`px-2 py-1 text-sm font-bold ${"  text-gray-700"} dark:text-white`}
               >
                 {currentQ?.length > 0 || currentQ !== undefined
-                  ? parseInt(currentQ[0]?.questionsName) === folderId
+                  ? currentQ[0]?.questionsName === String(folderId)
                     ? currentQ[0]?.compulsorySubQuestions
                     : "0"
                   : "0"}
@@ -579,7 +594,12 @@ const SelectCoordinates = () => {
 
         {/* Render children (sub-questions) recursively */}
         {folder.children?.map((child, index) =>
-          renderFolder(child, level + 1, index === folder?.children?.length - 1 , level === 0 ? folder.id : parentFolderId)
+          renderFolder(
+            child,
+            level + 1,
+            index === folder?.children?.length - 1,
+            level === 0 ? folder.id : parentFolderId
+          )
         )}
       </div>
     );
@@ -594,9 +614,7 @@ const SelectCoordinates = () => {
             className="border-current group flex w-[150px] cursor-pointer items-center justify-end gap-4 rounded-lg border bg-indigo-500 px-5 py-2 text-white transition-colors hover:bg-indigo-600 focus:outline-none focus:ring active:bg-indigo-500 dark:border-gray-700"
             onClick={handleFinalSubmitButton}
           >
-            <span
-              className="font-medium transition-colors group-hover:text-white dark:text-white"
-            >
+            <span className="font-medium transition-colors group-hover:text-white dark:text-white">
               {" "}
               Submit{" "}
             </span>
@@ -642,20 +660,20 @@ const SelectCoordinates = () => {
 
       {showViewImageModal && (
         <ViewImageModel
-        showViewImageModal={showViewImageModal}
-        setShowViewImageModal={setShowViewImageModal}
-        questionId={questionId[0]?._id}
-        handleSubmitButton={handleSubmitButton}
-        setFormData={setFormData}
-        showAnswerModel={showAnswerModel}
-        setShowAnswerModel={setShowAnswerModel}
-        handleUpdateButton={handleUpdateButton}
-        isAvailable={filterOutQuestionDone.some(
-          (item) => parseInt(item.questionsName) === folderIdQuestion // Calculate based on folderId
-        )}
-        questionDone={questionDone}
-        formData={formData}
-        folderid={folderid}
+          showViewImageModal={showViewImageModal}
+          setShowViewImageModal={setShowViewImageModal}
+          questionId={questionId[0]?._id}
+          handleSubmitButton={handleSubmitButton}
+          setFormData={setFormData}
+          showAnswerModel={showAnswerModel}
+          setShowAnswerModel={setShowAnswerModel}
+          handleUpdateButton={handleUpdateButton}
+          isAvailable={filterOutQuestionDone.some(
+            (item) => parseInt(item.questionsName) === folderIdQuestion // Calculate based on folderId
+          )}
+          questionDone={questionDone}
+          formData={formData}
+          folderid={folderid}
         />
       )}
     </>
