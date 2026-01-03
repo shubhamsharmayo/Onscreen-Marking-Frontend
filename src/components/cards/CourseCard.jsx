@@ -27,7 +27,7 @@ const CourseCard = ({
             },
           }
         );
-        // console.log(response);
+        console.log(response);
         setClassCourse(response.data);
       } catch (error) {
         console.log(error);
@@ -67,11 +67,18 @@ const CourseCard = ({
                   d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"
                 />
               </svg>
-
-              <div className="mt-1.5 sm:mt-0">
-                <p className="text-lg text-gray-500">
-                  Class : {classCourse?.className}
-                </p>
+              <div className="flex gap-5 flex-wrap">
+                <div className="mt-1.5 sm:mt-0">
+                  <p className="text-lg text-gray-500">
+                    Schema Name : {subject?.schemaName}
+                  </p>
+                </div>
+                
+                <div className="mt-1.5 sm:mt-0">
+                  <p className="text-lg text-gray-500">
+                    Class : {classCourse?.className}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -88,12 +95,13 @@ const CourseCard = ({
               Edit
             </button>
 
-            <button
+           <button
               className="inline-block rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-colors duration-200 hover:bg-purple-100 hover:text-purple-600 focus:relative focus:outline-none focus:ring-purple-300 dark:border-purple-500 dark:text-gray-400 dark:hover:bg-purple-800 dark:hover:text-purple-100 dark:focus:ring-purple-700"
               onClick={() => {
                 currentSetSubId(subject?._id);
                 setShowModal(true);
               }}
+              disabled={subject?.flag}
             >
               Select Schema
             </button>
