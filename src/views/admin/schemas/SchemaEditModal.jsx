@@ -24,6 +24,7 @@ const SchemaEditModal = ({
     minTime: "",
     maxTime: "",
   });
+  const [selectedHiddenPage, setSelectedHiddenPage] = useState("");
 
   useEffect(() => {
     if (selectedSchema) {
@@ -48,7 +49,18 @@ const SchemaEditModal = ({
   // console.log(selectedSchema)
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
+
+    if (type === "number") {
+      const numericValue = value === "" ? "" : Math.max(0, Number(value));
+
+      setFormData((prev) => ({
+        ...prev,
+        [name]: numericValue,
+      }));
+      return;
+    }
+
     if (name === "numberOfPage" && value === "") {
       setFormData((prevData) => ({
         ...prevData,
@@ -269,11 +281,10 @@ const SchemaEditModal = ({
             {/* Input for Compulsory Questions */}
             <div className="mb-2 sm:mb-0">
               <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg">
-                 Max Time (in minutes):
+                Max Time (in minutes):
               </label>
               <input
-               type="number"
-                
+                type="number"
                 name="maxTime"
                 value={formData?.maxTime}
                 onChange={handleInputChange}
@@ -312,10 +323,18 @@ const SchemaEditModal = ({
               <select
                 id="hiddenPage"
                 name="hiddenPage"
-                value={formData?.hiddenPage}
+                value={selectedHiddenPage}
                 onChange={(e) => {
-                  handleInputChange(e);
-                  // console.log("Selected Value:", e.target.value); // Logs the selected value
+                  const value = Number(e.target.value) - 1;
+
+                  if (!formData.hiddenPage.includes(value)) {
+                    setFormData((prev) => ({
+                      ...prev,
+                      hiddenPage: [...prev.hiddenPage, value],
+                    }));
+                  }
+
+                  setSelectedHiddenPage(""); // ✅ reset dropdown
                 }}
                 className="sm:text-md max-h-10 w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2"
               >

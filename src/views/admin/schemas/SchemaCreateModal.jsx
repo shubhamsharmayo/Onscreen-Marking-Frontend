@@ -4,8 +4,12 @@ import { toast } from "react-toastify";
 import { GiCrossMark } from "react-icons/gi";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getAllSchemas } from "./schemaApi";
+import { useNavigate } from "react-router-dom";
 
 const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
+  const [selectedHiddenPage, setSelectedHiddenPage] = useState("");
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     name: "",
     totalQuestions: "",
@@ -25,13 +29,23 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
   const queryClient = useQueryClient();
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
 
     if (name === "numberOfPage" && value === "") {
       setFormData((prevData) => ({
         ...prevData,
         hiddenPage: [],
       }));
+    }
+
+    if (type === "number") {
+      const numericValue = value === "" ? "" : Math.max(0, Number(value));
+
+      setFormData((prev) => ({
+        ...prev,
+        [name]: numericValue,
+      }));
+      return;
     }
 
     if (name === "hiddenPage") {
@@ -58,7 +72,6 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
   // ✅ 1. Mutation for creating schema
   const createSchemaMutation = useMutation({
     mutationFn: async (data) => {
-      console.log(data)
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/api/schemas/create/schema`,
         data,
@@ -70,26 +83,20 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
       );
       return response.data;
     },
-    onSuccess: () => {
-      // ✅ 2. Refetch schema list automatically
+
+    onSuccess: (data) => {
       queryClient.invalidateQueries(["schemas"]);
-      
+
       toast.success("Schema created successfully!");
-      setFormData({
-        name: "",
-        totalQuestions: "",
-        maxMarks: "",
-        minMarks: "",
-        compulsoryQuestions: "",
-        // evaluationTime: "",
-        isActive: true,
-        numberOfPage: "",
-        hiddenPage: [],
-        minTime: "",
-        maxTime: "",
-      });
+
+      const createdSchemaId = data?.data?._id || data?._id;
+
       setCreateShowModal(false);
+
+      // ✅ NAVIGATE TO CREATE STRUCTURE PAGE
+      navigate(`/admin/schema/create/structure/${createdSchemaId}`);
     },
+
     onError: (error) => {
       toast.error(error.response?.data?.message || "Failed to create schema.");
     },
@@ -301,11 +308,18 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
               </label>
               <select
                 id="hiddenPage"
-                name="hiddenPage"
-                value={formData?.hiddenPage}
+                value={selectedHiddenPage}
                 onChange={(e) => {
-                  handleChange(e);
-                  // console.log("Selected Value:", e.target.value); // Logs the selected value
+                  const value = Number(e.target.value) - 1;
+
+                  if (!formData.hiddenPage.includes(value)) {
+                    setFormData((prev) => ({
+                      ...prev,
+                      hiddenPage: [...prev.hiddenPage, value],
+                    }));
+                  }
+
+                  setSelectedHiddenPage(""); // ✅ reset dropdown
                 }}
                 className="sm:text-md max-h-10 w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2"
               >
