@@ -24,7 +24,7 @@ const ImageModal = ({
   const [checkboxStatus, setCheckboxStatus] = useState({}); // Object to hold checkbox status for each image
   const { id } = useParams();
 
-  // console.log(formData);
+  console.log(questionId);
 
   const nextImage = () => {
     if (showAnswerModel) {

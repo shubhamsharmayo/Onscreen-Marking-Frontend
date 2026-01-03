@@ -100,6 +100,11 @@ const CreateSchemaStructure = () => {
     return subQuestions.reduce((total, sq) => total + (sq.maxMarks || 0), 0);
   };
 
+  const clampMarks = (value, min, max) => {
+    if (value === "" || value === null) return "";
+    return Math.min(Math.max(Number(value), min), max);
+  };
+
   // NEW: Helper function to get parent question max marks
   const getParentMaxMarks = (parentFolderId) => {
     const parentQuestion = savedQuestionData.find(
@@ -143,13 +148,13 @@ const CreateSchemaStructure = () => {
 
   const handleDeleteQuestion = async (folder, level, parentFolderId = null) => {
     const folderId = folder.id;
-    
+
     if (deletingStatus[folderId]) return;
 
     const confirmDelete = window.confirm(
       `Are you sure you want to delete ${folder.name}? ${
-        folder.children?.length > 0 
-          ? "This will also delete all sub-questions." 
+        folder.children?.length > 0
+          ? "This will also delete all sub-questions."
           : ""
       }`
     );
@@ -173,20 +178,26 @@ const CreateSchemaStructure = () => {
         );
       }
 
-      const questionToDelete = level > 0 && currentSQ.length > 0 ? currentSQ[0] : currentQ[0];
+      const questionToDelete =
+        level > 0 && currentSQ.length > 0 ? currentSQ[0] : currentQ[0];
 
       if (!questionToDelete || !questionToDelete._id) {
         toast.warning("No saved question to delete");
-        
+
         const removeFolderFromStructure = (folders) => {
-          return folders.filter(f => f.id !== folderId).map((folder) => {
-            if (folder.children && folder.children.length > 0) {
-              return { ...folder, children: removeFolderFromStructure(folder.children) };
-            }
-            return folder;
-          });
+          return folders
+            .filter((f) => f.id !== folderId)
+            .map((folder) => {
+              if (folder.children && folder.children.length > 0) {
+                return {
+                  ...folder,
+                  children: removeFolderFromStructure(folder.children),
+                };
+              }
+              return folder;
+            });
         };
-        
+
         setFolders((prevFolders) => removeFolderFromStructure(prevFolders));
         setDeletingStatus((prev) => ({ ...prev, [folderId]: false }));
         return;
@@ -203,7 +214,10 @@ const CreateSchemaStructure = () => {
 
       toast.success(response?.data?.message || "Question deleted successfully");
 
-      setSavedQuestionData((prev) => 
+      window.location.reload();
+
+
+      setSavedQuestionData((prev) =>
         prev.filter((item) => item._id !== questionToDelete._id)
       );
 
@@ -228,34 +242,45 @@ const CreateSchemaStructure = () => {
       }
 
       const removeFolderFromStructure = (folders) => {
-        return folders.filter(f => f.id !== folderId).map((folder) => {
-          if (folder.children && folder.children.length > 0) {
-            return { ...folder, children: removeFolderFromStructure(folder.children) };
-          }
-          return folder;
-        });
+        return folders
+          .filter((f) => f.id !== folderId)
+          .map((folder) => {
+            if (folder.children && folder.children.length > 0) {
+              return {
+                ...folder,
+                children: removeFolderFromStructure(folder.children),
+              };
+            }
+            return folder;
+          });
       };
 
       setFolders((prevFolders) => removeFolderFromStructure(prevFolders));
 
       const totalMarksUsed = savedQuestionData
-        .filter(item => item._id !== questionToDelete._id)
+        .filter((item) => item._id !== questionToDelete._id)
         .reduce((acc, question) => acc + (question?.maxMarks || 0), 0);
-      
-      setRemainingMarks((schemaData?.maxMarks || 0) - totalMarksUsed);
 
+      setRemainingMarks((schemaData?.maxMarks || 0) - totalMarksUsed);
     } catch (error) {
       console.error("Error deleting question:", error);
-      toast.error(error?.response?.data?.message || "Failed to delete question");
+      toast.error(
+        error?.response?.data?.message || "Failed to delete question"
+      );
     } finally {
       setDeletingStatus((prev) => ({ ...prev, [folderId]: false }));
     }
   };
 
-  const handleSubQuestionsChange = async (folder, _, level, parentFolderId = null) => {
+  const handleSubQuestionsChange = async (
+    folder,
+    _,
+    level,
+    parentFolderId = null
+  ) => {
     const folderId = folder.id;
     setCurrentQuesNo(folderId);
-    console.log(_)
+    console.log(_);
 
     if (savingStatus[folderId]) return;
 
@@ -278,27 +303,39 @@ const CreateSchemaStructure = () => {
       const parentQuestion = savedQuestionData.find(
         (item) => parseInt(item.questionsName) === parentFolderId
       );
-      parentQuestionId = parentQuestion?._id || existingQuestion?.parentQuestionId || null;
+      parentQuestionId =
+        parentQuestion?._id || existingQuestion?.parentQuestionId || null;
     }
 
-    const existingQuestion = level > 0 && currentSQ.length > 0 ? currentSQ[0] : currentQ[0];
+    const existingQuestion =
+      level > 0 && currentSQ.length > 0 ? currentSQ[0] : currentQ[0];
 
-    const minMarks =
-      formRefs?.current[`${folderId}-minMarks`] ||
-      (existingQuestion && existingQuestion?.minMarks);
-    const maxMarks =
-      formRefs?.current[`${folderId}-maxMarks`] ||
-      (existingQuestion && existingQuestion?.maxMarks);
-    const bonusMarks =
-      formRefs?.current[`${folderId}-bonusMarks`] ||
-      (existingQuestion && existingQuestion?.bonusMarks);
-    const marksDifference =
-      formRefs.current[`${folderId}-marksDifference`] ||
-      (existingQuestion && existingQuestion?.marksDifference);
+    const minMarks = Number(
+      formRefs.current[`${folderId}-minMarks`] ??
+        existingQuestion?.minMarks ??
+        0
+    );
+
+    const maxMarks = Number(
+      formRefs.current[`${folderId}-maxMarks`] ??
+        existingQuestion?.maxMarks ??
+        0
+    );
+
+    const bonusMarks = Number(
+      formRefs.current[`${folderId}-bonusMarks`] ??
+        existingQuestion?.bonusMarks ??
+        0
+    );
+
+    const marksDifference = Number(
+      formRefs.current[`${folderId}-marksDifference`] ??
+        existingQuestion?.marksDifference ??
+        0
+    );
 
     let numberOfSubQuestions = "";
     let compulsorySubQuestions = "";
-    
 
     if (folder.isSubQuestion) {
       numberOfSubQuestions += formRefs?.current[
@@ -321,12 +358,16 @@ const CreateSchemaStructure = () => {
     // NEW: Validation for sub-questions - check if sum exceeds parent max marks
     if (level > 0 && parentFolderId) {
       const parentMaxMarks = getParentMaxMarks(parentFolderId);
-      const currentSubQuestionsTotal = calculateSubQuestionsTotalMarks(parentFolderId);
-      
+      const currentSubQuestionsTotal =
+        calculateSubQuestionsTotalMarks(parentFolderId);
+
       // Calculate what the new total would be
       const existingSubQuestionMarks = existingQuestion?.maxMarks || 0;
-      const newTotal = currentSubQuestionsTotal - existingSubQuestionMarks + parseFloat(maxMarks);
-      
+      const newTotal =
+        currentSubQuestionsTotal -
+        existingSubQuestionMarks +
+        parseFloat(maxMarks);
+
       if (newTotal > parentMaxMarks) {
         toast.error(
           `Sub-questions total marks (${newTotal}) cannot exceed parent question marks (${parentMaxMarks}). Current sub-questions total: ${currentSubQuestionsTotal}`
@@ -335,8 +376,10 @@ const CreateSchemaStructure = () => {
       }
     }
 
-    if (maxMarks > remainingMarks && level < 0)
-      return toast.error("Max Marks cannot be greater than remaining marks");
+    if (maxMarks > remainingMarks + (existingQuestion?.maxMarks || 0)) {
+      toast.error("Max Marks cannot exceed remaining marks");
+      return;
+    }
 
     if (minMarks > remainingMarks || minMarks > maxMarks)
       return toast.error(
@@ -364,8 +407,8 @@ const CreateSchemaStructure = () => {
       parentQuestionId: parentQuestionId,
     };
 
-    console.log(updatedQuestionData)
-    console.log(level)
+    console.log(updatedQuestionData);
+    console.log(level);
 
     setSavingStatus((prev) => ({ ...prev, [folderId]: true }));
 
@@ -382,7 +425,9 @@ const CreateSchemaStructure = () => {
           }
         );
 
-        toast.success(response?.data?.message || "Question updated successfully");
+        toast.success(
+          response?.data?.message || "Question updated successfully"
+        );
 
         const updatedData = response.data.data;
 
@@ -436,7 +481,6 @@ const CreateSchemaStructure = () => {
 
           setFolders((prevFolders) => updatedFolders(prevFolders));
         }
-
       } else {
         console.log("Creating new question");
         const response = await axios.post(
@@ -448,9 +492,11 @@ const CreateSchemaStructure = () => {
             },
           }
         );
-        
-        toast.success(response?.data?.message || "Question created successfully");
-        
+
+        toast.success(
+          response?.data?.message || "Question created successfully"
+        );
+
         const newData = response.data.data;
 
         if (level === 0) {
@@ -492,7 +538,9 @@ const CreateSchemaStructure = () => {
       }
     } catch (error) {
       console.error("Error saving question:", error);
-      toast.error(error?.response?.data?.message || "Failed to save the question data.");
+      toast.error(
+        error?.response?.data?.message || "Failed to save the question data."
+      );
     } finally {
       setSavingStatus((prev) => ({ ...prev, [folderId]: false }));
     }
@@ -520,10 +568,10 @@ const CreateSchemaStructure = () => {
       console.log(response);
       const subQuestionsNumber =
         Number(response?.data?.data?.parentQuestion?.numberOfSubQuestions) || 0;
-      
+
       setSubQuestionMap((prev) => ({
         ...prev,
-        [folderId]: response?.data?.data?.subQuestions || []
+        [folderId]: response?.data?.data?.subQuestions || [],
       }));
 
       setSubQuestionsFirst(response?.data?.data?.parentQuestion || []);
@@ -586,36 +634,65 @@ const CreateSchemaStructure = () => {
     }
   };
 
-  const renderFolder = (folder, level = 0, isLastChild = false, parentFolderId = null) => {
+  const renderFolder = (
+    folder,
+    level = 0,
+    isLastChild = false,
+    parentFolderId = null
+  ) => {
     const folderId = folder.id;
     const isSaving = savingStatus[folderId] || false;
     const isDeleting = deletingStatus[folderId] || false;
     const folderStyle = `relative ml-${level * 4} mt-3`;
     const color = level % 2 === 0 ? "bg-[#f4f4f4]" : "bg-[#fafafa]";
 
-    const handleMarkChange = (inputBoxName, inputValue) => {
-      if (inputBoxName.includes("maxMarks")) {
-        if (inputValue > remainingMarks && level < 0) {
-          toast.error("Max Marks cannot be greater than remaining marks");
-          setError(true);
-          return;
-        }
-      } else if (inputBoxName.includes("marksDifference")) {
-        if (inputValue > remainingMarks && level < 0) {
-          toast.error(
-            "Marks Difference cannot be greater than remaining marks"
-          );
-          setError(true);
-          return;
-        }
+    const getAllowedMaxMarks = () => {
+      const schemaMax = Number(schemaData?.maxMarks) || 0;
+      const alreadyUsed = Number(displayData[0]?.maxMarks || 0);
+      return Math.min(schemaMax, remainingMarks + alreadyUsed);
+    };
+
+    const handleMarkChange = (inputBoxName, inputValue, event) => {
+      // ✅ Allow clearing input (backspace/delete)
+      if (inputValue === "") {
+        formRefs.current[inputBoxName] = "";
+        return;
       }
-      setCurrentQuesNo(folderId);
-      formRefs.current[inputBoxName] = inputValue;
-      setError(false);
+
+      // ❌ Block alphabets & special characters
+      if (!/^\d+(\.\d+)?$/.test(inputValue)) {
+        return;
+      }
+
+      const allowedMax = getAllowedMaxMarks();
+      let numericValue = Number(inputValue);
+
+      if (Number.isNaN(numericValue)) return;
+
+      // Clamp max value
+      let safeValue = clampMarks(numericValue, 0, allowedMax);
+
+      // Min must not exceed Max
+      if (inputBoxName.includes("minMarks")) {
+        const currentMax =
+          formRefs.current[`${folderId}-maxMarks`] ??
+          displayData[0]?.maxMarks ??
+          allowedMax;
+
+        safeValue = clampMarks(safeValue, 0, currentMax);
+      }
+
+      // Force UI correction (important for uncontrolled input)
+      if (event && numericValue !== safeValue) {
+        event.target.value = safeValue;
+        toast.error(`Max Marks cannot exceed ${allowedMax}`);
+      }
+
+      formRefs.current[inputBoxName] = safeValue;
     };
 
     let displayData = [];
-    
+
     if (level === 0) {
       displayData = savedQuestionData.filter(
         (item) => parseInt(item.questionsName) === folderId
@@ -628,14 +705,19 @@ const CreateSchemaStructure = () => {
     }
 
     // NEW: Calculate and display remaining marks for parent questions with sub-questions
-    const showSubQuestionMarksInfo = level === 0 && displayData[0]?.isSubQuestion;
-    const subQuestionsTotal = showSubQuestionMarksInfo ? calculateSubQuestionsTotalMarks(folderId) : 0;
-    const remainingSubMarks = showSubQuestionMarksInfo ? (displayData[0]?.maxMarks || 0) - subQuestionsTotal : 0;
+    const showSubQuestionMarksInfo =
+      level === 0 && displayData[0]?.isSubQuestion;
+    const subQuestionsTotal = showSubQuestionMarksInfo
+      ? calculateSubQuestionsTotalMarks(folderId)
+      : 0;
+    const remainingSubMarks = showSubQuestionMarksInfo
+      ? (displayData[0]?.maxMarks || 0) - subQuestionsTotal
+      : 0;
 
     return (
       <div
         className={`${folderStyle} p-4 ${color} rounded shadow dark:bg-navy-900 dark:text-white`}
-        key={`${folder.id}-${displayData[0]?._id || 'new'}`}
+        key={`${folder.id}-${displayData[0]?._id || "new"}`}
       >
         {level > 0 && (
           <div
@@ -660,11 +742,12 @@ const CreateSchemaStructure = () => {
 
             <div className="w-20">
               <input
-                key={`${folderId}-maxMarks-${displayData[0]?._id || 'new'}`}
-                onChange={(e) => {
-                  handleMarkChange(`${folder.id}-maxMarks`, e.target.value);
-                }}
-                type="text"
+                key={`${folderId}-maxMarks-${displayData[0]?._id || "new"}`}
+                onChange={(e) =>
+                  handleMarkChange(`${folder.id}-maxMarks`, e.target.value, e)
+                }
+                type="number"
+                inputMode="numeric"
                 placeholder="Max"
                 className="w-full rounded border border-gray-300 px-2 py-1 text-center focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white"
                 defaultValue={displayData[0]?.maxMarks || ""}
@@ -673,11 +756,12 @@ const CreateSchemaStructure = () => {
 
             <div className="w-20">
               <input
-                key={`${folderId}-minMarks-${displayData[0]?._id || 'new'}`}
+                key={`${folderId}-minMarks-${displayData[0]?._id || "new"}`}
                 onChange={(e) => {
                   handleMarkChange(`${folder.id}-minMarks`, e.target.value);
                 }}
-                type="text"
+                type="number"
+                inputMode="numeric"
                 placeholder="Min"
                 defaultValue={displayData[0]?.minMarks ?? ""}
                 className="w-full rounded border border-gray-300 py-1 text-center focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white"
@@ -686,11 +770,12 @@ const CreateSchemaStructure = () => {
 
             <div className="w-20">
               <input
-                key={`${folderId}-bonusMarks-${displayData[0]?._id || 'new'}`}
+                key={`${folderId}-bonusMarks-${displayData[0]?._id || "new"}`}
                 onChange={(e) => {
                   handleMarkChange(`${folder.id}-bonusMarks`, e.target.value);
                 }}
-                type="text"
+                type="number"
+                inputMode="numeric"
                 placeholder="Bonus"
                 className="w-full rounded border border-gray-300 py-1 text-center focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white"
                 defaultValue={displayData[0]?.bonusMarks ?? ""}
@@ -699,14 +784,17 @@ const CreateSchemaStructure = () => {
 
             <div className="w-40">
               <input
-                key={`${folderId}-marksDifference-${displayData[0]?._id || 'new'}`}
+                key={`${folderId}-marksDifference-${
+                  displayData[0]?._id || "new"
+                }`}
                 onChange={(e) => {
                   handleMarkChange(
                     `${folder.id}-marksDifference`,
                     e.target.value
                   );
                 }}
-                type="text"
+                type="number"
+                inputMode="numeric"
                 placeholder="Marks Difference"
                 defaultValue={displayData[0]?.marksDifference || ""}
                 className="w-full rounded border border-gray-300 py-1 text-center focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white"
@@ -715,7 +803,9 @@ const CreateSchemaStructure = () => {
 
             <div className="flex w-28 items-center justify-center gap-2">
               <input
-                key={`${folderId}-isSubQuestion-${displayData[0]?._id || 'new'}`}
+                key={`${folderId}-isSubQuestion-${
+                  displayData[0]?._id || "new"
+                }`}
                 id={`isSubQuestion-${folderId}`}
                 type="checkbox"
                 className="cursor-pointer dark:bg-navy-900 dark:text-white"
@@ -759,7 +849,9 @@ const CreateSchemaStructure = () => {
               <button
                 className="font-md w-20 rounded-lg border-2 border-gray-900 bg-red-600 px-2 py-1.5 text-white hover:bg-red-700 disabled:bg-gray-400"
                 disabled={isDeleting}
-                onClick={() => handleDeleteQuestion(folder, level, parentFolderId)}
+                onClick={() =>
+                  handleDeleteQuestion(folder, level, parentFolderId)
+                }
               >
                 {isDeleting ? "Deleting..." : "Delete"}
               </button>
@@ -769,9 +861,14 @@ const CreateSchemaStructure = () => {
           {/* NEW: Show sub-question marks summary for parent questions */}
           {showSubQuestionMarksInfo && (
             <div className="ml-12 mt-2 flex items-center gap-4 text-sm">
-              <span className={`font-medium ${remainingSubMarks < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                Sub-questions: {subQuestionsTotal}/{displayData[0]?.maxMarks || 0} marks used
-                {remainingSubMarks < 0 && ' ⚠️ EXCEEDED!'}
+              <span
+                className={`font-medium ${
+                  remainingSubMarks < 0 ? "text-red-600" : "text-green-600"
+                }`}
+              >
+                Sub-questions: {subQuestionsTotal}/
+                {displayData[0]?.maxMarks || 0} marks used
+                {remainingSubMarks < 0 && " ⚠️ EXCEEDED!"}
               </span>
             </div>
           )}
@@ -782,7 +879,9 @@ const CreateSchemaStructure = () => {
                 No. of Sub-Questions:
               </label>
               <input
-                key={`${folderId}-numberOfSubQuestions-${displayData[0]?._id || 'new'}`}
+                key={`${folderId}-numberOfSubQuestions-${
+                  displayData[0]?._id || "new"
+                }`}
                 onChange={(e) => {
                   handleMarkChange(
                     `${folder.id}-numberOfSubQuestions`,
@@ -797,7 +896,9 @@ const CreateSchemaStructure = () => {
                 No. of compulsory Sub-Questions
               </label>
               <input
-                key={`${folderId}-compulsorySubQuestions-${displayData[0]?._id || 'new'}`}
+                key={`${folderId}-compulsorySubQuestions-${
+                  displayData[0]?._id || "new"
+                }`}
                 onChange={(e) => {
                   handleMarkChange(
                     `${folder.id}-compulsorySubQuestions`,
@@ -813,7 +914,12 @@ const CreateSchemaStructure = () => {
         </div>
 
         {folder.children?.map((child, index) =>
-          renderFolder(child, level + 1, index === folder?.children?.length - 1, level === 0 ? folder.id : parentFolderId)
+          renderFolder(
+            child,
+            level + 1,
+            index === folder?.children?.length - 1,
+            level === 0 ? folder.id : parentFolderId
+          )
         )}
       </div>
     );

@@ -80,7 +80,14 @@ const SelectCoordinates = () => {
                 },
               }
             );
-            setSavedQuestionData(responseData?.data?.data || []);
+            console.log(
+              ...responseData?.data?.data,
+              ...responseData?.data?.subQuestionsMap
+            );
+            setSavedQuestionData([
+              ...(responseData?.data?.data || []),
+              ...(responseData?.data?.subQuestionsMap || []),
+            ]);
           } catch (error) {
             console.error("Error fetching schema data:", error);
             toast.error(error.response.data.message);
@@ -137,8 +144,8 @@ const SelectCoordinates = () => {
       ...prev,
       { questionId: formData.questionId, temporary: true },
     ]);
-
     try {
+      console.log(formData);
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/api/coordinates/createcoordinateallocation`,
         formData,
@@ -169,6 +176,7 @@ const SelectCoordinates = () => {
       toast.success("Coordinates added successfully");
     } catch (error) {
       // Rollback optimistic update if there's an error
+      console.log(formData);
       setQuestionDone((prev) =>
         prev.filter((item) => item.questionId !== formData.questionId)
       );
@@ -288,14 +296,22 @@ const SelectCoordinates = () => {
   // };
 
   const handleSelectCoordinates = async (folder) => {
+    console.log(folder.id);
+    console.log(savedQuestionData);
     setFolderIdQuestion(folder.id); // Set the folder ID
     setShowImageModal(true); // Show the modal
     setQuestionId(
       savedQuestionData.filter(
         (savedQuestion) =>
-          parseInt(savedQuestion.questionsName) === folder.id || undefined
+          String(savedQuestion.questionsName) === String(folder.id )|| undefined
       )
     );
+    // console.log(
+    //   savedQuestionData.filter(
+    //     (savedQuestion) =>
+    //       savedQuestion.questionsName === folder.id || undefined
+    //   )
+    // );
     setFormData((prevFormData) => ({
       ...prevFormData,
       questionImages: [],
@@ -536,25 +552,29 @@ const SelectCoordinates = () => {
               Sub Questions
             </label>
 
-            <button
-              className={`font-md w-28 rounded-lg border-2 border-gray-900 bg-blue-800 py-1.5 text-white`}
-              disabled={isSaving}
-              onClick={() => handleSelectCoordinates(folder)}
-            >
-              {isAvailable ? "Update" : "Questions"}
-            </button>
+            {currentQ[0]?.isSubQuestion ? null : (
+              <button
+                className={`font-md w-28 rounded-lg border-2 border-gray-900 bg-blue-800 py-1.5 text-white`}
+                disabled={isSaving}
+                onClick={() => handleSelectCoordinates(folder)}
+              >
+                {isAvailable ? "Update" : "Questions"}
+              </button>
+            )}
 
-            <button
-              className={`font-md w-24 rounded-lg py-1.5 text-white ${
-                !isAvailable
-                  ? "cursor-not-allowed bg-green-400"
-                  : "bg-green-600 hover:bg-green-700"
-              }`}
-              onClick={() => handleAllSelectedImage(folder)}
-              disabled={!isAvailable}
-            >
-              View
-            </button>
+            {currentQ[0]?.isSubQuestion ? null : (
+              <button
+                className={`font-md w-24 rounded-lg py-1.5 text-white ${
+                  !isAvailable
+                    ? "cursor-not-allowed bg-green-400"
+                    : "bg-green-600 hover:bg-green-700"
+                }`}
+                onClick={() => handleAllSelectedImage(folder)}
+                disabled={!isAvailable}
+              >
+                View
+              </button>
+            )}
           </div>
 
           {/* Sub Questions Input Fields */}
