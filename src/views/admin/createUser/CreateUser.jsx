@@ -520,7 +520,7 @@ const CreateUser = () => {
                     type={visibility ? "text" : "password"}
                     id="Password"
                     name="password"
-                    placeholder="Enter Password"
+                    placeholder="Enter 8 Digit Password"
                     className="mt-1 w-full rounded-md border border-gray-300 bg-gray-50 p-1 text-gray-700 focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-2"
                     //                     className="mt-1 w-full rounded-md border-gray-300 bg-gray-50 p-1 text-gray-700 focus:border-blue-500 focus:ring focus:ring-blue-500 dark:bg-navy-900 dark:text-white sm:p-2"
 
@@ -557,7 +557,7 @@ const CreateUser = () => {
                     type={visibility ? "text" : "password"}
                     id="PasswordConfirmation"
                     name="password_confirmation"
-                    placeholder="Confirm Password"
+                    placeholder="Enter 8 Digit Password"
                     className="mt-1 w-full rounded-md border border-gray-300 bg-gray-50 p-1 text-gray-700 focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-2"
                     //                     className="mt-1 w-full rounded-md border-gray-300 bg-gray-50 p-1 text-gray-700 focus:border-blue-500 focus:ring focus:ring-blue-500 dark:bg-navy-900 dark:text-white sm:p-2"
 

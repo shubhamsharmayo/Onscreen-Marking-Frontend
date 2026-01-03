@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
+import SchemaQuestion from "../schemas/SchemaQuestion";
 
 const CreateSchemaStructure = () => {
   const [schemaData, setSchemaData] = useState(null);
@@ -12,7 +13,12 @@ const CreateSchemaStructure = () => {
   const countRef = useRef();
   const formRefs = useRef({});
   const [isSubQuestion, setIsSubQuestion] = useState(false);
+  const [createShowModal, setCreateShowModal] = useState(false);
   const [questionData, setQuestionData] = useState({});
+  const [editShowModal, setEditShowModal] = useState(false);
+  const [selectedSchema, setSelectedSchema] = useState(null);
+  const [loading, setLoading] = useState(false);
+
   const [savingStatus, setSavingStatus] = useState({});
   const [deletingStatus, setDeletingStatus] = useState({});
   const [parentId, setParentId] = useState([]);
@@ -47,6 +53,11 @@ const CreateSchemaStructure = () => {
         const data = response?.data;
 
         setSchemaData((prev) => ({ ...prev, ...data }));
+        setSelectedSchema({
+          id: data._id,
+          ...data,
+        });
+
         if (data?.totalQuestions) {
           setFolders(generateFolders(data.totalQuestions));
         }
@@ -216,7 +227,6 @@ const CreateSchemaStructure = () => {
 
       window.location.reload();
 
-
       setSavedQuestionData((prev) =>
         prev.filter((item) => item._id !== questionToDelete._id)
       );
@@ -269,6 +279,32 @@ const CreateSchemaStructure = () => {
       );
     } finally {
       setDeletingStatus((prev) => ({ ...prev, [folderId]: false }));
+    }
+  };
+
+  const handleUpdate = async (schemaId, updatedData) => {
+    try {
+      setLoading(true);
+
+      await axios.put(
+        `${process.env.REACT_APP_API_URL}/api/schemas/update/schema/${schemaId}`,
+        updatedData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      toast.success("Schema updated successfully");
+      setEditShowModal(false);
+
+      // ✅ FULL PAGE REFRESH
+      window.location.reload();
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Update failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -937,6 +973,14 @@ const CreateSchemaStructure = () => {
         <span className="cursor-pointer rounded-lg bg-green-600 p-2 text-white hover:bg-green-700">
           Marks To Allot: {remainingMarks ? remainingMarks : 0}
         </span>
+        <span>
+          <div
+            className="hover:bg-transparent inline-block cursor-pointer items-center rounded border border-indigo-600 bg-indigo-600 px-6 py-3 text-sm font-medium text-white hover:bg-indigo-700"
+            onClick={() => setEditShowModal(true)}
+          >
+            Edit Question Schema
+          </div>
+        </span>
         <span
           className="cursor-pointer rounded-lg bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
           onClick={handleFinalSubmit}
@@ -945,6 +989,14 @@ const CreateSchemaStructure = () => {
         </span>
       </div>
       {folders.map((folder) => renderFolder(folder))}
+
+      <SchemaQuestion
+        editShowModal={editShowModal}
+        setEditShowModal={setEditShowModal}
+        selectedSchema={selectedSchema}
+        handleUpdate={handleUpdate}
+        loading={loading}
+      />
     </div>
   );
 };
