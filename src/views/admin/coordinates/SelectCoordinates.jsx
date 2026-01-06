@@ -14,6 +14,7 @@ const SelectCoordinates = () => {
   const countRef = useRef(); // Ref for number of sub-questions
   const formRefs = useRef({}); // Ref object to hold form input values for each folder
   const [isSubQuestion, setIsSubQuestion] = useState(false); // Track if it's a sub-question
+  console.log(id)
   const [questionData, setQuestionData] = useState({}); // Store question data
   const [savingStatus, setSavingStatus] = useState({}); // Track saving per folder
   const [parentId, setParentId] = useState([]); // Track parent folder

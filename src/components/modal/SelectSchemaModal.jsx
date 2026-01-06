@@ -122,7 +122,7 @@ const SelectSchemaModal = ({ setShowModal, showModal, currentSubId }) => {
       toast.success("Files uploaded successfully!");
       console.log(response.data);
       navigate(
-        `/admin/schema/create/structure/coordinates/${response.data?._id}`
+        `/admin/schema/create/structure/coordinates/${response.data?.relationId}`
       );
     } catch (error) {
       if (error.name === "CanceledError") {
