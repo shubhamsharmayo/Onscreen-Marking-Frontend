@@ -7,24 +7,36 @@ const ClassModal = ({
   handleSubmit,
   formData,
   setFormData,
-  loading
+  loading,
 }) => {
-
   // Make state empty
-  useEffect(()=>{
-    if(isOpen){
+  useEffect(() => {
+    if (isOpen) {
       setFormData({
         className: "",
         classCode: "",
         duration: "",
         session: "",
         year: "",
-      })
+      });
     }
-  },[isOpen])
-  
+  }, [isOpen]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (["duration", "session", "year"].includes(name)) {
+      // Allow empty field (for backspace)
+      if (value === "") {
+        setFormData((prev) => ({ ...prev, [name]: "" }));
+        return;
+      }
+
+      // Block negative and non-numeric values
+      const numericValue = Number(value);
+      if (isNaN(numericValue) || numericValue < 0) {
+        return;
+      }
+    }
     setFormData((prevState) => ({
       ...prevState,
       [name]: value,
@@ -34,24 +46,27 @@ const ClassModal = ({
   return (
     <div>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-md transition-opacity duration-300">
-          <div className="relative w-full max-w-lg scale-95 transform rounded-lg bg-white pt-8 sm:p-8 shadow-lg transition-all duration-300 sm:scale-100 dark:bg-navy-700 dark:border dark:border-gray-400">
+        <div className="bg-black fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 backdrop-blur-md transition-opacity duration-300">
+          <div className="relative w-full max-w-lg scale-95 transform rounded-lg bg-white pt-8 shadow-lg transition-all duration-300 dark:border dark:border-gray-400 dark:bg-navy-700 sm:scale-100 sm:p-8">
             <button
               className="absolute right-2 top-2 p-4 text-2xl text-gray-700 hover:text-red-700 focus:outline-none "
               onClick={() => {
-                setIsOpen(false)
+                setIsOpen(false);
                 setFormData({
                   className: "",
                   classCode: "",
                   duration: "",
                   session: "",
                   year: "",
-                })
+                });
               }}
             >
               <GiCrossMark />
             </button>
-            <form className="space-y-4 py-6 px-4 sm:p-4" onSubmit={handleSubmit}>
+            <form
+              className="space-y-4 px-4 py-6 sm:p-4"
+              onSubmit={handleSubmit}
+            >
               <label
                 htmlFor="class"
                 className="block overflow-hidden rounded-md border border-gray-200 px-3 py-2 shadow-sm focus-within:border-indigo-600 focus-within:ring-1 focus-within:ring-indigo-600"
@@ -64,7 +79,7 @@ const ClassModal = ({
                   id="class"
                   name="className"
                   placeholder="B.Tech / B.A etc"
-                  className="focus:border-transparent mt-1 w-full border-none p-0 focus:outline-none focus:ring-0 sm:text-sm dark:bg-navy-700 dark:text-white"
+                  className="focus:border-transparent mt-1 w-full border-none p-0 focus:outline-none focus:ring-0 dark:bg-navy-700 dark:text-white sm:text-sm"
                   value={formData.className}
                   onChange={handleChange}
                 />
@@ -82,7 +97,7 @@ const ClassModal = ({
                   id="classCode"
                   name="classCode"
                   placeholder="Enter Class code"
-                  className="focus:border-transparent mt-1 w-full border-none p-0 focus:outline-none focus:ring-0 sm:text-sm dark:bg-navy-700 dark:text-white"
+                  className="focus:border-transparent mt-1 w-full border-none p-0 focus:outline-none focus:ring-0 dark:bg-navy-700 dark:text-white sm:text-sm"
                   value={formData.classCode}
                   onChange={handleChange}
                 />
@@ -101,7 +116,7 @@ const ClassModal = ({
                     id="duration"
                     name="duration"
                     placeholder="Enter duration"
-                    className="focus:border-transparent mt-1 w-full border-none p-0 focus:outline-none focus:ring-0 sm:text-sm dark:bg-navy-700 dark:text-white"
+                    className="focus:border-transparent mt-1 w-full border-none p-0 focus:outline-none focus:ring-0 dark:bg-navy-700 dark:text-white sm:text-sm"
                     value={formData.duration}
                     onChange={handleChange}
                   />
@@ -118,7 +133,7 @@ const ClassModal = ({
                     id="session"
                     name="session"
                     placeholder="Enter session"
-                    className="focus:border-transparent mt-1 w-full border-none p-0 focus:outline-none focus:ring-0 sm:text-sm dark:bg-navy-700 dark:text-white"
+                    className="focus:border-transparent mt-1 w-full border-none p-0 focus:outline-none focus:ring-0 dark:bg-navy-700 dark:text-white sm:text-sm"
                     value={formData.session}
                     onChange={handleChange}
                   />
@@ -137,7 +152,7 @@ const ClassModal = ({
                   id="year"
                   name="year"
                   placeholder="Enter year"
-                  className="focus:border-transparent mt-1 w-full border-none p-0 focus:outline-none focus:ring-0 sm:text-sm dark:bg-navy-700 dark:text-white"
+                  className="focus:border-transparent mt-1 w-full border-none p-0 focus:outline-none focus:ring-0 dark:bg-navy-700 dark:text-white sm:text-sm"
                   value={formData.year}
                   onChange={handleChange}
                 />
@@ -175,7 +190,7 @@ const ClassModal = ({
               ) : (
                 <button
                   type="submit"
-                  className="w-full rounded bg-indigo-600 p-2 text-white hover:bg-indigo-700 font-semibold"
+                  className="w-full rounded bg-indigo-600 p-2 font-semibold text-white hover:bg-indigo-700"
                   disabled={loading}
                 >
                   Submit

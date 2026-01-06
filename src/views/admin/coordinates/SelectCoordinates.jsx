@@ -296,14 +296,14 @@ const SelectCoordinates = () => {
   // };
 
   const handleSelectCoordinates = async (folder) => {
-    console.log(folder.id);
-    console.log(savedQuestionData);
+    // console.log(folder.id);
+    // console.log(savedQuestionData);
     setFolderIdQuestion(folder.id); // Set the folder ID
     setShowImageModal(true); // Show the modal
     setQuestionId(
       savedQuestionData.filter(
         (savedQuestion) =>
-          String(savedQuestion.questionsName) === String(folder.id )|| undefined
+          parseFloat(savedQuestion.questionsName) === parseFloat(folder.id) || undefined
       )
     );
     // console.log(
@@ -382,7 +382,7 @@ const SelectCoordinates = () => {
               folder.children?.length > 0
                 ? folder.children
                 : Array.from({ length: subQuestionsNumber }, (_, i) => ({
-                    id: `${folderId}-${i + 1}`,
+                    id: `${folderId}.${i + 1}`,
                     name: `Q. ${folderId}.${i + 1}`,
                     children: [],
                     showInputs: false,
@@ -403,10 +403,19 @@ const SelectCoordinates = () => {
   // console.log(getSubjectbyIdData);
 
   const handleFinalSubmitButton = async () => {
-    // if (filterOutQuestionDone.length != folders.length) {
-    //   toast.error("Please select all questions images & answers images");
-    //   return;
-    // }
+    const requiredQuestion = savedQuestionData.filter((q)=>q.isSubQuestion===false)
+
+    const allQuestionIds = requiredQuestion.map((q) => q._id);
+    const completedIds = new Set(filterOutQuestionDone.map((q) => q._id));
+
+    const allCompleted = allQuestionIds.every((id) => completedIds.has(id));
+    console.log(allQuestionIds)
+    console.log(completedIds)
+
+    if (!allCompleted) {
+      toast.error("Please select all questions images & answers images");
+      return;
+    }
     try {
       const updatedData = new FormData();
 
