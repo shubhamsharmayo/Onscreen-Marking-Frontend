@@ -412,15 +412,25 @@ const CreateSchemaStructure = () => {
       }
     }
 
-    if (maxMarks > remainingMarks + (existingQuestion?.maxMarks || 0)) {
-      toast.error("Max Marks cannot exceed remaining marks");
-      return;
+    if (level === 0) {
+      // MAIN QUESTION
+      // Only check schema remaining marks if this question does NOT have sub-questions
+      if (!folder.isSubQuestion) {
+        if (maxMarks > remainingMarks + (existingQuestion?.maxMarks || 0)) {
+          toast.error("Max Marks cannot exceed remaining marks");
+          return;
+        }
+      }
     }
 
-    if (minMarks > remainingMarks || minMarks > maxMarks)
+    const effectiveRemainingMarks =
+      remainingMarks + (existingQuestion?.maxMarks || 0);
+
+    if (minMarks > effectiveRemainingMarks || minMarks > maxMarks) {
       return toast.error(
         "Min Marks cannot be greater than remaining marks or max marks"
       );
+    }
 
     if (maxMarks % marksDifference != 0 || maxMarks < marksDifference)
       return toast.error(
@@ -689,39 +699,61 @@ const CreateSchemaStructure = () => {
     };
 
     const handleMarkChange = (inputBoxName, inputValue, event) => {
-      // ✅ Allow clearing input (backspace/delete)
+      // 1️⃣ Allow clearing
       if (inputValue === "") {
         formRefs.current[inputBoxName] = "";
         return;
       }
 
-      // ❌ Block alphabets & special characters
-      if (!/^\d+(\.\d+)?$/.test(inputValue)) {
-        return;
-      }
+      // 2️⃣ Numeric only
+      if (!/^\d+(\.\d+)?$/.test(inputValue)) return;
 
-      const allowedMax = getAllowedMaxMarks();
-      let numericValue = Number(inputValue);
-
+      const numericValue = Number(inputValue);
       if (Number.isNaN(numericValue)) return;
 
-      // Clamp max value
-      let safeValue = clampMarks(numericValue, 0, allowedMax);
+      const isSubQuestion = level > 0 && parentFolderId !== null;
 
-      // Min must not exceed Max
-      if (inputBoxName.includes("minMarks")) {
-        const currentMax =
+      let allowedMax;
+
+      // 3️⃣ Decide limit source
+      if (isSubQuestion) {
+        // 🔥 SUB-QUESTION → parent max marks
+        allowedMax =
+          formRefs.current[`${parentFolderId}-maxMarks`] ??
+          savedQuestionData.find(
+            (q) => parseInt(q.questionsName) === parentFolderId
+          )?.maxMarks ??
+          0;
+      } else if (displayData[0]?.isSubQuestion) {
+        // 🔥 PARENT QUESTION WITH SUB-QUESTIONS → its own max
+        allowedMax =
           formRefs.current[`${folderId}-maxMarks`] ??
           displayData[0]?.maxMarks ??
-          allowedMax;
-
-        safeValue = clampMarks(safeValue, 0, currentMax);
+          0;
+      } else {
+        // 🔥 NORMAL QUESTION → schema limit
+        allowedMax = getAllowedMaxMarks();
       }
 
-      // Force UI correction (important for uncontrolled input)
+      let safeValue = clampMarks(numericValue, 0, allowedMax);
+      formRefs.current[inputBoxName] = safeValue;
+
+      // 5️⃣ Min ≤ Max
+      if (inputBoxName.includes("minMarks")) {
+        const currentMax =
+          formRefs.current[inputBoxName.replace("minMarks", "maxMarks")] ??
+          allowedMax;
+
+        if (numericValue > currentMax) {
+          toast.error("Min Marks cannot be greater than Max Marks");
+          return; // ⛔ block update
+        }
+      }
+
+      // 6️⃣ Force UI correction
       if (event && numericValue !== safeValue) {
         event.target.value = safeValue;
-        toast.error(`Max Marks cannot exceed ${allowedMax}`);
+        toast.error(`Marks cannot exceed ${allowedMax}`);
       }
 
       formRefs.current[inputBoxName] = safeValue;

@@ -89,8 +89,9 @@ const QuestionDefinition = (props) => {
           return total + item.allottedMarks;
         }, 0);
         setTotalMarks(reducedArr);
+        const qID = data.marks.filter((id)=>parseFloat(id.questionsName)===currentQuestion)
          dispatch(
-          setCurrentQuestionDefinitionId(data.marks[currentQuestion - 1]._id)
+          setCurrentQuestionDefinitionId(qID._id)
         );
     console.log(data)
   })
@@ -186,7 +187,7 @@ const QuestionDefinition = (props) => {
         onClick={() => {
           setSelectedQuestion(index);
           dispatch(setCurrentQuestionDefinitionId(allQuestions[index]._id));
-          dispatch(setCurrentQuestion(index + 1));
+          dispatch(setCurrentQuestion(parseFloat(item.questionsName)));
         }}
         key={index}
       >
