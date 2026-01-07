@@ -510,7 +510,7 @@ const CreateSchemaStructure = () => {
                 const children = Array.from(
                   { length: numberOfSubQuestions },
                   (_, i) => ({
-                    id: `${folderId}-${i + 1}`,
+                    id: `${folderId}.${i + 1}`,
                     name: `Q. ${folderId}.${i + 1}`,
                     children: [],
                     showInputs: false,
@@ -564,7 +564,7 @@ const CreateSchemaStructure = () => {
                 const children = Array.from(
                   { length: numberOfSubQuestions },
                   (_, i) => ({
-                    id: `${folderId}-${i + 1}`,
+                    id: `${folderId}.${i + 1}`,
                     name: `Q. ${folderId}.${i + 1}`,
                     children: [],
                     showInputs: false,
@@ -633,7 +633,7 @@ const CreateSchemaStructure = () => {
               folder.children?.length > 0
                 ? folder.children
                 : Array.from({ length: subQuestionsNumber }, (_, i) => ({
-                    id: `${folderId}-${i + 1}`,
+                    id: `${folderId}.${i + 1}`,
                     name: `Q. ${folderId}.${i + 1}`,
                     children: [],
                     showInputs: false,
