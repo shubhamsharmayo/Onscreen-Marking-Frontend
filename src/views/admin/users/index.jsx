@@ -13,7 +13,6 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 const Index = () => {
- 
   // const [users, setUsers] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -176,7 +175,7 @@ const Index = () => {
     { field: "role", headerName: "Role", flex: 1 },
     { field: "date", headerName: "Date", flex: 1 },
     { field: "permissions", headerName: "Permissions", flex: 1 },
-    { field: "subjectName", headerName: "Subjects", flex: 1 },
+    
     { field: "maxBooklets", headerName: "Max Booklets", flex: 1 },
     {
       field: "edit",

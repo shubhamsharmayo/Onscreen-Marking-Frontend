@@ -224,7 +224,7 @@ const token = localStorage.getItem("token")
 
   const columns = [
     { field: "folderName", headerName: "Course Code", width: 120 },
-    { field: "description", headerName: "Description", width: 150 },
+    { field: "className", headerName: "Class", width: 150 },
     { field: "scannedFolder", headerName: "Scanned Data", width: 150 },
     { field: "unAllocated", headerName: "Unallocated", width: 150 },
     { field: "allocated", headerName: "Allocated", width: 110 },
