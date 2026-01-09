@@ -14,6 +14,7 @@ import {
   setCurrentQuestionDefinitionId,
   setIsLoadingTrue,
   setIsLoadingFalse,
+  setCurrentSubQuestionParentId,
 } from "store/evaluatorSlice";
 import socket from "../../services/socket/socket";
 import { changeCurrentIndexById } from "components/Helper/Evaluator/EvalRoute";
@@ -39,6 +40,7 @@ const QuestionDefinition = (props) => {
   const currentQuestion = evaluatorState.currentQuestion;
   const currentAnswerPdfImageId = evaluatorState.currentAnswerPdfImageId;
   const currentBookletId = evaluatorState.currentBookletId;
+  const currentParentId = evaluatorState.currentSubQuestionParentId;
   const marksStore = useSelector((state) => state.annotation.marksStore);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -48,14 +50,16 @@ const QuestionDefinition = (props) => {
   //   }
   //   console.log(allQuestions[currentQuestion]._id);
   // }, [allQuestions, currentQuestion]);
+
+  console.log(currentParentId)
   useEffect(() => {
-    const fetchQuestionDetails = async (answerPdfDetails,userId) => {
+    const fetchQuestionDetails = async (answerPdfDetails, userId) => {
       console.log(userId);
       try {
         socket.emit("get-questions", {
           taskId: answerPdfDetails.taskId,
           answerPdfId: answerPdfDetails._id,
-          userId:userId
+          userId: userId,
         });
         // const response2 = await getQuestionSchemaById(
         //   answerPdfDetails.taskId,
@@ -78,23 +82,22 @@ const QuestionDefinition = (props) => {
     };
 
     if (props.answerPdfDetails) {
-      fetchQuestionDetails(props.answerPdfDetails,props.taskdetails.userId);
+      fetchQuestionDetails(props.answerPdfDetails, props.taskdetails.userId);
     }
   }, [props.answerPdfDetails, marked, evaluatorState.rerender]);
 
-
-  socket.on("questions-data",(data)=>{
-    setAllQuestions(sortByQuestionsName(data.marks))
+  socket.on("questions-data", (data) => {
+    setAllQuestions(sortByQuestionsName(data.marks));
     const reducedArr = data.marks.reduce((total, item) => {
-          return total + item.allottedMarks;
-        }, 0);
-        setTotalMarks(reducedArr);
-        const qID = data.marks.filter((id)=>parseFloat(id.questionsName)===currentQuestion)
-         dispatch(
-          setCurrentQuestionDefinitionId(qID._id)
-        );
-    console.log(data)
-  })
+      return total + item.allottedMarks;
+    }, 0);
+    setTotalMarks(reducedArr);
+    const qID = data.marks.filter(
+      (id) => parseFloat(id.questionsName) === currentQuestion
+    );
+    dispatch(setCurrentQuestionDefinitionId(qID._id));
+    console.log(qID);
+  });
 
   const handleRotate = (index) => {
     setRotationStates({
@@ -122,7 +125,7 @@ const QuestionDefinition = (props) => {
       dispatch(setCurrentMarkDetails(body));
       dispatch(setCurrentIcon("/check.png"));
       dispatch(setIsDraggingIcon(true));
-      dispatch(setCurrentQuestion(index + 1));
+      dispatch(setCurrentQuestion(parseFloat(item.questionsName)));
       // const response = await postMarkById(body);
       setMarked((prev) => !prev);
       setRotationStates({
@@ -170,7 +173,7 @@ const QuestionDefinition = (props) => {
         dispatch(setCurrentMarkDetails(body));
         dispatch(setCurrentIcon("/close.png"));
         dispatch(setIsDraggingIcon(true));
-        dispatch(setCurrentQuestion(index + 1));
+        dispatch(setCurrentQuestion(parseFloat(item.questionsName)));
 
         setMarked((prev) => !prev);
         setRotationStates({
@@ -188,6 +191,9 @@ const QuestionDefinition = (props) => {
           setSelectedQuestion(index);
           dispatch(setCurrentQuestionDefinitionId(allQuestions[index]._id));
           dispatch(setCurrentQuestion(parseFloat(item.questionsName)));
+          dispatch(
+            setCurrentSubQuestionParentId(allQuestions[index].parentQuestionId)
+          );
         }}
         key={index}
       >
@@ -199,7 +205,7 @@ const QuestionDefinition = (props) => {
         </th>
         <td className=" px-2 py-3">
           <div className="relative flex flex-row rounded-lg border  px-1 py-1">
-            <IconButton
+            {!item.isSubQuestion&&<IconButton
               color={isRotated ? "warning" : "primary"}
               aria-label="add icon"
               onClick={() => handleRotate(index)}
@@ -209,14 +215,14 @@ const QuestionDefinition = (props) => {
               }}
             >
               <AddCircleOutlineIcon className="" />
-            </IconButton>
+            </IconButton>}
             <input
               className="w-full rounded-lg border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={allotedMarks}
               type="text"
             />
             {/* Modal */}
-            {isRotated && (
+            {isRotated && !item.isSubQuestion &&(
               <div
                 className="absolute left--2 top-12 z-10 ml-2 w-24  rounded-md border border-gray-300 bg-white  shadow-lg"
                 style={{
@@ -299,7 +305,10 @@ const QuestionDefinition = (props) => {
   const submitHandler = async () => {
     try {
       // setIsloading(true);
-      const res = await submitBookletById(currentBookletId,props.taskdetails.userId);
+      const res = await submitBookletById(
+        currentBookletId,
+        props.taskdetails.userId
+      );
 
       if (res.success) {
         toast.success(res.message);

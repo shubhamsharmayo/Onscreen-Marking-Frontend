@@ -17,14 +17,14 @@ const ImageModal = ({
   formData,
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(1);
-  const [questionsPdfPath, setQuestionsPdfPath] = useState(undefined);
+  const [questionsPdfPath, setQuestionsPdfPath] = useState(null);
   const [answersPdfPath, setAnswersPdfPath] = useState(undefined);
   const [countQuestions, setCountQuestions] = useState(0);
   const [countAnswers, setCountAnswers] = useState(0);
   const [checkboxStatus, setCheckboxStatus] = useState({}); // Object to hold checkbox status for each image
   const { id } = useParams();
 
-  console.log(questionId);
+  // console.log(questionId);
 
   const nextImage = () => {
     if (showAnswerModel) {
@@ -61,6 +61,7 @@ const ImageModal = ({
             },
           }
         );
+        console.log(response?.data)
 
         setQuestionsPdfPath(response?.data?.questionPdfPath);
         setCountQuestions(response?.data?.countOfQuestionImages);
@@ -210,6 +211,10 @@ const ImageModal = ({
       }));
     }
   };
+
+  if (!questionsPdfPath) {
+  return <div>Loading...</div>;
+}
 
   return (
     <div>
