@@ -206,11 +206,11 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="sm:text-md w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2"
+              className="sm:text-md w box-border w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:px-4 sm:py-2"
             />
           </div>
           {/* Total Questions */}
-          <div className="flex flex-col justify-between sm:flex-row">
+          <div className="flex flex-col justify-between space-x-3 sm:flex-row">
             <div className="mb-2 sm:mb-0">
               <label
                 className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg"
@@ -224,7 +224,7 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
                 name="totalQuestions"
                 value={formData.totalQuestions}
                 onChange={handleChange}
-                className="sm:text-md w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2"
+                className="sm:text-md box-border  w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:px-4 sm:py-2"
               />
             </div>
             <div className="mb-2 sm:mb-0">
@@ -240,11 +240,11 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
                 name="maxMarks"
                 value={formData.maxMarks}
                 onChange={handleChange}
-                className="sm:text-md w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2"
+                className="sm:text-md box-border  w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:px-4 sm:py-2"
               />
             </div>
           </div>
-          <div className="flex flex-col justify-between sm:flex-row">
+          <div className="flex flex-col justify-between space-x-3 sm:flex-row">
             <div className="mb-2 sm:mb-0">
               <label
                 className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg"
@@ -258,7 +258,7 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
                 name="minTime"
                 value={formData.minTime}
                 onChange={handleChange}
-                className="sm:text-md w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2"
+                className="sm:text-md box-border  w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:px-4 sm:py-2"
               />
             </div>
             <div className="mb-2 sm:mb-0">
@@ -274,7 +274,7 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
                 name="maxTime"
                 value={formData.maxTime}
                 onChange={handleChange}
-                className="sm:text-md w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2"
+                className="sm:text-md box-border  w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:px-4 sm:py-2"
               />
             </div>
           </div>
@@ -294,7 +294,7 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
                 name="numberOfPage"
                 value={formData.numberOfPage}
                 onChange={handleChange}
-                className="sm:text-md w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2"
+                className="sm:text-md box-border w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:px-4 sm:py-2"
               />
             </div>
 
@@ -321,7 +321,7 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
 
                   setSelectedHiddenPage(""); // ✅ reset dropdown
                 }}
-                className="sm:text-md max-h-10 w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2"
+                className="sm:text-md box-border max-h-10  w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:px-4 sm:py-2"
               >
                 <option value="" className="px-2 text-sm text-gray-400">
                   Select Hidden Pages
@@ -351,7 +351,7 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
             </div>
           )}
           {/* Min Marks */}
-          <div className="flex flex-col justify-between sm:flex-row">
+          <div className="flex flex-col justify-between space-x-3 sm:flex-row">
             <div className="mb-2 sm:mb-0">
               <label
                 className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg"
@@ -365,7 +365,7 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
                 name="minMarks"
                 value={formData.minMarks}
                 onChange={handleChange}
-                className="sm:text-md w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2"
+                className="sm:text-md box-border  w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:px-4 sm:py-2"
               />
             </div>
             <div className="mb-2 sm:mb-0">
@@ -381,7 +381,7 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
                 name="compulsoryQuestions"
                 value={formData.compulsoryQuestions}
                 onChange={handleChange}
-                className="sm:text-md w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2"
+                className="sm:text-md box-border  w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:px-4 sm:py-2"
               />
             </div>
           </div>

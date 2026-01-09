@@ -11,7 +11,7 @@ const CourseCard = ({
   setCurrentSubject,
 }) => {
   const { id } = useParams();
-  const [classCourse, setClassCourse] = useState([]);
+  const [classCourse, setClassCourse] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [currentSubId, currentSetSubId] = useState("");
 
@@ -36,17 +36,22 @@ const CourseCard = ({
     fetchedData();
   }, []);
 
+  const trimToChars = (text = "", limit = 10) => {
+    if (!text) return "";
+    return text.length > limit ? text.slice(0, limit) + "..." : text;
+  };
+
   const navigate = useNavigate();
 
   return (
     <div>
       <div
         key={subject?._id}
-        className="block rounded-lg bg-white p-4 shadow-sm shadow-indigo-50 transition duration-300 ease-in-out hover:-translate-y-1 hover:scale-100 hover:shadow-lg dark:border-blue-300 dark:bg-navy-700 dark:text-white dark:shadow-gray-800 dark:hover:border"
+        className="... block max-w-full overflow-hidden rounded-lg bg-white p-4 shadow-sm shadow-indigo-50 transition"
       >
         <div className="mt-2">
           <dl>
-            <div className="mt-2 text-lg font-medium">
+            <div className="mt-2 line-clamp-2 max-w-full break-words text-lg font-medium">
               {subject.name} ({subject?.code})
             </div>
           </dl>
@@ -67,17 +72,35 @@ const CourseCard = ({
                   d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"
                 />
               </svg>
-              <div className="flex gap-5 flex-wrap">
+              <div className="flex max-w-full flex-col gap-2 sm:flex-row sm:gap-x-6">
                 <div className="mt-1.5 sm:mt-0">
-                  <p className="text-lg text-gray-500">
-                    Schema Name : {subject?.schemaName}
-                  </p>
+                  <div className="group relative max-w-full">
+                    <p className="max-w-[240px] break-words text-base text-gray-500 sm:max-w-none">
+                      <span className="font-medium">Schema Name:</span>{" "}
+                      <span className="cursor-pointer">
+                        {trimToChars(subject?.name, 10)}{" "}
+                        {trimToChars(subject?.code, 5)}
+                      </span>
+                      {/* Hover tooltip */}
+                      <div className="bg-black pointer-events-none absolute left-0 top-full z-30 hidden max-w-xs rounded-md px-2 py-1 text-xs text-white group-hover:block">
+                        {subject?.name}
+                      </div>
+                    </p>
+                  </div>
                 </div>
-                
+
                 <div className="mt-1.5 sm:mt-0">
-                  <p className="text-lg text-gray-500">
-                    Class : {classCourse?.className}
-                  </p>
+                  <div className="group relative max-w-full">
+                    <p className="max-w-[240px] break-words text-base text-gray-500 sm:max-w-none">
+                      <span className="font-medium">Class:</span>{" "}
+                      <span className="inline sm:hidden">
+                        {trimToChars(classCourse?.className, 10)}
+                      </span>
+                      <span className="hidden sm:inline">
+                        {classCourse?.className}
+                      </span>
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -95,7 +118,7 @@ const CourseCard = ({
               Edit
             </button>
 
-           <button
+            <button
               className="inline-block rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-colors duration-200 hover:bg-purple-100 hover:text-purple-600 focus:relative focus:outline-none focus:ring-purple-300 dark:border-purple-500 dark:text-gray-400 dark:hover:bg-purple-800 dark:hover:text-purple-100 dark:focus:ring-purple-700"
               onClick={() => {
                 currentSetSubId(subject?._id);

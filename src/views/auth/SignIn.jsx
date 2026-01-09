@@ -88,6 +88,96 @@ export function SignIn() {
     }
   };
 
+  const sendForgotOtp = async () => {
+    if (!user.email) {
+      toast.error("Email is required");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/auth/send-otp`,
+        { email: user.email }
+      );
+
+      toast.success(res.data.message || "OTP sent successfully");
+      setOtp(true); // show OTP input
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to send OTP");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyForgotOtp = async () => {
+    const otpValue = otpdata.join("");
+
+    if (otpValue.length !== 6) {
+      toast.error("Enter valid 6-digit OTP");
+      return;
+    }
+
+    try {
+      setVerify(true);
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/auth/verify-otp`,
+        {
+          email: user.email,
+          otp: otpValue,
+        }
+      );
+
+      toast.success(res.data.message || "OTP verified successfully");
+      setOpen(true); // open reset password modal
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Invalid OTP");
+    } finally {
+      setVerify(false);
+    }
+  };
+
+  const resetPassword = async () => {
+    if (!newPassword || !confirmPassword) {
+      toast.error("All fields are required");
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      toast.error("Password must be at least 8 characters");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/auth/reset-password`,
+        {
+          email: user.email,
+          password: newPassword,
+          confirmPassword,
+        }
+      );
+
+      toast.success(res.data.message || "Password reset successfully");
+
+      // cleanup + redirect
+      setOpen(false);
+      setForgotPassword(false);
+      setOtp(false);
+      setUser({ email: "", password: "", otp: "" });
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Reset failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Helper function to handle input changes
   const handleChange = (value, index) => {
     if (/^\d?$/.test(value)) {
@@ -139,50 +229,50 @@ export function SignIn() {
     }
   };
 
-  const updatePassword = async () => {
-    setLoading(true);
-    const userId = localStorage.getItem("userId");
+  // const updatePassword = async () => {
+  //   setLoading(true);
+  //   const userId = localStorage.getItem("userId");
 
-    if (newPassword.length < 8) {
-      toast.error("Password must be at least 8 characters");
-      return;
-    }
+  //   if (newPassword.length < 8) {
+  //     toast.error("Password must be at least 8 characters");
+  //     return;
+  //   }
 
-    if (!newPassword || !confirmPassword) {
-      toast.error("Please enter new password and confirm password");
-      return;
-    }
+  //   if (!newPassword || !confirmPassword) {
+  //     toast.error("Please enter new password and confirm password");
+  //     return;
+  //   }
 
-    if (newPassword !== confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
+  //   if (newPassword !== confirmPassword) {
+  //     toast.error("Passwords do not match");
+  //     return;
+  //   }
 
-    try {
-      const response = await axios.put(
-        `${process.env.REACT_APP_API_URL}/api/auth/forgotpassword`,
-        { userId, newPassword }
-      );
-      toast.success(response?.data?.message);
-      if (localStorage.getItem("token")) localStorage.removeItem("token");
-      localStorage.setItem("token", response?.data?.token);
-    } catch (error) {
-      toast.error(error?.response?.data?.message);
-      console.log(error);
-    } finally {
-      setLoading(false);
-      setForgotPassword(false);
-      setOpen(false);
-      setConfirmPassword("");
-      setNewPassword("");
-      setUser({
-        email: "",
-        password: "",
-        type: "",
-        otp: "",
-      });
-    }
-  };
+  //   try {
+  //     const response = await axios.put(
+  //       `${process.env.REACT_APP_API_URL}/api/auth/forgotpassword`,
+  //       { userId, newPassword }
+  //     );
+  //     toast.success(response?.data?.message);
+  //     if (localStorage.getItem("token")) localStorage.removeItem("token");
+  //     localStorage.setItem("token", response?.data?.token);
+  //   } catch (error) {
+  //     toast.error(error?.response?.data?.message);
+  //     console.log(error);
+  //   } finally {
+  //     setLoading(false);
+  //     setForgotPassword(false);
+  //     setOpen(false);
+  //     setConfirmPassword("");
+  //     setNewPassword("");
+  //     setUser({
+  //       email: "",
+  //       password: "",
+  //       type: "",
+  //       otp: "",
+  //     });
+  //   }
+  // };
 
   return (
     <div className="flex h-screen w-full items-center justify-center">
@@ -241,7 +331,11 @@ export function SignIn() {
                     className={`hover:bg-transparent inline-block h-10 w-32 rounded-md border border-indigo-600 bg-indigo-600 text-sm font-medium text-white transition hover:bg-indigo-700 hover:text-white ${
                       loading ? "cursor-not-allowed" : ""
                     }`}
+                    type="button"
                     disabled={loading}
+                    onClick={
+                      forgotPassword ? sendForgotOtp : handleSubmitOtpPassword
+                    }
                   >
                     {loading ? (
                       <div
@@ -281,7 +375,7 @@ export function SignIn() {
               <div className="col-span-6">
                 <label
                   htmlFor="otp"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="mb-1 block text-sm font-medium text-gray-700"
                 >
                   OTP
                 </label>
@@ -308,7 +402,7 @@ export function SignIn() {
                       key={index}
                       type="text"
                       maxLength={1}
-                      className="bg-transparent focus:ring-sky-500 focus:border-sky-500 w-10 sm:w-12 rounded-md border border-gray-500 px-2 py-2 text-center text-sm transition duration-300 placeholder:text-gray-700 focus:border-indigo-500 focus:outline-none focus:ring-2"
+                      className="bg-transparent focus:ring-sky-500 focus:border-sky-500 w-10 rounded-md border border-gray-500 px-2 py-2 text-center text-sm transition duration-300 placeholder:text-gray-700 focus:border-indigo-500 focus:outline-none focus:ring-2 sm:w-12"
                       value={digit}
                       onChange={(e) => handleChange(e.target.value, index)}
                       onKeyUp={(e) => handleKeyUp(e, index)}
@@ -322,7 +416,7 @@ export function SignIn() {
                   className={`hover:bg-transparent hover:bg-bulue-700 inline-block h-10 rounded-md border border-indigo-600 bg-indigo-600 text-sm font-medium text-white transition hover:bg-indigo-700 hover:text-white ${
                     forgotPassword || otp ? "w-full" : "sm:w-2/3"
                   } `}
-                  onClick={verifyOTP}
+                  onClick={forgotPassword ? verifyForgotOtp : verifyOTP}
                   type="button"
                   disabled={verify}
                 >
@@ -354,6 +448,8 @@ export function SignIn() {
                       </svg>
                       Verifying...
                     </div>
+                  ) : forgotPassword ? (
+                    "Verify OTP"
                   ) : (
                     "Login with OTP"
                   )}
@@ -477,12 +573,14 @@ export function SignIn() {
                   </p>
                   <p className="text-sm text-gray-500">
                     <button
+                      type="button"
                       className={`rounded-md p-3 ${
                         loading ? "text-indigo-400" : "text-indigo-600"
                       }`}
                       onClick={() => {
-                        setForgotPassword(!forgotPassword);
-                        setOtp(!otp);
+                        setForgotPassword(true);
+                        setOtp(true);
+                        setOtpsdata(["", "", "", "", "", ""]);
                       }}
                       disabled={loading}
                     >
@@ -499,12 +597,11 @@ export function SignIn() {
         <ForgotPassword
           open={open}
           setOpen={setOpen}
-          setNewPassword={setNewPassword}
-          updatePassword={updatePassword}
-          setConfirmPassword={setConfirmPassword}
           newPassword={newPassword}
-          setUser={setUser}
           confirmPassword={confirmPassword}
+          setNewPassword={setNewPassword}
+          setConfirmPassword={setConfirmPassword}
+          updatePassword={resetPassword}
         />
       </main>
     </div>
