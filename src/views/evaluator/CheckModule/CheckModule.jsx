@@ -49,7 +49,7 @@ const CheckModule = () => {
 
   const evaluatorState = useSelector((state) => state.evaluator);
   const currentIndex = evaluatorState.currentIndex;
-  console.log(currentIndex);
+  // console.log(currentIndex);
   const taskDetails = evaluatorState?.currentTaskDetails;
   const currentBookletIndex = evaluatorState.currentBookletIndex;
   const currentAnswerPdfId = evaluatorState.currentAnswerPdfId;
@@ -88,7 +88,7 @@ const CheckModule = () => {
       ) {
         remainingSecondsRef.current = Math.max(
           0,
-          remainingSecondsRef.current - 1
+          remainingSecondsRef.current + 1
         );
         setRemainingTimeStr(formatSeconds(remainingSecondsRef.current));
         settimeInSeconds(remainingSecondsRef.current);
@@ -130,10 +130,10 @@ const CheckModule = () => {
     newSocket.on("start-timer-update", (data) => {
       console.log("⏱ Received start-timer-update:", data);
 
-      remainingSecondsRef.current = data.remainingTime * 60;
+      remainingSecondsRef.current = data.remainingTime*60;
 
       isPausedRef.current = false;
-
+      // console.log(data)
       // Start ticking as soon as we get timer
       startLocalTick();
     });
@@ -160,11 +160,11 @@ const CheckModule = () => {
           remainingTime,
         });
 
-        // console.log("📤 Sent timer update:", {
-        //   taskId,
-        //   answerPdfId,
-        //   remainingTime,
-        // });
+        console.log("📤 Sent timer update:", {
+          taskId,
+          answerPdfId,
+          remainingTime,
+        });
       }
     }, 5000);
 
@@ -246,24 +246,24 @@ const CheckModule = () => {
     "/pageicons/green.png",
     "/pageicons/yellow.png",
   ];
- const Imgicons = answerImageDetails.map((item, index) => {
-  const isActive =
-    String(item.name.split("_")[1].split(".")[0]) ===
-    String(evaluatorState.currentIndex);
+  const Imgicons = answerImageDetails.map((item, index) => {
+    const isActive =
+      String(item.name.split("_")[1].split(".")[0]) ===
+      String(evaluatorState.currentIndex);
 
-  const statusBgMap = {
-    notVisited: "bg-red-200",
-    visited: "bg-yellow-200",
-    submitted: "bg-green-200",
-  };
+    const statusBgMap = {
+      notVisited: "bg-red-200",
+      visited: "bg-yellow-200",
+      submitted: "bg-green-200",
+    };
 
-  const bgClass = statusBgMap[item.status] || "bg-gray-200";
+    const bgClass = statusBgMap[item.status] || "bg-gray-200";
 
-  return (
-    <div
-      key={index}
-      onClick={() => handleUpdateImageDetail(item, index)}
-      className={`
+    return (
+      <div
+        key={index}
+        onClick={() => handleUpdateImageDetail(item, index)}
+        className={`
         my-1 flex h-[8rem] w-[5rem] cursor-pointer
         flex-wrap items-center justify-center rounded
         py-2 text-center transition-colors duration-200
@@ -271,11 +271,11 @@ const CheckModule = () => {
         ${bgClass}
         ${isActive ? "border-[4px] border-gray-800" : "border border-gray-300"}
       `}
-    >
-      <div>{index + 1}</div>
-    </div>
-  );
-});
+      >
+        <div>{index + 1}</div>
+      </div>
+    );
+  });
 
   const handleUpdateImageDetail = async (item, index) => {
     // console.log(item, currentIndex);

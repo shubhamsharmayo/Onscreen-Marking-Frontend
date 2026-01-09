@@ -296,6 +296,8 @@ const SelectCoordinates = () => {
   //   );
   // };
 
+  console.log(savedQuestionData)
+
   const handleSelectCoordinates = async (folder) => {
     // console.log(folder.id);
     // console.log(savedQuestionData);

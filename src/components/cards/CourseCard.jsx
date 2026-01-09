@@ -124,7 +124,7 @@ const CourseCard = ({
                 currentSetSubId(subject?._id);
                 setShowModal(true);
               }}
-              disabled={subject?.flag}
+              // disabled={subject?.flag}
             >
               Select Schema
             </button>
@@ -155,6 +155,7 @@ const CourseCard = ({
         setShowModal={setShowModal}
         showModal={showModal}
         currentSubId={currentSubId}
+        subject={subject}
       />
     </div>
   );

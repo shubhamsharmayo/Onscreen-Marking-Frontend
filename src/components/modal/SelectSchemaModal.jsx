@@ -10,7 +10,12 @@ import { GiCrossMark } from "react-icons/gi";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
-const SelectSchemaModal = ({ setShowModal, showModal, currentSubId }) => {
+const SelectSchemaModal = ({
+  setShowModal,
+  showModal,
+  currentSubId,
+  subject,
+}) => {
   const [schemas, setSchemas] = useState([]); // To hold the schema data
   const [selectedSchema, setSelectedSchema] = useState(""); // To store the selected schema ID
   const [selectedSchemaData, setSelectedSchemaData] = useState(null); // To store the full selected schema
@@ -25,6 +30,8 @@ const SelectSchemaModal = ({ setShowModal, showModal, currentSubId }) => {
   const navigate = useNavigate();
   const abortControllerRef = useRef(null);
 
+  console.log(subject);
+
   // Fetch schemas on component mount
   useEffect(() => {
     const fetchSchemaData = async () => {
@@ -38,7 +45,7 @@ const SelectSchemaModal = ({ setShowModal, showModal, currentSubId }) => {
           }
         );
         setSchemas(response.data);
-        // console.log(response.data);
+        console.log(response.data);
       } catch (error) {
         console.log(error);
       }
@@ -190,11 +197,14 @@ const SelectSchemaModal = ({ setShowModal, showModal, currentSubId }) => {
           <select
             value={selectedSchema}
             onChange={(e) => setSelectedSchema(e.target.value)}
-            className="mb-5 w-full rounded-lg p-2 border border-gray-300 dark:border-gray-700 focus:border-none focus:outline-none focus:ring focus:ring-indigo-500 focus:border-indigo-500 dark:bg-navy-900 dark:text-white"
+            className="mb-5 w-full rounded-lg border border-gray-300 p-2 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white"
             required
             disabled={loading}
           >
-            <option value=" ">Select a schema</option>
+            <option value="" disabled hidden>
+              {subject?.schemaName ?? "Select a schema"}
+            </option>
+
             {schemas.map((schema) => (
               <option key={schema._id} value={schema._id}>
                 {schema.name}
@@ -247,7 +257,7 @@ const SelectSchemaModal = ({ setShowModal, showModal, currentSubId }) => {
             type="text"
             value={relationName}
             onChange={(e) => setRelationName(e.target.value)}
-            className="mb-5 w-full rounded-lg p-2 border border-gray-300 dark:border-gray-700 focus:border-none focus:outline-none focus:ring focus:ring-indigo-500 focus:border-indigo-500 dark:bg-navy-900 dark:text-white"
+            className="mb-5 w-full rounded-lg border border-gray-300 p-2 focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white"
             required
             placeholder="Enter Relation Name"
             disabled={loading}
@@ -261,32 +271,32 @@ const SelectSchemaModal = ({ setShowModal, showModal, currentSubId }) => {
           >
             {loading ? (
               <div
-              className={`flex h-full w-full items-center justify-center px-5 py-3 text-white ${
-                loading ? "bg-indigo-400" : "bg-indigo-600"
-              }`}
-            >
-              <svg
-                className="mr-2 h-5 w-5 animate-spin text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
+                className={`flex h-full w-full items-center justify-center px-5 py-3 text-white ${
+                  loading ? "bg-indigo-400" : "bg-indigo-600"
+                }`}
               >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                />
-              </svg>
-              Uploading...
-            </div>
+                <svg
+                  className="mr-2 h-5 w-5 animate-spin text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                  />
+                </svg>
+                Uploading...
+              </div>
             ) : images?.length ? (
               "Uploaded"
             ) : (
