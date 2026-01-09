@@ -93,19 +93,18 @@ const Index = () => {
       );
       setSubjects(subjects.filter((subject) => subject._id !== subjectId));
       toast.success(response.data.message);
-      setConfirmationModal(false)
+      setConfirmationModal(false);
     } catch (error) {
       console.log(error);
-    }
-    finally {
-      setSubjectId("")
+    } finally {
+      setSubjectId("");
     }
   };
 
   return (
     <div>
       <div
-        className="hover:bg-transparent mt-12 inline-block cursor-pointer rounded border border-indigo-600 bg-indigo-600 px-12 py-3 text-sm font-medium text-white hover:text-white-600 focus:outline-none focus:ring active:text-indigo-500"
+        className="hover:bg-transparent hover:text-white-600 mt-12 inline-block cursor-pointer rounded border border-indigo-600 bg-indigo-600 px-12 py-3 text-sm font-medium text-white focus:outline-none focus:ring active:text-indigo-500"
         onClick={() => setIsOpen(true)}
       >
         Create subject
@@ -130,7 +129,7 @@ const Index = () => {
         setCourses={setSubjects}
       />
 
-      <div className="grid w-full grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mt-10 gap-5">
+      <div className="mt-10 grid w-full grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {subjects.length > 0 ? (
           subjects.map((subject) => (
             <CourseCard
@@ -143,8 +142,8 @@ const Index = () => {
             />
           ))
         ) : (
-          <div className="flex flex-col items-center justify-center col-span-full mt-12">
-            <p className="text-gray-700 text-lg font-semibold">
+          <div className="col-span-full mt-12 flex flex-col items-center justify-center">
+            <p className="text-lg font-semibold text-gray-700">
               No subjects available. Create one to get started!
             </p>
           </div>
