@@ -1,180 +1,163 @@
-import React, { useState } from "react";
-import CardClasses from "components/cards/CardClasses";
-import { getAllClasses } from "../../../services/common";
-import ClassModal from "components/modal/ClassModal";
-import axios from "axios";
+import React, { useEffect, useState } from "react";
+import CourseCard from "components/cards/CourseCard";
+import CourseModal from "components/modal/CourseModal";
+import EditCourseModal from "components/modal/EditCourseModal";
 import { toast } from "react-toastify";
-import EditClassModal from "components/modal/EditClassModal";
+import axios from "axios";
 import ConfirmationModal from "components/modal/ConfirmationModal";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useParams } from "react-router-dom";
 
 const Index = () => {
-  const [currentClass, setCurrentClass] = useState(null);
+  const [subjects, setSubjects] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [isEditOpen, setEditIsOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [currentSubject, setCurrentSubject] = useState(null);
   const [confirmationModal, setConfirmationModal] = useState(false);
-  const [classId, setClassId] = useState("");
+  const [subjectId, setSubjectId] = useState("");
   const [formData, setFormData] = useState({
-    className: "",
-    classCode: "",
-    duration: "",
-    session: "",
-    year: "",
+    name: "",
+    code: "",
   });
+  const [loading, setLoading] = useState(false);
+  const { id } = useParams();
 
-  const queryClient = useQueryClient();
+  useEffect(() => {
+    const fetchedData = async () => {
+      const token = localStorage.getItem("token");
+      try {
+        const response = await axios.get(
+          `${process.env.REACT_APP_API_URL}/api/subjects/getallsubjectbasedonclass/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setSubjects(response.data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchedData();
+  }, []);
 
-  // 🧠 Fetch all classes
-  const {
-    data: classes = [],
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: ["classes"],
-    queryFn: getAllClasses,
-  });
+  const handleSubmit = async (e) => {
+    e.preventDefault(); // Prevent form submission
 
-  // 🧩 Add class mutation
-  const addClassMutation = useMutation({
-    mutationFn: async (formData) => {
+    const classData = {
+      ...formData,
+      classId: id, // Include classId from params
+    };
+
+    try {
+      setLoading(true);
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/classes/create/class`,
-        formData,
-        { headers: { Authorization: `Bearer ${token}` } }
+        `${process.env.REACT_APP_API_URL}/api/subjects/create/subject`,
+        classData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
-      return response.data;
-    },
-    onSuccess: () => {
-      toast.success("Class added successfully.");
-      queryClient.invalidateQueries({ queryKey: ["classes"] });
-      setIsOpen(false);
-      setFormData({
-        className: "",
-        classCode: "",
-        duration: "",
-        session: "",
-        year: "",
-      });
-    },
-    onError: (error) => {
-      toast.error(error.response?.data?.error || "Failed to add class");
-    },
-  });
 
-  // 🗑️ Delete class mutation
-  const deleteClassMutation = useMutation({
-    mutationFn: async (id) => {
+      setSubjects((preSubjects) => [...preSubjects, response.data]);
+
+      // Clear form data after successful submission
+      setFormData({
+        name: "",
+        code: "",
+      });
+
+      console.log(response);
+      toast.success("Course added successfully 🙂");
+      setIsOpen(false); // Close modal on success
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
       const token = localStorage.getItem("token");
       const response = await axios.delete(
-        `${process.env.REACT_APP_API_URL}/api/classes/remove/class/${id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        `${process.env.REACT_APP_API_URL}/api/subjects/remove/subject/${subjectId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
-      return response.data;
-    },
-    onSuccess: (data) => {
-      toast.success(data.message);
-      queryClient.invalidateQueries({ queryKey: ["classes"] });
+      setSubjects(subjects.filter((subject) => subject._id !== subjectId));
+      toast.success(response.data.message);
       setConfirmationModal(false);
-    },
-    onError: () => {
-      toast.error("Failed to delete class");
-    },
-  });
-
-  // 🧾 Form submission
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const { className, classCode, duration, session, year } = formData;
-
-    if (!className || !classCode || !duration || !session || !year) {
-      toast.warning("All fields are required.");
-      return;
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setSubjectId("");
     }
-
-    addClassMutation.mutate(formData);
   };
-
-  // ❌ Handle delete
-  const handleDelete = () => {
-    deleteClassMutation.mutate(classId);
-  };
-
-  if (isLoading) {
-    return <p className="mt-10 text-center text-lg">Loading classes...</p>;
-  }
-
-  if (isError) {
-    return (
-      <p className="mt-10 text-center text-lg text-red-600">
-        Failed to load classes.
-      </p>
-    );
-  }
 
   return (
     <div>
-      {/* Create Button */}
       <div
-        className="hover:text-white-600 active:text-white-500 mb-4 ml-2 mt-12 
-        inline-block cursor-pointer rounded-md border border-indigo-600 bg-indigo-600 
-        px-12 py-3 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring"
+        className="hover:bg-transparent hover:text-white-600 mt-12 inline-block cursor-pointer rounded border border-indigo-600 bg-indigo-600 px-12 py-3 text-sm font-medium text-white focus:outline-none focus:ring active:text-indigo-500"
         onClick={() => setIsOpen(true)}
       >
-        Create Class
+        Create subject
       </div>
 
-      {/* Create Modal */}
-      <ClassModal
+      <CourseModal
         setIsOpen={setIsOpen}
         isOpen={isOpen}
         handleSubmit={handleSubmit}
-        formData={formData}
         setFormData={setFormData}
-        loading={addClassMutation.isPending}
+        formData={formData}
+        loading={loading}
       />
 
-      {/* Edit Modal */}
-      <EditClassModal
+      <EditCourseModal
         isEditOpen={isEditOpen}
-        setEditIsOpen={setEditIsOpen}
-        currentClass={currentClass}
+        setIsEditOpen={setIsEditOpen}
+        currentSubject={currentSubject}
         formData={formData}
         setFormData={setFormData}
+        courses={subjects}
+        setCourses={setSubjects}
       />
 
-      {/* Class Grid */}
-      <div className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-        {classes.length > 0 ? (
-          classes.map((class_) => (
-            <CardClasses
-              key={class_._id}
-              setClassId={setClassId}
+      <div className="mt-10 grid w-full grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {subjects.length > 0 ? (
+          subjects.map((subject) => (
+            <CourseCard
+              key={subject._id}
+              subject={subject}
               setConfirmationModal={setConfirmationModal}
-              class_={class_}
-              handleDelete={handleDelete}
-              setEditIsOpen={setEditIsOpen}
-              setCurrentClass={setCurrentClass}
+              setSubjectId={setSubjectId}
+              setIsEditOpen={setIsEditOpen}
+              setCurrentSubject={setCurrentSubject}
             />
           ))
         ) : (
           <div className="col-span-full mt-12 flex flex-col items-center justify-center">
             <p className="text-lg font-semibold text-gray-700">
-              No classes available. Create one to get started!
+              No subjects available. Create one to get started!
             </p>
           </div>
         )}
       </div>
 
-      {/* Confirmation Modal */}
       <ConfirmationModal
         confirmationModal={confirmationModal}
         onSubmitHandler={handleDelete}
         setConfirmationModal={setConfirmationModal}
-        setId={setClassId}
-        heading="Confirm Class Removal"
-        message="Are you sure you want to remove this class? This will delete all associated data."
-        type="error"
+        setId={setSubjectId}
+        heading="Confirm subject Removal"
+        message="Are you sure you want to remove this subject? Please note that removing this subject will also permanently delete all associated schemas and data. This action cannot be undone."
+        type="error" // Options: 'success', 'warning', 'error'
       />
     </div>
   );
