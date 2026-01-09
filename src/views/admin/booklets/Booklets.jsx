@@ -223,22 +223,30 @@ const token = localStorage.getItem("token")
   });
 
   const columns = [
-    { field: "folderName", headerName: "Course Code", width: 120 },
-    { field: "className", headerName: "Class", width: 150 },
-    { field: "scannedFolder", headerName: "Scanned Data", width: 150 },
-    { field: "unAllocated", headerName: "Unallocated", width: 150 },
-    { field: "allocated", headerName: "Allocated", width: 110 },
-    { field: "evaluated", headerName: "Evaluated", width: 150 },
+    { field: "folderName", headerName: "Course Code", flex: 1,
+      minWidth: 1 / 11, },
+    { field: "className", headerName: "Class",  flex: 1,
+      minWidth: 1 / 11, },
+    { field: "scannedFolder", headerName: "Scanned Data",  flex: 1,
+      minWidth: 1 / 11, },
+    { field: "unAllocated", headerName: "Unallocated",  flex: 1,
+      minWidth: 1 / 11, },
+    { field: "allocated", headerName: "Allocated",  flex: 1,
+      minWidth: 1 / 11, },
+    { field: "evaluated", headerName: "Evaluated",  flex: 1,
+      minWidth: 1 / 11, },
     {
       field: "evaluation_pending",
       headerName: "Evaluation Pending",
-      width: 150,
+       flex: 1,
+      minWidth: 1 / 11,
     },
 
     {
       field: "processBooklets",
       headerName: "Process Booklets",
-      width: 150,
+       flex: 1,
+      minWidth: 1 / 11,
       renderCell: (params) => (
         <div
           className="flex cursor-pointer justify-center rounded px-3 py-2 text-center font-medium text-yellow-600 "
@@ -254,7 +262,8 @@ const token = localStorage.getItem("token")
     {
       field: "downloadbooklet",
       headerName: "Download Booklets",
-      width: 150,
+       flex: 1,
+      minWidth: 1 / 11,
       renderCell: (params) => (
         <div
           className="flex cursor-pointer justify-center rounded px-3 py-2 text-center font-medium text-yellow-600  "
@@ -270,7 +279,8 @@ const token = localStorage.getItem("token")
     {
       field: "upload",
       headerName: "Upload",
-      width: 150,
+       flex: 1,
+      minWidth: 1 / 11,
       renderCell: (params) => (
         <>
           <div
@@ -297,7 +307,8 @@ const token = localStorage.getItem("token")
      {
       field: "assignTask",
       headerName: "Assign Task",
-      width: 150,
+       flex: 1,
+      minWidth: 1 / 11,
       renderCell: (params) => (
         <div
           className="flex cursor-pointer justify-center rounded px-3 py-2 text-center font-medium text-yellow-600  "
