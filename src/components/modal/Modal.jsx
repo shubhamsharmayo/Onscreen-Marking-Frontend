@@ -14,6 +14,7 @@ const Modal = ({ user, isOpen, setIsOpen }) => {
     permissions: [],
     subjectCode: [],
     maxBooklets: "",
+    changepassword: "",
   });
 
   const [subjectDetails, setSubjectDetails] = useState([]);
@@ -32,6 +33,7 @@ const Modal = ({ user, isOpen, setIsOpen }) => {
         permissions: user.permissions || [],
         subjectCode: user.subjectCode || [],
         maxBooklets: user.maxBooklets || "",
+        changepassword: user.changepassword || "",
       });
     }
   }, [user]);
@@ -116,6 +118,11 @@ const Modal = ({ user, isOpen, setIsOpen }) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
 
+    if (formData.changepassword && formData.changepassword.length < 8) {
+      toast.error("Password must be at least 8 characters long");
+      return;
+    }
+
     try {
       setLoading(true);
       const response = await axios.put(
@@ -173,7 +180,10 @@ const Modal = ({ user, isOpen, setIsOpen }) => {
     <div>
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="bg-black absolute inset-0 bg-opacity-50 backdrop-blur-md"></div>
+          <div
+            className="bg-black absolute inset-0 bg-opacity-50 backdrop-blur-md"
+            onClick={toggleModal}
+          ></div>
           <div className="relative w-full max-w-lg scale-95 transform rounded-xl bg-white p-1 shadow-2xl transition-all duration-300 dark:bg-navy-700 sm:scale-100 sm:p-2">
             <button
               className="absolute right-4 p-2 text-2xl text-gray-700 hover:text-red-700 focus:outline-none sm:top-4"
@@ -188,7 +198,7 @@ const Modal = ({ user, isOpen, setIsOpen }) => {
               </h2>
               <div className="rounded-xl bg-gray-100 p-3 shadow-inner dark:bg-navy-800 sm:p-4">
                 <form
-                  className="space-y-0 sm:space-y-6"
+                  className="space-y-0 sm:space-y-3"
                   onSubmit={handleFormSubmit}
                 >
                   <div>
@@ -245,24 +255,43 @@ const Modal = ({ user, isOpen, setIsOpen }) => {
                     </div>
                   </div>
 
-                  <div>
-                    <label
-                      htmlFor="role"
-                      className="mt-2 block text-sm font-medium text-gray-700 dark:text-white"
-                    >
-                      Role
-                    </label>
-                    <select
-                      id="role"
-                      value={formData.role}
-                      onChange={handleInputChange}
-                      className="mt-1 w-full rounded-lg border border-gray-300 p-1 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-3"
-                    >
-                      <option value="">Select a role</option>
-                      <option value="admin">Admin</option>
-                      <option value="evaluator">Evaluator</option>
-                      <option value="moderator">Moderator</option>
-                    </select>
+                  <div className="grid grid-cols-1 gap-1 sm:grid-cols-2 sm:gap-6">
+                    <div>
+                      <label
+                        htmlFor="role"
+                        className=" block text-sm font-medium text-gray-700 dark:text-white"
+                      >
+                        Role
+                      </label>
+                      <select
+                        id="role"
+                        value={formData.role}
+                        onChange={handleInputChange}
+                        className="mt-1 w-full rounded-lg border border-gray-300 p-1 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-3"
+                      >
+                        <option value="">Select a role</option>
+                        <option value="admin">Admin</option>
+                        <option value="evaluator">Evaluator</option>
+                        <option value="moderator">Moderator</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="maxBooklets"
+                        className="block text-sm font-medium text-gray-700 dark:text-white"
+                      >
+                        Maximum Booklets
+                      </label>
+                      <input
+                        type="text"
+                        id="maxBooklets"
+                        value={formData.maxBooklets}
+                        onChange={handleInputChange}
+                        className="mt-1 w-full rounded-lg border border-gray-300 p-1 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-3"
+                        placeholder="Enter name"
+                      />
+                    </div>
                   </div>
                   {/* {console.log(formData)} */}
 
@@ -321,15 +350,16 @@ const Modal = ({ user, isOpen, setIsOpen }) => {
                       htmlFor="maxBooklets"
                       className="block text-sm font-medium text-gray-700 dark:text-white"
                     >
-                      Maximum Booklets
+                      Change Password
                     </label>
                     <input
                       type="text"
-                      id="maxBooklets"
-                      value={formData.maxBooklets}
+                      id="changepassword"
+                      value={formData.changepassword}
                       onChange={handleInputChange}
+                      minLength={8}
                       className="mt-1 w-full rounded-lg border border-gray-300 p-1 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-3"
-                      placeholder="Enter name"
+                      placeholder="Enter New Password"
                     />
                   </div>
 

@@ -46,48 +46,39 @@ const EditClassModal = ({
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!formData) {
-      toast.warning("All the fields are required.");
-      return;
-    }
+  if (
+    !formData?.className ||
+    !formData?.classCode ||
+    !formData?.duration ||
+    !formData?.session ||
+    !formData?.year
+  ) {
+    toast.warning("All the fields are required.");
+    return;
+  }
 
-    if (
-      !formData.className ||
-      !formData.classCode ||
-      !formData.duration ||
-      !formData.session ||
-      !formData.year
-    ) {
-      toast.warning("All the fields are required.");
-      return;
-    }
+  try {
+    setLoading(true);
+    const token = localStorage.getItem("token");
 
-    try {
-      setLoading(true);
-      const token = localStorage.getItem("token");
-      const response = await axios.put(
-        `${process.env.REACT_APP_API_URL}/api/classes/update/classes/${currentClass._id}`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+    const response = await axios.put(
+      `${process.env.REACT_APP_API_URL}/api/classes/update/classes/${currentClass._id}`,
+      formData,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
 
-      // Update the course in the courses state
-      const updatedClasses = classes.map((class_) => {
-        if (class_._id === response.data._id) {
-          return response.data;
-        }
-        return class_;
-      });
-      setClasses(updatedClasses);
+    // ✅ API success (200)
+    if (response.status === 200) {
+      toast.success("Classess update successfully");
+
+      // ✅ Close modal
       setEditIsOpen(false);
-      toast.success("Class updated successfully");
-      queryClient.invalidateQueries({ queryKey: ["classes"] });
+
+      // ✅ Reset form
       setFormData({
         className: "",
         classCode: "",
@@ -95,13 +86,19 @@ const EditClassModal = ({
         session: "",
         year: "",
       });
-      setEditIsOpen(false);
-    } catch (error) {
-      toast.error(error?.response?.data?.error);
-    } finally {
-      setLoading(false);
+
+      // ✅ THIS re-renders cards automatically
+      queryClient.invalidateQueries({ queryKey: ["classes"] });
     }
-  };
+  } catch (error) {
+    toast.error(
+      error?.response?.data?.error || "Failed to update class"
+    );
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div>
