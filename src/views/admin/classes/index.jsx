@@ -25,7 +25,11 @@ const Index = () => {
   const queryClient = useQueryClient();
 
   // 🧠 Fetch all classes
-  const { data: classes = [], isLoading, isError } = useQuery({
+  const {
+    data: classes = [],
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["classes"],
     queryFn: getAllClasses,
   });
@@ -112,9 +116,9 @@ const Index = () => {
     <div>
       {/* Create Button */}
       <div
-        className="hover:text-white-600 active:text-white-500 ml-2 mt-12 inline-block 
-        cursor-pointer rounded-md border border-indigo-600 bg-indigo-600 px-12 
-        py-3 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring mb-4"
+        className="hover:text-white-600 active:text-white-500 mb-4 ml-2 mt-12 
+        inline-block cursor-pointer rounded-md border border-indigo-600 bg-indigo-600 
+        px-12 py-3 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring"
         onClick={() => setIsOpen(true)}
       >
         Create Class
@@ -137,7 +141,6 @@ const Index = () => {
         currentClass={currentClass}
         formData={formData}
         setFormData={setFormData}
-        classes={classes}
       />
 
       {/* Class Grid */}

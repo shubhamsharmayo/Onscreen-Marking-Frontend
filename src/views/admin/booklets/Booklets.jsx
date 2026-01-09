@@ -31,9 +31,9 @@ const Booklets = () => {
   const [assignModel, setassignModel] = useState(false);
   const [assignTask, setAssignTask] = useState("");
   const [allUsers, setAllUsers] = useState("");
-const token = localStorage.getItem("token")
+  const token = localStorage.getItem("token");
   const fileInputRef = useRef(null);
-  console.log(currentBookletDetails)
+  console.log(currentBookletDetails);
 
   useEffect(() => {
     // Check if the `dark` mode is applied to the `html` element
@@ -170,10 +170,10 @@ const token = localStorage.getItem("token")
     files.forEach((file) => {
       formData.append("file", file);
     });
-    console.log(currentBookletDetails?.folderName)
+    console.log(currentBookletDetails?.folderName);
     // formData.append("bookletId", currentBookletDetails?._id);
-     formData.append("subjectCode", currentBookletDetails?.folderName);
-    console.log(formData)
+    formData.append("subjectCode", currentBookletDetails?.folderName);
+    console.log(formData);
     try {
       await axios.post(
         `${process.env.REACT_APP_API_URL}/api/bookletprocessing/uploadingbooklets`,
@@ -223,22 +223,38 @@ const token = localStorage.getItem("token")
   });
 
   const columns = [
-    { field: "folderName", headerName: "Course Code", width: 120 },
-    { field: "className", headerName: "Class", width: 150 },
-    { field: "scannedFolder", headerName: "Scanned Data", width: 150 },
-    { field: "unAllocated", headerName: "Unallocated", width: 150 },
-    { field: "allocated", headerName: "Allocated", width: 110 },
-    { field: "evaluated", headerName: "Evaluated", width: 150 },
+    {
+      field: "folderName",
+      headerName: "Course Code",
+      flex: 1,
+      minWidth: 1 / 11,
+    },
+    { field: "className", headerName: "Class", flex: 1, minWidth: 1 / 11 },
+    {
+      field: "scannedFolder",
+      headerName: "Scanned Data",
+      flex: 1,
+      minWidth: 1 / 11,
+    },
+    {
+      field: "unAllocated",
+      headerName: "Unallocated",
+      flex: 1,
+      minWidth: 1 / 11,
+    },
+    { field: "allocated", headerName: "Allocated", flex: 1, minWidth: 1 / 11 },
+    { field: "evaluated", headerName: "Evaluated", flex: 1, minWidth: 1 / 11 },
     {
       field: "evaluation_pending",
       headerName: "Evaluation Pending",
-      width: 150,
+      flex: 1,
+      minWidth: 1 / 11,
     },
 
     {
       field: "processBooklets",
       headerName: "Process Booklets",
-      width: 150,
+      minWidth: 1 / 11,
       renderCell: (params) => (
         <div
           className="flex cursor-pointer justify-center rounded px-3 py-2 text-center font-medium text-yellow-600 "
@@ -254,7 +270,7 @@ const token = localStorage.getItem("token")
     {
       field: "downloadbooklet",
       headerName: "Download Booklets",
-      width: 150,
+      minWidth: 1 / 11,
       renderCell: (params) => (
         <div
           className="flex cursor-pointer justify-center rounded px-3 py-2 text-center font-medium text-yellow-600  "
@@ -270,7 +286,7 @@ const token = localStorage.getItem("token")
     {
       field: "upload",
       headerName: "Upload",
-      width: 150,
+      minWidth: 1 / 11,
       renderCell: (params) => (
         <>
           <div
@@ -294,10 +310,10 @@ const token = localStorage.getItem("token")
         </>
       ),
     },
-     {
+    {
       field: "assignTask",
       headerName: "Assign Task",
-      width: 150,
+      minWidth: 1 / 11,
       renderCell: (params) => (
         <div
           className="flex cursor-pointer justify-center rounded px-3 py-2 text-center font-medium text-yellow-600  "
@@ -317,7 +333,7 @@ const token = localStorage.getItem("token")
     <div className="mt-12">
       {isDarkMode ? (
         <ThemeProvider theme={darkTheme}>
-          <div style={{ height: "600px", width: "100%" }}>
+          <div style={{ height: "600px", width: "98%" }}>
             <DataGrid
               className="dark:bg-navy-700"
               columns={columns}
@@ -359,7 +375,7 @@ const token = localStorage.getItem("token")
         </ThemeProvider>
       ) : (
         <div
-          style={{ maxHeight: "600px", width: "100%" }}
+          style={{ maxHeight: "600px", width: "95%" }}
           className="dark:bg-navy-700"
         >
           <DataGrid
