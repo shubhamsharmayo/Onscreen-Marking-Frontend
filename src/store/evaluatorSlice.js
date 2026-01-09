@@ -20,7 +20,8 @@ const initialState = {
   icons: [],
   isLoading: false,
   currentBookletId:null,
-  imageObj : null
+  imageObj : null,
+  currentSubQuestionParentId:null
 };
 
 const evaluatorSlice = createSlice({
@@ -104,6 +105,9 @@ const evaluatorSlice = createSlice({
     setImageObj: (state, action) => {
       state.imageObj = action.payload;
     },
+    setCurrentSubQuestionParentId: (state, action) => {
+      state.currentSubQuestionParentId = action.payload;
+    },
   },
 });
 
@@ -128,6 +132,7 @@ export const {
   setIsLoadingTrue,
   setIsLoadingFalse,
   setCurrentBookletId,
-  setImageObj
+  setImageObj,
+  setCurrentSubQuestionParentId
 } = evaluatorSlice.actions;
 export default evaluatorSlice.reducer;

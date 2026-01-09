@@ -36,7 +36,7 @@ import html2canvas from "html2canvas";
 import { submitImageById } from "components/Helper/Evaluator/EvalRoute";
 import useAnnotationSync from "../../hook/useAnnotationSync";
 
-const IconsData = [{ imgUrl: "/blank.jpg" },{imgUrl: "/not_attempt.png"}];
+const IconsData = [{ imgUrl: "/blank.jpg" }, { imgUrl: "/not_attempt.png" }];
 
 const preprocessImage = (canvas) => {
   const context = canvas.getContext("2d");
@@ -91,6 +91,7 @@ const ImageContainer = (props) => {
   const currentQuestionDefinitionId =
     evaluatorState?.currentQuestionDefinitionId;
   const currentAnswerPdfId = evaluatorState.currentAnswerPdfId;
+  const currentParentId = evaluatorState.currentSubQuestionParentId;
   const canvasRef = useRef(null);
   const iconRefs = useRef([]);
   const dispatch = useDispatch();
@@ -585,9 +586,11 @@ const ImageContainer = (props) => {
           page: currentIndex,
           question: currentQuestionNo,
           userId: props.taskdetails?.userId,
+
+          parentQuestionId: currentParentId,
           // timeStamps: currentTimeStamp,
         };
-        console.log(totalMarksBody);
+        // console.log(totalMarksBody);
         // const response = await postMarkById(totalMarksBody);
         // socket.emit("get-marks", iconBody)
         socket.emit("add-marks", totalMarksBody);
@@ -841,7 +844,7 @@ const ImageContainer = (props) => {
               onLoad={() => {
                 setImageLoaded(true); // mark image as loaded
               }}
-              style={{pointerEvents:'none'}}
+              style={{ pointerEvents: "none" }}
               // width={"70vw"}
             />
             <canvas
@@ -1007,7 +1010,7 @@ const ImageContainer = (props) => {
                           <span
                             className={`ml-1 inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-gray-50 p-1 font-extrabold ${checkClass}`}
                           >
-                            {`${icon?.mark?icon?.mark:0}`}
+                            {`${icon?.mark ? icon?.mark : 0}`}
                           </span>
                         </div>
 
