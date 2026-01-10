@@ -30,6 +30,7 @@ const CreateSchemaStructure = () => {
   const [remainingMarks, setRemainingMarks] = useState("");
   const [questionToAllot, setQuestionToAllot] = useState("");
   const [subQuestionMap, setSubQuestionMap] = useState({});
+  const [dirtyStatus, setDirtyStatus] = useState({});
 
   const navigate = useNavigate();
 
@@ -67,6 +68,15 @@ const CreateSchemaStructure = () => {
     };
     fetchedData();
   }, [id, token]);
+
+  const calculateLiveUsedMarks = () => {
+    return savedQuestionData.reduce((total, q) => {
+      const key = `${q.questionsName}-maxMarks`;
+      const liveValue = formRefs.current[key];
+
+      return total + Number(liveValue ?? q.maxMarks ?? 0);
+    }, 0);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -590,6 +600,11 @@ const CreateSchemaStructure = () => {
     } finally {
       setSavingStatus((prev) => ({ ...prev, [folderId]: false }));
     }
+
+    setDirtyStatus((prev) => ({
+      ...prev,
+      [folderId]: false,
+    }));
   };
 
   const handleFolderClick = async (folderId) => {
@@ -698,7 +713,7 @@ const CreateSchemaStructure = () => {
       return Math.min(schemaMax, remainingMarks + alreadyUsed);
     };
 
-    const handleMarkChange = (inputBoxName, inputValue, event) => {
+    const handleMarkChange = (folderId, inputBoxName, inputValue, event) => {
       // 1️⃣ Allow clearing
       if (inputValue === "") {
         formRefs.current[inputBoxName] = "";
@@ -757,6 +772,16 @@ const CreateSchemaStructure = () => {
       }
 
       formRefs.current[inputBoxName] = safeValue;
+
+      const totalUsed = calculateLiveUsedMarks();
+      const schemaMax = Number(schemaData?.maxMarks || 0);
+
+      setRemainingMarks(schemaMax - totalUsed);
+
+      setDirtyStatus((prev) => ({
+        ...prev,
+        [folderId]: true,
+      }));
     };
 
     let displayData = [];
@@ -812,7 +837,12 @@ const CreateSchemaStructure = () => {
               <input
                 key={`${folderId}-maxMarks-${displayData[0]?._id || "new"}`}
                 onChange={(e) =>
-                  handleMarkChange(`${folder.id}-maxMarks`, e.target.value, e)
+                  handleMarkChange(
+                    folder.id,
+                    `${folder.id}-maxMarks`,
+                    e.target.value,
+                    e
+                  )
                 }
                 type="number"
                 inputMode="numeric"
@@ -907,6 +937,8 @@ const CreateSchemaStructure = () => {
               >
                 {isSaving
                   ? "Saving..."
+                  : dirtyStatus[folderId]
+                  ? "Save"
                   : displayData[0]?._id
                   ? "Update"
                   : "Save"}
@@ -996,9 +1028,9 @@ const CreateSchemaStructure = () => {
   return (
     <div
       className="max-h-[75vh] min-w-[1000px] space-y-4 overflow-x-auto overflow-y-scroll rounded-lg 
-    border border-gray-300 p-4 dark:border-gray-700 dark:bg-navy-700"
+    border border-gray-300 px-5 dark:border-gray-700 dark:bg-navy-700"
     >
-      <div className="flex justify-between">
+      <div className="sticky top-0 z-20 mb-4 flex justify-between bg-white p-3 shadow dark:bg-navy-700">
         <span className="cursor-pointer rounded-lg bg-blue-600 p-2 text-white hover:bg-blue-700">
           Questions To Allot: {questionToAllot ? questionToAllot : 0}
         </span>
