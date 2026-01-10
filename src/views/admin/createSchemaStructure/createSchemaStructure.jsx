@@ -30,6 +30,7 @@ const CreateSchemaStructure = () => {
   const [remainingMarks, setRemainingMarks] = useState("");
   const [questionToAllot, setQuestionToAllot] = useState("");
   const [subQuestionMap, setSubQuestionMap] = useState({});
+  const hasRunRef = useRef(false);
 
   const navigate = useNavigate();
 
@@ -225,7 +226,7 @@ const CreateSchemaStructure = () => {
 
       toast.success(response?.data?.message || "Question deleted successfully");
 
-      window.location.reload();
+      // window.location.reload();
 
       setSavedQuestionData((prev) =>
         prev.filter((item) => item._id !== questionToDelete._id)
@@ -680,6 +681,26 @@ const CreateSchemaStructure = () => {
     }
   };
 
+
+
+
+   useEffect(() => {
+    if (!hasRunRef.current && savedQuestionData.length > 0 && folders.length > 0) {
+      hasRunRef.current = true;
+      
+      // Auto-expand folders that have sub-questions
+      folders.forEach((folder) => {
+        const currentQuestionInfo = savedQuestionData.filter((item) =>
+          item.questionsName.startsWith(String(folder.id))
+        );
+        
+        if (currentQuestionInfo.length > 0 && currentQuestionInfo[0]?.isSubQuestion) {
+          handleFolderClick(folder.id);
+        }
+      });
+    }
+  }, [savedQuestionData, folders]);
+
   const renderFolder = (
     folder,
     level = 0,
@@ -802,11 +823,14 @@ const CreateSchemaStructure = () => {
             <div className="w-20">
               <span
                 className="text-black-500 cursor-pointer font-semibold"
-                onClick={() => handleFolderClick(folder.id)}
+                onClick={()=> handleFolderClick(folder.id)}
               >
                 📁 {folder?.name}
               </span>
             </div>
+           
+
+
 
             <div className="w-20">
               <input
@@ -995,10 +1019,10 @@ const CreateSchemaStructure = () => {
 
   return (
     <div
-      className="max-h-[75vh] min-w-[1000px] space-y-4 overflow-x-auto overflow-y-scroll rounded-lg 
-    border border-gray-300 p-4 dark:border-gray-700 dark:bg-navy-700"
+      className=" max-h-[75vh] min-w-[1000px] space-y-4 overflow-x-auto overflow-y-scroll rounded-lg 
+    border border-gray-300 p-4 dark:border-gray-700 dark:bg-navy-700 "
     >
-      <div className="flex justify-between">
+      <div className="flex justify-between ">
         <span className="cursor-pointer rounded-lg bg-blue-600 p-2 text-white hover:bg-blue-700">
           Questions To Allot: {questionToAllot ? questionToAllot : 0}
         </span>

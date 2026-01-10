@@ -175,7 +175,7 @@ const Booklets = () => {
     formData.append("subjectCode", currentBookletDetails?.folderName);
     console.log(formData);
     try {
-      await axios.post(
+     const response =  await axios.post(
         `${process.env.REACT_APP_API_URL}/api/bookletprocessing/uploadingbooklets`,
         formData,
         {
@@ -188,7 +188,8 @@ const Booklets = () => {
 
       toast.success("Upload successful");
     } catch (err) {
-      toast.error("Upload failed");
+      // console.log(err?.response?.data?.message)
+      toast.error(err?.response?.data?.message);
     } finally {
       event.target.value = "";
     }
@@ -223,111 +224,139 @@ const Booklets = () => {
   });
 
   const columns = [
-    {
-      field: "folderName",
-      headerName: "Course Code",
-      flex: 1,
-      minWidth: 1 / 11,
-    },
-    { field: "className", headerName: "Class", flex: 1, minWidth: 1 / 11 },
-    {
-      field: "scannedFolder",
-      headerName: "Scanned Data",
-      flex: 1,
-      minWidth: 1 / 11,
-    },
-    {
-      field: "unAllocated",
-      headerName: "Unallocated",
-      flex: 1,
-      minWidth: 1 / 11,
-    },
-    { field: "allocated", headerName: "Allocated", flex: 1, minWidth: 1 / 11 },
-    { field: "evaluated", headerName: "Evaluated", flex: 1, minWidth: 1 / 11 },
-    {
-      field: "evaluation_pending",
-      headerName: "Evaluation Pending",
-      flex: 1,
-      minWidth: 1 / 11,
-    },
+  // 🔽 First 3 columns – smaller
+  {
+    field: "folderName",
+    headerName: "Course Code",
+    flex: 0.8,
+    minWidth: 1/2,
+  },
+  {
+    field: "className",
+    headerName: "Class",
+    flex: 0.8,
+    minWidth: 1,
+  },
+  {
+    field: "scannedFolder",
+    headerName: "Scanned Data",
+    flex: 0.8,
+    minWidth: 1,
+  },
 
-    {
-      field: "processBooklets",
-      headerName: "Process Booklets",
-      minWidth: 1 / 11,
-      renderCell: (params) => (
-        <div
-          className="flex cursor-pointer justify-center rounded px-3 py-2 text-center font-medium text-yellow-600 "
-          onClick={() => {
-            localStorage.removeItem("navigateFrom");
-            navigate(`/admin/process/booklets/${params.row.folderName}`);
-          }}
-        >
-          <FcProcess className="size-7 text-indigo-500 " />
-        </div>
-      ),
-    },
-    {
-      field: "downloadbooklet",
-      headerName: "Download Booklets",
-      minWidth: 1 / 11,
-      renderCell: (params) => (
-        <div
-          className="flex cursor-pointer justify-center rounded px-3 py-2 text-center font-medium text-yellow-600  "
-          onClick={() => {
-            setShowAssignBookletModal(true);
-            setCurrentBookletDetails(params?.row);
-          }}
-        >
-          <FaCloudDownloadAlt className="size-7 text-yellow-600 " />
-        </div>
-      ),
-    },
-    {
-      field: "upload",
-      headerName: "Upload",
-      minWidth: 1 / 11,
-      renderCell: (params) => (
-        <>
-          <div
-            className="flex cursor-pointer justify-center rounded px-3 py-2 text-center font-medium text-yellow-600"
-            onClick={() => {
-              setCurrentBookletDetails(params.row);
-              fileInputRef.current.click();
-            }}
-          >
-            <FaCloudUploadAlt className="size-7 text-yellow-600" />
-          </div>
+  // Normal size
+  {
+    field: "unAllocated",
+    headerName: "Unallocated",
+    flex: 1,
+    minWidth: 1,
+  },
+  {
+    field: "allocated",
+    headerName: "Allocated",
+    flex: 1,
+    minWidth:1,
+  },
+  {
+    field: "evaluated",
+    headerName: "Evaluated",
+    flex: 1,
+    minWidth: 1,
+  },
 
-          <input
-            type="file"
-            ref={fileInputRef}
-            accept=".pdf,.zip"
-            multiple
-            className="hidden"
-            onChange={handleFileUpload}
-          />
-        </>
-      ),
-    },
-    {
-      field: "assignTask",
-      headerName: "Assign Task",
-      minWidth: 1 / 11,
-      renderCell: (params) => (
+  // 🔼 Bigger
+  {
+    field: "evaluation_pending",
+    headerName: "Evaluation Pending",
+    flex: 1.4,
+    minWidth: 1,
+  },
+
+  {
+    field: "upload",
+    headerName: "Upload",
+    flex: 0.9,
+    minWidth: 1,
+    renderCell: (params) => (
+      <>
         <div
-          className="flex cursor-pointer justify-center rounded px-3 py-2 text-center font-medium text-yellow-600  "
+          className="flex cursor-pointer justify-center rounded px-3 py-2"
           onClick={() => {
-            setassignModel(true);
-            setCurrentBookletDetails(params?.row);
+            setCurrentBookletDetails(params.row);
+            fileInputRef.current.click();
           }}
         >
-          {/* {console.log(params?.row)} */}
-          <MdTask className="size-7 text-yellow-600 " />
+          <FaCloudUploadAlt className="size-7 text-yellow-600" />
         </div>
-      ),
-    },
-  ];
+
+        <input
+          type="file"
+          ref={fileInputRef}
+          accept=".pdf,.zip"
+          multiple
+          className="hidden"
+          onChange={handleFileUpload}
+        />
+      </>
+    ),
+  },
+
+  // 🔼 Bigger
+  {
+    field: "processBooklets",
+    headerName: "Process Booklets",
+    flex: 1.2,
+    minWidth: 1,
+    renderCell: (params) => (
+      <div
+        className="flex cursor-pointer justify-center rounded px-3 py-2"
+        onClick={() => {
+          localStorage.removeItem("navigateFrom");
+          navigate(`/admin/process/booklets/${params.row.folderName}`);
+        }}
+      >
+        <FcProcess className="size-7 text-indigo-500" />
+      </div>
+    ),
+  },
+
+  {
+    field: "assignTask",
+    headerName: "Assign Task",
+    flex: 1,
+    minWidth: 1,
+    renderCell: (params) => (
+      <div
+        className="flex cursor-pointer justify-center rounded px-3 py-2"
+        onClick={() => {
+          setassignModel(true);
+          setCurrentBookletDetails(params.row);
+        }}
+      >
+        <MdTask className="size-7 text-yellow-600" />
+      </div>
+    ),
+  },
+
+  {
+    field: "downloadbooklet",
+    headerName: "Download Booklets",
+    flex: 1,
+    minWidth: 1,
+    renderCell: (params) => (
+      <div
+        className="flex cursor-pointer justify-center rounded px-3 py-2"
+        onClick={() => {
+          setShowAssignBookletModal(true);
+          setCurrentBookletDetails(params.row);
+        }}
+      >
+        <FaCloudDownloadAlt className="size-7 text-yellow-600" />
+      </div>
+    ),
+  },
+];
+
 
   return (
     <div className="mt-12">
@@ -341,8 +370,8 @@ const Booklets = () => {
               slots={{ toolbar: GridToolbar }}
               sx={{
                 "& .MuiDataGrid-columnHeaders": {
-                  fontWeight: 900,
-                  fontSize: "1rem",
+                  fontWeight: 1000,
+                  fontSize: "0.8rem",
                   backgroundColor: "rgba(255, 255, 255, 0.1)",
                   color: "#ffffff",
                   position: "sticky",
@@ -350,8 +379,10 @@ const Booklets = () => {
                   zIndex: 10,
                 },
                 "& .MuiDataGrid-cell": {
-                  fontSize: "0.80rem",
+                  fontSize: "0.75rem",
                   color: "#ffffff",
+                  display:'flex',
+                  justifyContent:'center'
                 },
                 "& .MuiDataGrid-row:hover": {
                   backgroundColor: "rgba(255, 255, 255, 0.1)",
@@ -384,8 +415,8 @@ const Booklets = () => {
             slots={{ toolbar: GridToolbar }}
             sx={{
               "& .MuiDataGrid-columnHeaders": {
-                fontWeight: 900,
-                fontSize: "1rem",
+                fontWeight: 1000,
+                fontSize: "0.8rem",
                 backgroundColor: "#ffffff",
                 borderBottom: "1px solid rgba(0, 0, 0, 0.2)",
               },

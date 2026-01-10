@@ -121,19 +121,36 @@ const Schema = () => {
   }));
 
   const columns = [
-    { field: "name", headerName: "Schema", flex: 1 },
-    { field: "maxMarks", headerName: "Max Marks", flex: 1 },
-    { field: "minMarks", headerName: "Min Marks", flex: 1 },
-    { field: "minTime", headerName: "Min Time", flex: 1 },
-    { field: "maxTime", headerName: "Max Time", flex: 1 },
-    { field: "totalQuestions", headerName: "Primary Qs", flex: 1 },
-    { field: "compulsoryQuestions", headerName: "Compulsory Qs", flex: 1 },
+    { field: "name", headerName: "Schema", flex: 1.4, minWidth: 1 },
+    { field: "maxMarks", headerName: "Max Marks", flex: 0.7, minWidth: 1 },
+    { field: "minMarks", headerName: "Min Marks", flex: 0.7, minWidth: 1 },
+    { field: "minTime", headerName: "Min Time", flex: 0.7, minWidth: 1 },
+    { field: "maxTime", headerName: "Max Time", flex: 0.7, minWidth: 1 },
+    {
+      field: "totalQuestions",
+      headerName: "Primary Qs",
+      flex: 0.7,
+      minWidth: 1,
+    },
+    {
+      field: "compulsoryQuestions",
+      headerName: "Compulsory Qs",
+      flex: 0.8,
+      minWidth: 1,
+    },
     // { field: "evaluationTime", headerName: "Eval Time", flex: 1 },
-    { field: "numberOfPage", headerName: "No. of Pages Booklets", flex: 1 },
-    { field: "hiddenPage", headerName: "Hidden Page", flex: 1 },
+    {
+      field: "numberOfPage",
+      headerName: "No. of Pages Booklets",
+      flex: 1.3,
+      minWidth: 1,
+    },
+    { field: "hiddenPage", headerName: "Hidden Page", flex: 1, minWidth: 1 },
     {
       field: "createStructure",
       headerName: "Create Structure",
+      flex: 1.3,
+      minWidth: 1,
       renderCell: (params) => (
         <div
           className="flex cursor-pointer justify-center rounded px-3 py-2 text-center font-medium text-yellow-600"
@@ -209,13 +226,15 @@ const Schema = () => {
                 sx={{
                   "& .MuiDataGrid-columnHeaders": {
                     fontWeight: 900,
-                    fontSize: "1rem",
+                    fontSize: "0.9rem",
                     backgroundColor: "rgba(255, 255, 255, 0.1)",
                     color: "#ffffff",
                   },
                   "& .MuiDataGrid-cell": {
                     fontSize: "0.80rem",
                     color: "#ffffff",
+                    display: "flex",
+                    justifyContent: "center",
                   },
                   "& .MuiDataGrid-row:hover": {
                     backgroundColor: "rgba(255, 255, 255, 0.1)",
