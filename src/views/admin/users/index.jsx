@@ -169,14 +169,14 @@ const Index = () => {
   // console.log(users);
 
   const columns = [
-    { field: "name", headerName: "Name", flex: 1 },
+    { field: "name", headerName: "Name", flex: 0.7 },
     { field: "email", headerName: "Email", flex: 1 },
-    { field: "mobile", headerName: "Mobile", flex: 1 },
-    { field: "role", headerName: "Role", flex: 1 },
-    { field: "date", headerName: "Date", flex: 1 },
+    { field: "mobile", headerName: "Mobile", flex: 0.7 },
+    { field: "role", headerName: "Role", flex: 0.6 },
+    { field: "date", headerName: "Date", flex: 0.5 },
     { field: "permissions", headerName: "Permissions", flex: 1 },
     
-    { field: "maxBooklets", headerName: "Max Booklets", flex: 1 },
+    { field: "maxBooklets", headerName: "Max Booklets", flex: 0.5 },
     {
       field: "edit",
       headerName: "Edit",
