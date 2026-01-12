@@ -30,8 +30,6 @@ const CreateSchemaStructure = () => {
   const [remainingMarks, setRemainingMarks] = useState("");
   const [questionToAllot, setQuestionToAllot] = useState("");
   const [subQuestionMap, setSubQuestionMap] = useState({});
-  const [dirtyStatus, setDirtyStatus] = useState({});
-  const hasRunRef = useRef(false);
 
   const navigate = useNavigate();
 
@@ -69,15 +67,6 @@ const CreateSchemaStructure = () => {
     };
     fetchedData();
   }, [id, token]);
-
-  const calculateLiveUsedMarks = () => {
-    return savedQuestionData.reduce((total, q) => {
-      const key = `${q.questionsName}-maxMarks`;
-      const liveValue = formRefs.current[key];
-
-      return total + Number(liveValue ?? q.maxMarks ?? 0);
-    }, 0);
-  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -236,7 +225,7 @@ const CreateSchemaStructure = () => {
 
       toast.success(response?.data?.message || "Question deleted successfully");
 
-      // window.location.reload();
+      window.location.reload();
 
       setSavedQuestionData((prev) =>
         prev.filter((item) => item._id !== questionToDelete._id)
@@ -601,11 +590,6 @@ const CreateSchemaStructure = () => {
     } finally {
       setSavingStatus((prev) => ({ ...prev, [folderId]: false }));
     }
-
-    setDirtyStatus((prev) => ({
-      ...prev,
-      [folderId]: false,
-    }));
   };
 
   const handleFolderClick = async (folderId) => {
@@ -696,26 +680,6 @@ const CreateSchemaStructure = () => {
     }
   };
 
-
-
-
-   useEffect(() => {
-    if (!hasRunRef.current && savedQuestionData.length > 0 && folders.length > 0) {
-      hasRunRef.current = true;
-      
-      // Auto-expand folders that have sub-questions
-      folders.forEach((folder) => {
-        const currentQuestionInfo = savedQuestionData.filter((item) =>
-          item.questionsName.startsWith(String(folder.id))
-        );
-        
-        if (currentQuestionInfo.length > 0 && currentQuestionInfo[0]?.isSubQuestion) {
-          handleFolderClick(folder.id);
-        }
-      });
-    }
-  }, [savedQuestionData, folders]);
-
   const renderFolder = (
     folder,
     level = 0,
@@ -734,7 +698,7 @@ const CreateSchemaStructure = () => {
       return Math.min(schemaMax, remainingMarks + alreadyUsed);
     };
 
-    const handleMarkChange = (folderId, inputBoxName, inputValue, event) => {
+    const handleMarkChange = (inputBoxName, inputValue, event) => {
       // 1️⃣ Allow clearing
       if (inputValue === "") {
         formRefs.current[inputBoxName] = "";
@@ -793,16 +757,6 @@ const CreateSchemaStructure = () => {
       }
 
       formRefs.current[inputBoxName] = safeValue;
-
-      const totalUsed = calculateLiveUsedMarks();
-      const schemaMax = Number(schemaData?.maxMarks || 0);
-
-      setRemainingMarks(schemaMax - totalUsed);
-
-      setDirtyStatus((prev) => ({
-        ...prev,
-        [folderId]: true,
-      }));
     };
 
     let displayData = [];
@@ -848,25 +802,17 @@ const CreateSchemaStructure = () => {
             <div className="w-20">
               <span
                 className="text-black-500 cursor-pointer font-semibold"
-                onClick={()=> handleFolderClick(folder.id)}
+                onClick={() => handleFolderClick(folder.id)}
               >
                 📁 {folder?.name}
               </span>
             </div>
-           
-
-
 
             <div className="w-20">
               <input
                 key={`${folderId}-maxMarks-${displayData[0]?._id || "new"}`}
                 onChange={(e) =>
-                  handleMarkChange(
-                    folder.id,
-                    `${folder.id}-maxMarks`,
-                    e.target.value,
-                    e
-                  )
+                  handleMarkChange(`${folder.id}-maxMarks`, e.target.value, e)
                 }
                 type="number"
                 inputMode="numeric"
@@ -961,8 +907,6 @@ const CreateSchemaStructure = () => {
               >
                 {isSaving
                   ? "Saving..."
-                  : dirtyStatus[folderId]
-                  ? "Save"
                   : displayData[0]?._id
                   ? "Update"
                   : "Save"}
@@ -1052,7 +996,7 @@ const CreateSchemaStructure = () => {
   return (
     <div
       className="max-h-[75vh] min-w-[1000px] space-y-4 overflow-x-auto overflow-y-scroll rounded-lg 
-    border border-gray-300 px-5 dark:border-gray-700 dark:bg-navy-700"
+    border border-gray-300 px-5  dark:border-gray-700 dark:bg-navy-700"
     >
       <div className="sticky top-0 z-20 mb-4 flex justify-between bg-white p-3 shadow dark:bg-navy-700">
         <span className="cursor-pointer rounded-lg bg-blue-600 p-2 text-white hover:bg-blue-700">

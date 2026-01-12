@@ -14,6 +14,7 @@ import { toast } from "react-toastify";
 import axios from "axios";
 import { getAllUsers } from "services/common";
 import socket from "../../../services/socket/socket";
+import Tooltip from "@mui/material/Tooltip";
 
 // Initialize socket connection
 // const socket = io(process.env.REACT_APP_API_URL, {
@@ -175,7 +176,7 @@ const Booklets = () => {
     formData.append("subjectCode", currentBookletDetails?.folderName);
     console.log(formData);
     try {
-     const response =  await axios.post(
+      const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/api/bookletprocessing/uploadingbooklets`,
         formData,
         {
@@ -224,139 +225,146 @@ const Booklets = () => {
   });
 
   const columns = [
-  // 🔽 First 3 columns – smaller
-  {
-    field: "folderName",
-    headerName: "Course Code",
-    flex: 0.8,
-    minWidth: 1/2,
-  },
-  {
-    field: "className",
-    headerName: "Class",
-    flex: 0.8,
-    minWidth: 1,
-  },
-  {
-    field: "scannedFolder",
-    headerName: "Scanned Data",
-    flex: 0.8,
-    minWidth: 1,
-  },
+    // 🔽 First 3 columns – smaller
+    {
+      field: "folderName",
+      headerName: "Course Code",
+      flex: 0.8,
+      minWidth: 1 / 2,
+    },
+    {
+      field: "className",
+      headerName: "Class",
+      flex: 0.8,
+      minWidth: 1,
+    },
+    {
+      field: "scannedFolder",
+      headerName: "Scanned Data",
+      flex: 0.8,
+      minWidth: 1,
+    },
 
-  // Normal size
-  {
-    field: "unAllocated",
-    headerName: "Unallocated",
-    flex: 1,
-    minWidth: 1,
-  },
-  {
-    field: "allocated",
-    headerName: "Allocated",
-    flex: 1,
-    minWidth:1,
-  },
-  {
-    field: "evaluated",
-    headerName: "Evaluated",
-    flex: 1,
-    minWidth: 1,
-  },
+    // Normal size
+    {
+      field: "unAllocated",
+      headerName: "Unallocated",
+      flex: 1,
+      minWidth: 1,
+    },
+    {
+      field: "allocated",
+      headerName: "Allocated",
+      flex: 1,
+      minWidth: 1,
+    },
+    {
+      field: "evaluated",
+      headerName: "Evaluated",
+      flex: 1,
+      minWidth: 1,
+    },
 
-  // 🔼 Bigger
-  {
-    field: "evaluation_pending",
-    headerName: "Evaluation Pending",
-    flex: 1.4,
-    minWidth: 1,
-  },
+    // 🔼 Bigger
+    {
+      field: "evaluation_pending",
+      headerName: "Evaluation Pending",
+      flex: 1.4,
+      minWidth: 1,
+    },
 
-  {
-    field: "upload",
-    headerName: "Upload",
-    flex: 0.9,
-    minWidth: 1,
-    renderCell: (params) => (
-      <>
-        <div
-          className="flex cursor-pointer justify-center rounded px-3 py-2"
-          onClick={() => {
-            setCurrentBookletDetails(params.row);
-            fileInputRef.current.click();
-          }}
-        >
-          <FaCloudUploadAlt className="size-7 text-yellow-600" />
-        </div>
+    {
+      field: "upload",
+      headerName: "Upload",
+      flex: 0.9,
+      minWidth: 1,
+      renderCell: (params) => (
+        <>
+          <Tooltip title="Upload the zip file" arrow placement="top">
+            <div
+              className="flex cursor-pointer justify-center rounded px-3 py-2"
+              onClick={() => {
+                setCurrentBookletDetails(params.row);
+                fileInputRef.current.click();
+              }}
+            >
+              <FaCloudUploadAlt className="size-7 text-yellow-600" />
+            </div>
+          </Tooltip>
 
-        <input
-          type="file"
-          ref={fileInputRef}
-          accept=".pdf,.zip"
-          multiple
-          className="hidden"
-          onChange={handleFileUpload}
-        />
-      </>
-    ),
-  },
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept=".pdf,.zip"
+            multiple
+            className="hidden"
+            onChange={handleFileUpload}
+          />
+        </>
+      ),
+    },
 
-  // 🔼 Bigger
-  {
-    field: "processBooklets",
-    headerName: "Process Booklets",
-    flex: 1.2,
-    minWidth: 1,
-    renderCell: (params) => (
-      <div
-        className="flex cursor-pointer justify-center rounded px-3 py-2"
-        onClick={() => {
-          localStorage.removeItem("navigateFrom");
-          navigate(`/admin/process/booklets/${params.row.folderName}`);
-        }}
-      >
-        <FcProcess className="size-7 text-indigo-500" />
-      </div>
-    ),
-  },
+    // 🔼 Bigger
+    {
+      field: "processBooklets",
+      headerName: "Process Booklets",
+      flex: 1.2,
+      minWidth: 1,
+      renderCell: (params) => (
+        <Tooltip title="Process the booklets" arrow placement="top">
+          <div
+            className="flex cursor-pointer justify-center rounded px-3 py-2"
+            onClick={() => {
+              localStorage.removeItem("navigateFrom");
+              navigate(`/admin/process/booklets/${params.row.folderName}`);
+            }}
+          >
+            <FcProcess className="size-7 text-indigo-500" />
+          </div>
+        </Tooltip>
+      ),
+    },
 
-  {
-    field: "assignTask",
-    headerName: "Assign Task",
-    flex: 1,
-    minWidth: 1,
-    renderCell: (params) => (
-      <div
-        className="flex cursor-pointer justify-center rounded px-3 py-2"
-        onClick={() => {
-          setassignModel(true);
-          setCurrentBookletDetails(params.row);
-        }}
-      >
-        <MdTask className="size-7 text-yellow-600" />
-      </div>
-    ),
-  },
+    {
+      field: "assignTask",
+      headerName: "Assign Task",
+      flex: 1,
+      minWidth: 1,
+      renderCell: (params) => (
+        <Tooltip title="Assign the task to operator" arrow placement="top">
+          <div
+            className="flex cursor-pointer justify-center rounded px-3 py-2"
+            onClick={() => {
+              setassignModel(true);
+              setCurrentBookletDetails(params.row);
+            }}
+          >
+            <MdTask className="size-7 text-yellow-600" />
+          </div>
+        </Tooltip>
+      ),
+    },
 
-  {
-    field: "downloadbooklet",
-    headerName: "Download Booklets",
-    flex: 1,
-    minWidth: 1,
-    renderCell: (params) => (
-      <div
-        className="flex cursor-pointer justify-center rounded px-3 py-2"
-        onClick={() => {
-          setShowAssignBookletModal(true);
-          setCurrentBookletDetails(params.row);
-        }}
-      >
-        <FaCloudDownloadAlt className="size-7 text-yellow-600" />
-      </div>
-    ),
-  },
-];
-
+    {
+      field: "downloadbooklet",
+      headerName: "Download Booklets",
+      flex: 1,
+      minWidth: 1,
+      renderCell: (params) => (
+        <Tooltip title="Hover booklets" arrow placement="top">
+          <div
+            className="flex cursor-pointer justify-center rounded px-3 py-2"
+            onClick={() => {
+              setShowAssignBookletModal(true);
+              setCurrentBookletDetails(params.row);
+            }}
+          >
+            <FaCloudDownloadAlt className="size-7 text-yellow-600" />
+          </div>
+        </Tooltip>
+      ),
+    },
+  ];
 
   return (
     <div className="mt-12">
@@ -381,8 +389,8 @@ const Booklets = () => {
                 "& .MuiDataGrid-cell": {
                   fontSize: "0.75rem",
                   color: "#ffffff",
-                  display:'flex',
-                  justifyContent:'center'
+                  display: "flex",
+                  justifyContent: "center",
                 },
                 "& .MuiDataGrid-row:hover": {
                   backgroundColor: "rgba(255, 255, 255, 0.1)",

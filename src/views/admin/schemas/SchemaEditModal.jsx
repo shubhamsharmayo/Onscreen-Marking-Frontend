@@ -97,7 +97,7 @@ const SchemaEditModal = ({
       !formData.maxMarks ||
       !formData.minMarks ||
       !formData.totalQuestions ||
-      !formData.compulsoryQuestions ||
+      formData.compulsoryQuestions === "" ||
       // !formData.evaluationTime ||
       !formData.minTime ||
       !formData.maxTime ||
@@ -134,11 +134,10 @@ const SchemaEditModal = ({
     }
 
     // Validate compulsoryQuestions
-    if (
-      !formData.compulsoryQuestions ||
-      Number(formData?.compulsoryQuestions) < 0
-    ) {
-      toast.error("Compulsory Questions must be a postive number.");
+    const compulsory = Number(formData.compulsoryQuestions);
+
+    if (Number.isNaN(compulsory) || compulsory < 0) {
+      toast.error("Compulsory Questions must be 0 or a positive number.");
       return;
     }
 
