@@ -577,6 +577,7 @@ const ImageContainer = (props) => {
           answerPdfId: currentAnswerPdfId,
           id: currentTimeStamp,
           userId: props.taskdetails?.userId,
+          parentQuestionId:currentParentId
         };
         const totalMarksBody = {
           ...currentMarkDetails,
@@ -619,6 +620,7 @@ const ImageContainer = (props) => {
           answerPdfId: currentAnswerPdfId,
           id: currentTimeStamp,
           userId: props.taskdetails?.userId,
+          parentQuestionId: currentParentId,
         };
 
         // const res = await createIcon(iconBody);
