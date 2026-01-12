@@ -57,7 +57,7 @@ const CheckModule = () => {
   const rerenderer = evaluatorState.rerender;
   const currentTaskDetails = evaluatorState.currentTaskDetails;
   const { id } = useParams();
-  const [userTimerData, setuserTimerData] = useState()
+  const [userTimerData, setuserTimerData] = useState({});
 
   const [socket, setSocket] = useState(null);
   const dispatch = useDispatch();
@@ -131,10 +131,10 @@ const CheckModule = () => {
     newSocket.on("start-timer-update", (data) => {
       console.log("⏱ Received start-timer-update:", data);
 
-      remainingSecondsRef.current = data.remainingTime*60;
-
+      remainingSecondsRef.current = data.remainingTime * 60;
+      setuserTimerData(data);
       isPausedRef.current = false;
-      console.log(data)
+      console.log(data);
       // Start ticking as soon as we get timer
       startLocalTick();
     });
@@ -385,7 +385,16 @@ const CheckModule = () => {
                 <span className="text-black font-semibold">
                   Evaluation Time
                 </span>
-                :<span className="ml-2 font-mono">{remainingTimeStr}</span>
+                :
+                <span
+                  className={`ml-2 font-mono ${
+                    remainingSecondsRef.current/60 > userTimerData.maxTime
+                      ? "font-semibold text-red-600"
+                      : "text-gray-800"
+                  }`}
+                >
+                  {remainingTimeStr}
+                </span>
               </div>
             </section>
           </div>
