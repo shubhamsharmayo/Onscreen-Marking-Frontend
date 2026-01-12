@@ -57,6 +57,7 @@ const CheckModule = () => {
   const rerenderer = evaluatorState.rerender;
   const currentTaskDetails = evaluatorState.currentTaskDetails;
   const { id } = useParams();
+  const [userTimerData, setuserTimerData] = useState()
 
   const [socket, setSocket] = useState(null);
   const dispatch = useDispatch();
@@ -133,7 +134,7 @@ const CheckModule = () => {
       remainingSecondsRef.current = data.remainingTime*60;
 
       isPausedRef.current = false;
-      // console.log(data)
+      console.log(data)
       // Start ticking as soon as we get timer
       startLocalTick();
     });
