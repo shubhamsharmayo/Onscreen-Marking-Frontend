@@ -11,6 +11,7 @@ import { FiEdit } from "react-icons/fi";
 import { MdAutoDelete } from "react-icons/md";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import Tooltip from "@mui/material/Tooltip";
 
 const Index = () => {
   // const [users, setUsers] = useState([]);
@@ -175,21 +176,23 @@ const Index = () => {
     { field: "role", headerName: "Role", flex: 0.6 },
     { field: "date", headerName: "Date", flex: 0.5 },
     { field: "permissions", headerName: "Permissions", flex: 1 },
-    
+
     { field: "maxBooklets", headerName: "Max Booklets", flex: 0.5 },
     {
       field: "edit",
       headerName: "Edit",
 
       renderCell: (params) => (
-        <div
-          className="mt-1 flex cursor-pointer justify-center rounded px-3 py-2 text-center font-medium text-indigo-400"
-          onClick={() => {
-            handleClick(params.row);
-          }}
-        >
-          <FiEdit className="size-6" />
-        </div>
+        <Tooltip title="update User details and password" arrow placement="top">
+          <div
+            className="mt-1 flex cursor-pointer justify-center rounded px-3 py-2 text-center font-medium text-indigo-400"
+            onClick={() => {
+              handleClick(params.row);
+            }}
+          >
+            <FiEdit className="size-6" />
+          </div>
+        </Tooltip>
       ),
     },
     {
@@ -197,15 +200,17 @@ const Index = () => {
       headerName: "Remove",
       renderCell: (params) =>
         params.row.id !== loggedInUserId && (
-          <div
-            className="mt-1 flex cursor-pointer justify-center rounded px-3 py-2 text-center font-medium text-red-600"
-            onClick={() => {
-              setConfirmationModal(true);
-              setUserId(params.row.id);
-            }}
-          >
-            <MdAutoDelete className="size-6" />
-          </div>
+          <Tooltip title="Delete User " arrow placement="top">
+            <div
+              className="mt-1 flex cursor-pointer justify-center rounded px-3 py-2 text-center font-medium text-red-600"
+              onClick={() => {
+                setConfirmationModal(true);
+                setUserId(params.row.id);
+              }}
+            >
+              <MdAutoDelete className="size-6" />
+            </div>
+          </Tooltip>
         ),
     },
   ];
