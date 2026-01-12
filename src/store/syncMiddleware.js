@@ -45,7 +45,8 @@ const syncMiddleware = (store) => (next) => (action) => {
         questionName:deletedData.question,
         allottedMarks:deletedData.mark,
         annotationIds: [deletedData.id],
-        userId:deletedData.userId
+        userId:deletedData.userId,
+        parentQuestionId:deletedData.parentQuestionId
       });
       console.log(deletedData);
     }
