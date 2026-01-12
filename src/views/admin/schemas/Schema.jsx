@@ -11,6 +11,7 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { toast } from "react-toastify";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getAllSchemas, deleteSchema, updateSchema } from "./schemaApi";
+import Tooltip from "@mui/material/Tooltip";
 
 const Schema = () => {
   const [editShowModal, setEditShowModal] = useState(false);
@@ -152,46 +153,52 @@ const Schema = () => {
       flex: 1.3,
       minWidth: 1,
       renderCell: (params) => (
-        <div
-          className="flex cursor-pointer justify-center rounded px-3 py-2 text-center font-medium text-yellow-600"
-          onClick={() => {
-            localStorage.removeItem("navigateFrom");
-            navigate(`/admin/schema/create/structure/${params.row.id}`);
-          }}
-        >
-          <MdCreateNewFolder className="size-8" />
-        </div>
+        <Tooltip title="update schema structure" arrow placement="top">
+          <div
+            className="flex cursor-pointer justify-center rounded px-3 py-2 text-center font-medium text-yellow-600"
+            onClick={() => {
+              localStorage.removeItem("navigateFrom");
+              navigate(`/admin/schema/create/structure/${params.row.id}`);
+            }}
+          >
+            <MdCreateNewFolder className="size-8" />
+          </div>
+        </Tooltip>
       ),
     },
     {
       field: "edit",
       headerName: "Edit",
       renderCell: (params) => (
-        <div
-          className="mt-1 flex cursor-pointer justify-center rounded px-3 py-2 text-center font-medium text-indigo-400"
-          onClick={() => {
-            setEditShowModal(true);
-            setSchemaId(params.row.id);
-            setSelectedSchema(params.row);
-          }}
-        >
-          <FiEdit className="size-6" />
-        </div>
+        <Tooltip title="Edit schema" arrow placement="top">
+          <div
+            className="mt-1 flex cursor-pointer justify-center rounded px-3 py-2 text-center font-medium text-indigo-400"
+            onClick={() => {
+              setEditShowModal(true);
+              setSchemaId(params.row.id);
+              setSelectedSchema(params.row);
+            }}
+          >
+            <FiEdit className="size-6" />
+          </div>
+        </Tooltip>
       ),
     },
     {
       field: "delete",
       headerName: "Delete",
       renderCell: (params) => (
-        <div
-          className="mt-1 flex cursor-pointer justify-center rounded px-3 py-2 text-center font-medium text-red-600"
-          onClick={() => {
-            setConfirmationModal(true);
-            setSchemaId(params.row.id);
-          }}
-        >
-          <MdAutoDelete className="size-6" />
-        </div>
+        <Tooltip title="Delete the schema" arrow placement="top">
+          <div
+            className="mt-1 flex cursor-pointer justify-center rounded px-3 py-2 text-center font-medium text-red-600"
+            onClick={() => {
+              setConfirmationModal(true);
+              setSchemaId(params.row.id);
+            }}
+          >
+            <MdAutoDelete className="size-6" />
+          </div>
+        </Tooltip>
       ),
     },
   ];

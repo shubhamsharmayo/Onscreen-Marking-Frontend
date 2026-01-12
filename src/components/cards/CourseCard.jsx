@@ -78,8 +78,7 @@ const CourseCard = ({
                     <p className="max-w-[240px] break-words text-base text-gray-500 sm:max-w-none">
                       <span className="font-medium">Schema Name:</span>{" "}
                       <span className="cursor-pointer">
-                        {trimToChars(subject?.name, 10)}{" "}
-                        {trimToChars(subject?.code, 5)}
+                        {trimToChars(subject?.schemaName, 10)}
                       </span>
                       {/* Hover tooltip */}
                       <div className="bg-black pointer-events-none absolute left-0 top-full z-30 hidden max-w-xs rounded-md px-2 py-1 text-xs text-white group-hover:block">
