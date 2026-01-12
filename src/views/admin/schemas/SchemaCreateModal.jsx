@@ -111,7 +111,7 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
       !formData.maxMarks ||
       !formData.minMarks ||
       !formData.totalQuestions ||
-      !formData.compulsoryQuestions ||
+      !formData.compulsoryQuestions === 0 ||
       // !formData.evaluationTime ||
       !formData.numberOfPage ||
       formData?.hiddenPage?.length === 0 ||

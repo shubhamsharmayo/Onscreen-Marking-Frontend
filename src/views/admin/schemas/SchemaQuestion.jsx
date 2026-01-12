@@ -96,7 +96,7 @@ const SchemaQuestion = ({
       !formData.maxMarks ||
       !formData.minMarks ||
       !formData.totalQuestions ||
-      !formData.compulsoryQuestions ||
+      !formData.compulsoryQuestions === "" ||
       // !formData.evaluationTime ||
       !formData.minTime ||
       !formData.maxTime ||
@@ -133,11 +133,10 @@ const SchemaQuestion = ({
     }
 
     // Validate compulsoryQuestions
-    if (
-      !formData.compulsoryQuestions ||
-      Number(formData?.compulsoryQuestions) < 0
-    ) {
-      toast.error("Compulsory Questions must be a postive number.");
+    const compulsory = Number(formData.compulsoryQuestions);
+
+    if (Number.isNaN(compulsory) || compulsory < 0) {
+      toast.error("Compulsory Questions must be 0 or a positive number.");
       return;
     }
 
@@ -197,7 +196,7 @@ const SchemaQuestion = ({
 
         <div className="sm:space-y-6">
           {/* Input for Schema Name */}
-          <div className="mb-2 sm:mb-0">
+          {/* <div className="mb-2 sm:mb-0">
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg">
               Schema Name
             </label>
@@ -208,7 +207,7 @@ const SchemaQuestion = ({
               onChange={handleInputChange}
               className="sm:text-md w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:p-3"
             />
-          </div>
+          </div> */}
           {/* Input for Maximum Marks */}
           <div className="flex flex-col justify-between sm:flex-row">
             <div className="mb-2 sm:mb-0">
@@ -264,7 +263,7 @@ const SchemaQuestion = ({
               />
             </div>
           </div>
-          <div className="flex flex-col justify-between sm:flex-row">
+          {/* <div className="flex flex-col justify-between sm:flex-row">
             <div className="mb-2 sm:mb-0">
               <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg">
                 Min Time (in minutes):
@@ -277,7 +276,6 @@ const SchemaQuestion = ({
                 className="sm:text-md w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-3"
               />
             </div>
-            {/* Input for Compulsory Questions */}
             <div className="mb-2 sm:mb-0">
               <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg">
                 Max Time (in minutes):
@@ -291,9 +289,8 @@ const SchemaQuestion = ({
               />
             </div>
           </div>
-          {/* Number of pages in Booklets and Hidden Pages */}
           <div className="flex flex-col justify-between sm:flex-row">
-            {/* No. of pages input */}
+           
             <div className="mb-2 sm:mb-0">
               <label
                 className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg"
@@ -311,7 +308,6 @@ const SchemaQuestion = ({
               />
             </div>
 
-            {/* Hidden Pages Dropdown */}
             <div className="mb-2 sm:mb-0">
               <label
                 className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg"
@@ -333,7 +329,7 @@ const SchemaQuestion = ({
                     }));
                   }
 
-                  setSelectedHiddenPage(""); // ✅ reset dropdown
+                  setSelectedHiddenPage(""); 
                 }}
                 className="sm:text-md max-h-10 w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2"
               >
@@ -348,7 +344,7 @@ const SchemaQuestion = ({
               </select>
             </div>
           </div>{" "}
-          {/* Page Index Contains */}
+          
           {formData?.hiddenPage?.length > 0 && (
             <div className="flex flex-col justify-between sm:flex-row">
               <div className="flex w-full flex-wrap gap-2 rounded-md border border-gray-300 px-4 py-1 sm:py-3">
@@ -363,7 +359,7 @@ const SchemaQuestion = ({
                 ))}
               </div>
             </div>
-          )}
+          )} */}
           {/* Input for Evaluation Time */}
           {/* <div className="mb-2 sm:mb-0">
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg">

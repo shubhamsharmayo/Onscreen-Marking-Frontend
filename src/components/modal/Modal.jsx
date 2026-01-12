@@ -184,7 +184,7 @@ const Modal = ({ user, isOpen, setIsOpen }) => {
             className="bg-black absolute inset-0 bg-opacity-50 backdrop-blur-md"
             onClick={toggleModal}
           ></div>
-          <div className="relative w-full max-w-lg scale-95 transform rounded-xl bg-white p-1 shadow-2xl transition-all duration-300 dark:bg-navy-700 sm:scale-100 sm:p-2">
+          <div className="relative w-full max-w-lg scale-95 transform rounded-xl bg-white shadow-2xl transition-all duration-300 dark:bg-navy-700 sm:scale-100 sm:p-2">
             <button
               className="absolute right-4 p-2 text-2xl text-gray-700 hover:text-red-700 focus:outline-none sm:top-4"
               onClick={toggleModal}
@@ -193,9 +193,9 @@ const Modal = ({ user, isOpen, setIsOpen }) => {
             </button>
 
             <section className="sm:px-4 sm:py-2">
-              <h2 className="my-2 ml-1 text-xl font-semibold text-gray-900 dark:text-white sm:mb-4 sm:text-3xl">
+              <h6 className="my-2 ml-1 text-xl font-semibold text-gray-900 dark:text-white sm:mb-4 sm:text-3xl">
                 Edit User Details
-              </h2>
+              </h6>
               <div className="rounded-xl bg-gray-100 p-3 shadow-inner dark:bg-navy-800 sm:p-4">
                 <form
                   className="space-y-0 sm:space-y-3"
@@ -213,7 +213,7 @@ const Modal = ({ user, isOpen, setIsOpen }) => {
                       id="name"
                       value={formData.name}
                       onChange={handleInputChange}
-                      className="mt-1 w-full rounded-lg border border-gray-300 p-1 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-3"
+                      className="mt-1 w-full rounded-lg border border-gray-300 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-3"
                       placeholder="Enter name"
                     />
                   </div>
