@@ -83,7 +83,7 @@ const CourseCard = ({
                       </span>
                       {/* Hover tooltip */}
                       <div className="bg-black pointer-events-none absolute left-0 top-full z-30 hidden max-w-xs rounded-md px-2 py-1 text-xs text-white group-hover:block">
-                        {subject?.name}
+                        {subject?.schemaName}
                       </div>
                     </p>
                   </div>
