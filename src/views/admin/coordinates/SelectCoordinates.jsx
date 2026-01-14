@@ -14,7 +14,7 @@ const SelectCoordinates = () => {
   const countRef = useRef(); // Ref for number of sub-questions
   const formRefs = useRef({}); // Ref object to hold form input values for each folder
   const [isSubQuestion, setIsSubQuestion] = useState(false); // Track if it's a sub-question
-  console.log(id)
+  console.log(id);
   const [questionData, setQuestionData] = useState({}); // Store question data
   const [savingStatus, setSavingStatus] = useState({}); // Track saving per folder
   const [parentId, setParentId] = useState([]); // Track parent folder
@@ -296,7 +296,7 @@ const SelectCoordinates = () => {
   //   );
   // };
 
-  console.log(savedQuestionData)
+  console.log(savedQuestionData);
 
   const handleSelectCoordinates = async (folder) => {
     // console.log(folder.id);
@@ -306,7 +306,8 @@ const SelectCoordinates = () => {
     setQuestionId(
       savedQuestionData.filter(
         (savedQuestion) =>
-          parseFloat(savedQuestion.questionsName) === parseFloat(folder.id) || undefined
+          parseFloat(savedQuestion.questionsName) === parseFloat(folder.id) ||
+          undefined
       )
     );
     // console.log(
@@ -406,14 +407,16 @@ const SelectCoordinates = () => {
   // console.log(getSubjectbyIdData);
 
   const handleFinalSubmitButton = async () => {
-    const requiredQuestion = savedQuestionData.filter((q)=>q.isSubQuestion===false)
+    const requiredQuestion = savedQuestionData.filter(
+      (q) => q.isSubQuestion === false
+    );
 
     const allQuestionIds = requiredQuestion.map((q) => q._id);
     const completedIds = new Set(filterOutQuestionDone.map((q) => q._id));
 
     const allCompleted = allQuestionIds.every((id) => completedIds.has(id));
-    console.log(allQuestionIds)
-    console.log(completedIds)
+    console.log(allQuestionIds);
+    console.log(completedIds);
 
     if (!allCompleted) {
       toast.error("Please select all questions images & answers images");

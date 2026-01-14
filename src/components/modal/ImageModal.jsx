@@ -61,7 +61,7 @@ const ImageModal = ({
             },
           }
         );
-        console.log(response?.data)
+        console.log(response?.data);
 
         setQuestionsPdfPath(response?.data?.questionPdfPath);
         setCountQuestions(response?.data?.countOfQuestionImages);
@@ -213,17 +213,15 @@ const ImageModal = ({
   };
 
   if (!questionsPdfPath) {
-  return <div>Loading...</div>;
-}
+    return <div>Loading...</div>;
+  }
 
   return (
     <div>
       {/* Question Image Modal */}
       {showImageModal && !showAnswerModel && (
         <div className="bg-black fixed inset-0 z-50 flex  items-center justify-center bg-opacity-50 backdrop-blur-md">
-          <div
-            className="relative rounded-lg border w-11/12 sm:w-8/12 lg:w-6/12 xl:w-4/12 h-11/12 border-gray-900 bg-white p-6 m-5 shadow-lg dark:bg-navy-700"
-          >
+          <div className="h-11/12 relative m-5 w-11/12 rounded-lg border border-gray-900 bg-white p-6 shadow-lg dark:bg-navy-700 sm:w-8/12 lg:w-6/12 xl:w-4/12">
             <div className="mb-4 flex items-center justify-between dark:bg-navy-700">
               <div className="text-lg font-bold text-gray-800 dark:text-white ">
                 Questions PDF
@@ -258,7 +256,7 @@ const ImageModal = ({
             <img
               src={`${process.env.REACT_APP_API_URL}/uploadedPdfs/extractedQuestionPdfImages/${questionsPdfPath}/image_${currentImageIndex}.png`} // Use the current image URL
               alt={`Slide ${currentImageIndex}`}
-              className={`mb-2 h-[350px] sm:h-[650px] xl:h-[670px] w-full rounded-lg object-contain overflow-auto cursor-pointer ${
+              className={`mb-2 h-[350px] w-full cursor-pointer overflow-auto rounded-lg object-contain sm:h-[650px] xl:h-[670px] ${
                 checkboxStatus[currentImageIndex]
                   ? "border-2 border-green-700 shadow-lg hover:shadow-2xl"
                   : ""
@@ -345,9 +343,7 @@ const ImageModal = ({
       {/* Answer Image Modal */}
       {showAnswerModel && (
         <div className="bg-black fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 backdrop-blur-md">
-          <div
-            className="relative rounded-lg border w-11/12 sm:w-8/12 lg:w-6/12 xl:w-4/12 h-11/12 border-gray-900 bg-white p-6 m-5 shadow-lg dark:bg-navy-700"
-          >
+          <div className="h-11/12 relative m-5 w-11/12 rounded-lg border border-gray-900 bg-white p-6 shadow-lg dark:bg-navy-700 sm:w-8/12 lg:w-6/12 xl:w-4/12">
             <div className="mb-4 flex items-center justify-between ">
               <div className="text-lg font-bold text-gray-800 dark:text-white ">
                 Answers PDF
@@ -382,7 +378,7 @@ const ImageModal = ({
             <img
               src={`${process.env.REACT_APP_API_URL}/uploadedPdfs/extractedAnswerPdfImages/${answersPdfPath}/image_${currentImageIndex}.png`}
               alt={`Slide ${currentImageIndex}`}
-              className={`mb-2 h-[350px] sm:h-[650px] xl:h-[670px] w-full rounded-lg object-contain overflow-auto cursor-pointer ${
+              className={`mb-2 h-[350px] w-full cursor-pointer overflow-auto rounded-lg object-contain sm:h-[650px] xl:h-[670px] ${
                 checkboxStatus[currentImageIndex]
                   ? "border-2 border-green-700"
                   : ""
