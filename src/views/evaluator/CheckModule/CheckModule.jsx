@@ -28,6 +28,7 @@ import { setCurrentBookletIndex } from "store/evaluatorSlice";
 import EvalQuestionModal from "components/modal/EvalQuestionModal";
 import LineLoader from "UI/LineLoader/LineLoader";
 import { io } from "socket.io-client";
+import useInactivityLogout from "../../../hook/InactivityTracker";
 const CheckModule = () => {
   const [answerSheetCount, setAnswerSheetCount] = useState(null);
   const [answerImageDetails, setAnswerImageDetails] = useState([]);
@@ -35,8 +36,8 @@ const CheckModule = () => {
   const [showloader, setShowLoader] = useState(false);
   const [imageObj, setImageObj] = useState(null);
   const [taskdetails, settaskdetails] = useState({});
-  const [totalMarksToDisplay, settotalMarksToDisplay] = useState(null)
-  const [TotalMarks, setTotalMarks] = useState(null)
+  const [totalMarksToDisplay, settotalMarksToDisplay] = useState(null);
+  const [TotalMarks, setTotalMarks] = useState(null);
 
   // Local timer display string (HH:MM:SS)
   const [remainingTimeStr, setRemainingTimeStr] = useState("00:00:00");
@@ -65,8 +66,8 @@ const CheckModule = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  console.log(totalMarksToDisplay)
-  console.log(TotalMarks)
+  console.log(totalMarksToDisplay);
+  console.log(TotalMarks);
   // token MUST be defined before socket connect code
   const token =
     useSelector((state) => state.auth.token) || localStorage.getItem("token");
@@ -190,6 +191,11 @@ const CheckModule = () => {
       socket.off("annotations-updated", handleAnnotations);
     };
   }, [socket]);
+
+  useInactivityLogout(() => {
+    dispatch(logout());
+    navigate("/auth/sign-in");
+  });
 
   // -----------------------------------------------------------------
   // Keep your existing data-fetching useEffects — only change: after
@@ -392,7 +398,7 @@ const CheckModule = () => {
                 :
                 <span
                   className={`ml-2 font-mono ${
-                    remainingSecondsRef.current/60 > userTimerData.maxTime
+                    remainingSecondsRef.current / 60 > userTimerData.maxTime
                       ? "font-semibold text-red-600"
                       : "text-gray-800"
                   }`}
@@ -526,9 +532,9 @@ const CheckModule = () => {
               answerPdfDetails={answerSheetCount}
               taskdetails={taskdetails}
               remainingSecondsRef={remainingSecondsRef.current}
-            userTimerData={userTimerData}
-            settotalMarksToDisplay={settotalMarksToDisplay}
-            setTotalMarks={setTotalMarks}
+              userTimerData={userTimerData}
+              settotalMarksToDisplay={settotalMarksToDisplay}
+              setTotalMarks={setTotalMarks}
             />
           </div>
         </div>
