@@ -50,8 +50,9 @@ const QuestionDefinition = (props) => {
   //   }
   //   console.log(allQuestions[currentQuestion]._id);
   // }, [allQuestions, currentQuestion]);
+  console.log(props.userTimerData);
 
-  console.log(currentParentId)
+  console.log(currentParentId);
   useEffect(() => {
     const fetchQuestionDetails = async (answerPdfDetails, userId) => {
       console.log(userId);
@@ -87,11 +88,17 @@ const QuestionDefinition = (props) => {
   }, [props.answerPdfDetails, marked, evaluatorState.rerender]);
 
   socket.on("questions-data", (data) => {
+    console.log(data)
     setAllQuestions(sortByQuestionsName(data.marks));
-    const reducedArr = data.marks.reduce((total, item) => {
-      return total + item.allottedMarks;
-    }, 0);
+   const reducedArr = data.marks
+  .filter(item => item.isSubQuestion === false)
+  .reduce((total, item) => total + item.allottedMarks, 0);
+   const total = data.marks
+  .filter(item => item.isSubQuestion === false)
+  .reduce((total, item) => total + item.maxMarks, 0);
     setTotalMarks(reducedArr);
+    props.settotalMarksToDisplay(reducedArr)
+    props.setTotalMarks(total)
     const qID = data.marks.filter(
       (id) => parseFloat(id.questionsName) === currentQuestion
     );
@@ -205,24 +212,26 @@ const QuestionDefinition = (props) => {
         </th>
         <td className=" px-2 py-3">
           <div className="relative flex flex-row rounded-lg border  px-1 py-1">
-            {!item.isSubQuestion&&<IconButton
-              color={isRotated ? "warning" : "primary"}
-              aria-label="add icon"
-              onClick={() => handleRotate(index)}
-              style={{
-                transform: `rotate(${isRotated ? 45 : 0}deg)`,
-                transition: "transform 0.3s ease-in-out",
-              }}
-            >
-              <AddCircleOutlineIcon className="" />
-            </IconButton>}
+            {!item.isSubQuestion && (
+              <IconButton
+                color={isRotated ? "warning" : "primary"}
+                aria-label="add icon"
+                onClick={() => handleRotate(index)}
+                style={{
+                  transform: `rotate(${isRotated ? 45 : 0}deg)`,
+                  transition: "transform 0.3s ease-in-out",
+                }}
+              >
+                <AddCircleOutlineIcon className="" />
+              </IconButton>
+            )}
             <input
               className="w-full rounded-lg border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={allotedMarks}
               type="text"
             />
             {/* Modal */}
-            {isRotated && !item.isSubQuestion &&(
+            {isRotated && !item.isSubQuestion && (
               <div
                 className="absolute left--2 top-12 z-10 ml-2 w-24  rounded-md border border-gray-300 bg-white  shadow-lg"
                 style={{
@@ -395,8 +404,18 @@ const QuestionDefinition = (props) => {
         </button>
         <button
           type="button"
-          className=" w-[100%]  border border-green-700 bg-green-700 px-5 py-2.5 text-center text-sm font-medium text-green-700 text-white hover:bg-green-800 focus:outline-none focus:ring-4 focus:ring-green-300 dark:border-green-500 dark:text-red-500 dark:hover:bg-red-600 dark:hover:text-white dark:focus:ring-red-900"
+          disabled={
+            props.remainingSecondsRef / 60 < props.userTimerData.minTime
+          }
           onClick={submitHandler}
+          className={`w-full border px-5 py-2.5 text-center text-sm font-medium
+    ${
+      props.remainingSecondsRef / 60 < props.userTimerData.minTime
+        ? "cursor-not-allowed border-green-700 bg-green-700 opacity-60"
+        : "cursor-pointer bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300"
+    }
+    text-white focus:outline-none
+  `}
         >
           SUBMIT BOOKLET AND NEXT
         </button>
