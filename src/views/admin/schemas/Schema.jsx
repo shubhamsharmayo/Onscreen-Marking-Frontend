@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import SchemaEditModal from "./SchemaEditModal";
 import SchemaCreateModal from "./SchemaCreateModal";
 import ConfirmationModal from "components/modal/ConfirmationModal";
 import { useNavigate } from "react-router-dom";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { MdCreateNewFolder } from "react-icons/md";
+import { FaCloudUploadAlt } from "react-icons/fa";
 import { FiEdit } from "react-icons/fi";
 import { MdAutoDelete } from "react-icons/md";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
@@ -12,14 +13,17 @@ import { toast } from "react-toastify";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getAllSchemas, deleteSchema, updateSchema } from "./schemaApi";
 import Tooltip from "@mui/material/Tooltip";
+import axios from "axios";
 
 const Schema = () => {
   const [editShowModal, setEditShowModal] = useState(false);
   const [createShowModal, setCreateShowModal] = useState(false);
   const [selectedSchema, setSelectedSchema] = useState(null);
+  const [currentBookletDetails, setCurrentBookletDetails] = useState("");
   const [schemaId, setSchemaId] = useState("");
   const [confirmationModal, setConfirmationModal] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const fileInputRef = useRef(null);
   // const [schemaData, setschemaData] = useState()
 
   const token = localStorage.getItem("token");
@@ -67,6 +71,41 @@ const Schema = () => {
   });
   console.log(schemaData);
 
+  const handleSupplementaryUpload = async (event) => {
+    const file = event.target.files[0];
+
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      toast.error("Only PDF files are allowed");
+      event.target.value = "";
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("supplimentaryPdf", file); // ✅ exact backend key
+
+    try {
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/schemas/uploadSupplimentarypdf/${schemaId}`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      toast.success(response.data?.message || "Supplementary PDF uploaded");
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Supplementary PDF upload failed"
+      );
+    } finally {
+      event.target.value = ""; // reset input
+    }
+  };
+
   // Delete schema mutation
   const deleteMutation = useMutation({
     mutationFn: deleteSchema,
@@ -83,6 +122,64 @@ const Schema = () => {
     deleteMutation.mutate({ id: schemaId, token });
     setConfirmationModal(false);
   };
+  // const handleFileUpload = async (event) => {
+  //   const files = Array.from(event.target.files);
+  //   if (!files.length) return;
+
+  //   const pdfFiles = files.filter((file) => file.type === "application/pdf");
+
+  //   const rarFiles = files.filter(
+  //     (file) =>
+  //       file.type === "application/zip" ||
+  //       file.type === "application/x-zip-compressed"
+  //   );
+
+  //   // Rule 1: PDF → multiple allowed
+  //   // Rule 2: RAR → only one allowed
+  //   // Rule 3: PDF + RAR together → NOT allowed
+
+  //   if (rarFiles.length > 1) {
+  //     toast.error("Only one RAR file can be uploaded at a time");
+  //     event.target.value = "";
+  //     return;
+  //   }
+
+  //   if (rarFiles.length === 1 && pdfFiles.length > 0) {
+  //     toast.error("Cannot upload PDF and RAR together");
+  //     event.target.value = "";
+  //     return;
+  //   }
+
+  //   // Proceed with upload
+  //   const formData = new FormData();
+
+  //   files.forEach((file) => {
+  //     formData.append("file", file);
+  //   });
+  //   console.log(currentBookletDetails?.folderName);
+  //   // formData.append("bookletId", currentBookletDetails?._id);
+  //   formData.append("subjectCode", currentBookletDetails?.folderName);
+  //   console.log(formData);
+  //   try {
+  //     const response = await axios.post(
+  //       `${process.env.REACT_APP_API_URL}/api/bookletprocessing/uploadingbooklets`,
+  //       formData,
+  //       {
+  //         headers: {
+  //           "Content-Type": "multipart/form-data",
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
+
+  //     toast.success("Upload successful");
+  //   } catch (err) {
+  //     // console.log(err?.response?.data?.message)
+  //     toast.error(err?.response?.data?.message);
+  //   } finally {
+  //     event.target.value = "";
+  //   }
+  // };
 
   // Update schema mutation
   const updateMutation = useMutation({
@@ -113,10 +210,13 @@ const Schema = () => {
     maxMarks: data.maxMarks,
     minMarks: data.minMarks,
     totalQuestions: data.totalQuestions,
+    numberOfSupplement: data.numberOfSupplement,
     compulsoryQuestions: data.compulsoryQuestions,
     // evaluationTime: data.evaluationTime,
     minTime: data.minTime,
     maxTime: data.maxTime,
+    PageofSupplement: data.PageofSupplement,
+
     numberOfPage: data.numberOfPage,
     hiddenPage: data?.hiddenPage.map((item) => parseInt(item) + 1),
   }));
@@ -167,6 +267,35 @@ const Schema = () => {
       ),
     },
     {
+      field: "upload",
+      headerName: "Upload",
+      flex: 0.9,
+      minWidth: 1,
+      renderCell: (params) => (
+        <>
+          <Tooltip title="Upload Supplementary PDF" arrow placement="top">
+            <div
+              className="flex cursor-pointer justify-center rounded px-3 py-2"
+              onClick={() => {
+                setSchemaId(params.row.id); // ✅ store schemaId
+                fileInputRef.current.click(); // ✅ open file picker
+              }}
+            >
+              <FaCloudUploadAlt className="size-7 text-yellow-600" />
+            </div>
+          </Tooltip>
+
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept="application/pdf"
+            className="hidden"
+            onChange={handleSupplementaryUpload}
+          />
+        </>
+      ),
+    },
+    {
       field: "edit",
       headerName: "Edit",
       renderCell: (params) => (
@@ -177,6 +306,7 @@ const Schema = () => {
               setEditShowModal(true);
               setSchemaId(params.row.id);
               setSelectedSchema(params.row);
+              console.log(params.row);
             }}
           >
             <FiEdit className="size-6" />

@@ -23,6 +23,8 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
     hiddenPage: [],
     minTime: "",
     maxTime: "",
+    PageofSupplement: "",
+    numberOfSupplement: "",
   });
 
   const token = localStorage.getItem("token");
@@ -116,6 +118,8 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
       !formData.numberOfPage ||
       formData?.hiddenPage?.length === 0 ||
       !formData?.minTime ||
+      !formData?.numberOfSupplement === 0 ||
+      !formData?.PageofSupplement === 0 ||
       !formData?.maxTime
     ) {
       toast.error("All fields are required.");
@@ -155,6 +159,17 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
       toast.error("Min Time must be positive.");
       return;
     }
+
+    if (Number(formData?.numberOfSupplement) <= 0) {
+      toast.error("Min Time must be positive.");
+      return;
+    }
+
+    if (Number(formData?.PageofSupplement) <= 0) {
+      toast.error("Min Time must be positive.");
+      return;
+    }
+
     if (Number(formData?.maxTime) <= 0) {
       toast.error("Max Time must be positive.");
       return;
@@ -335,7 +350,7 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
                 ))}
               </select>
             </div>
-          </div>{" "}
+          </div>
           {/* Page Index Contains */}
           {formData?.hiddenPage?.length > 0 && (
             <div className="flex flex-col justify-between sm:flex-row">
@@ -353,6 +368,43 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
             </div>
           )}
           {/* Min Marks */}
+
+          <div className="flex flex-col justify-between sm:flex-row">
+            {/* No. of pages input */}
+            <div className="mb-2 sm:mb-0">
+              <label
+                className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg"
+                // htmlFor="numberOfPage"
+              >
+                No. of Supplement:
+              </label>
+              <input
+                type="number"
+                id="numberOfSupplement"
+                name="numberOfSupplement"
+                value={formData.numberOfSupplement}
+                onChange={handleChange}
+                className="sm:text-md box-border w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:px-4 sm:py-2"
+              />
+            </div>
+
+            <div className="mb-2 sm:mb-0">
+              <label
+                className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg"
+                // htmlFor="numberOfPage"
+              >
+                Pages in Supplement:
+              </label>
+              <input
+                type="number"
+                id="PageofSupplement"
+                name="PageofSupplement"
+                value={formData.PageofSupplement}
+                onChange={handleChange}
+                className="sm:text-md box-border w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:px-4 sm:py-2"
+              />
+            </div>
+          </div>
           <div className="flex flex-col justify-between space-x-3 sm:flex-row">
             <div className="mb-2 sm:mb-0">
               <label

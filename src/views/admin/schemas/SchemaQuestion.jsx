@@ -23,6 +23,8 @@ const SchemaQuestion = ({
     hiddenPage: [],
     minTime: "",
     maxTime: "",
+    PageofSupplement: "",
+    numberOfSupplement: "",
   });
   const [selectedHiddenPage, setSelectedHiddenPage] = useState("");
 
@@ -34,6 +36,8 @@ const SchemaQuestion = ({
         minMarks: selectedSchema.minMarks || "",
         totalQuestions: selectedSchema.totalQuestions || "",
         compulsoryQuestions: selectedSchema.compulsoryQuestions || "",
+        PageofSupplement: selectedSchema.PageofSupplement || "",
+        numberOfSupplement: selectedSchema.numberOfSupplement || "",
         // evaluationTime: selectedSchema.evaluationTime || "",
         minTime: selectedSchema.minTime || "",
         maxTime: selectedSchema.maxTime || "",
@@ -100,6 +104,8 @@ const SchemaQuestion = ({
       // !formData.evaluationTime ||
       !formData.minTime ||
       !formData.maxTime ||
+      !formData?.numberOfSupplement === 0 ||
+      !formData?.PageofSupplement === 0 ||
       !formData.numberOfPage ||
       formData?.hiddenPage?.length === 0
     ) {
@@ -137,6 +143,16 @@ const SchemaQuestion = ({
 
     if (Number.isNaN(compulsory) || compulsory < 0) {
       toast.error("Compulsory Questions must be 0 or a positive number.");
+      return;
+    }
+
+    if (Number(formData?.numberOfSupplement) <= 0) {
+      toast.error("Min Time must be positive.");
+      return;
+    }
+
+    if (Number(formData?.PageofSupplement) <= 0) {
+      toast.error("Min Time must be positive.");
       return;
     }
 

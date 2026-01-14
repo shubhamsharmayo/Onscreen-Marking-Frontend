@@ -1,3 +1,4 @@
+import { Select } from "@mui/material";
 import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { GiCrossMark } from "react-icons/gi";
@@ -23,6 +24,8 @@ const SchemaEditModal = ({
     hiddenPage: [],
     minTime: "",
     maxTime: "",
+    PageofSupplement: "",
+    numberOfSupplement: "",
   });
   const [selectedHiddenPage, setSelectedHiddenPage] = useState("");
 
@@ -34,6 +37,8 @@ const SchemaEditModal = ({
         minMarks: selectedSchema.minMarks || "",
         totalQuestions: selectedSchema.totalQuestions || "",
         compulsoryQuestions: selectedSchema.compulsoryQuestions || "",
+        PageofSupplement: selectedSchema.PageofSupplement || "",
+        numberOfSupplement: selectedSchema.numberOfSupplement || "",
         // evaluationTime: selectedSchema.evaluationTime || "",
         minTime: selectedSchema.minTime || "",
         maxTime: selectedSchema.maxTime || "",
@@ -97,10 +102,12 @@ const SchemaEditModal = ({
       !formData.maxMarks ||
       !formData.minMarks ||
       !formData.totalQuestions ||
-      formData.compulsoryQuestions === "" ||
+      formData.compulsoryQuestions === 0 ||
       // !formData.evaluationTime ||
       !formData.minTime ||
       !formData.maxTime ||
+      !formData?.numberOfSupplement === "" ||
+      !formData?.PageofSupplement === "" ||
       !formData.numberOfPage ||
       formData?.hiddenPage?.length === 0
     ) {
@@ -125,6 +132,16 @@ const SchemaEditModal = ({
       toast.error(
         "Min Marks must be a positive number and less than or equal to Max Marks."
       );
+      return;
+    }
+
+    if (Number(formData?.numberOfSupplement) <= 0) {
+      toast.error("Min Time must be positive.");
+      return;
+    }
+
+    if (Number(formData?.PageofSupplement) <= 0) {
+      toast.error("Min Time must be positive.");
       return;
     }
 
@@ -288,6 +305,42 @@ const SchemaEditModal = ({
                 value={formData?.maxTime}
                 onChange={handleInputChange}
                 className="sm:text-md w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-3"
+              />
+            </div>
+          </div>
+          <div className="flex flex-col justify-between sm:flex-row">
+            {/* No. of pages input */}
+            <div className="mb-2 sm:mb-0">
+              <label
+                className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg"
+                // htmlFor="numberOfPage"
+              >
+                No. of Supplement:
+              </label>
+              <input
+                type="number"
+                id="numberOfSupplement"
+                name="numberOfSupplement"
+                value={formData.numberOfSupplement}
+                onChange={handleInputChange}
+                className="sm:text-md box-border w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:px-4 sm:py-2"
+              />
+            </div>
+
+            <div className="mb-2 sm:mb-0">
+              <label
+                className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg"
+                // htmlFor="numberOfPage"
+              >
+                Pages in Supplement:
+              </label>
+              <input
+                type="number"
+                id="PageofSupplement"
+                name="PageofSupplement"
+                value={formData.PageofSupplement}
+                onChange={handleInputChange}
+                className="sm:text-md box-border w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:px-4 sm:py-2"
               />
             </div>
           </div>
