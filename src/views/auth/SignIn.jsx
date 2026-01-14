@@ -295,9 +295,10 @@ export function SignIn() {
               Enter your email address to recover your account.
             </p>
           ) : (
-            <p className="mt-4 leading-relaxed text-gray-700">
-              Enter your email address and password or OTP to access the admin
-              panel.
+            <p className="mt-4 text-center leading-relaxed text-gray-700">
+              Enter your email address and password.{" "}
+              {/* or OTP to access the admin
+              panel. */}
             </p>
           )}
 
@@ -560,7 +561,7 @@ export function SignIn() {
                   )}
                 </button>
                 <div className="flex justify-center gap-5">
-                  <p className="text-sm text-gray-500">
+                  {/* <p className="text-sm text-gray-500">
                     <button
                       onClick={() => setOtp(!otp)}
                       className={`rounded-md p-3 ${
@@ -570,7 +571,7 @@ export function SignIn() {
                     >
                       OTP based login
                     </button>
-                  </p>
+                  </p> */}
                   <p className="text-sm text-gray-500">
                     <button
                       type="button"

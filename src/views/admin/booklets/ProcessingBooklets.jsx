@@ -121,14 +121,14 @@ const ProcessingBooklets = () => {
     }
   };
 
-  const handlePdfImages = (pdfName) => {
-    if (!pdfName) return toast.error("No pdf name found");
-    if (!classId) return toast.error("No class id found");
+  // const handlePdfImages = (pdfName) => {
+  //   if (!pdfName) return toast.error("No pdf name found");
+  //   if (!classId) return toast.error("No class id found");
 
-    setPdfName(pdfName);
-    SetShowProcessingImageModal(true);
-    SetShowProcessingModal(false);
-  };
+  //   setPdfName(pdfName);
+  //   SetShowProcessingImageModal(true);
+  //   SetShowProcessingModal(false);
+  // };
 
   // Table columns configuration
   const columns = [
@@ -160,7 +160,7 @@ const ProcessingBooklets = () => {
       renderCell: (params) => (
         <div
           className="flex cursor-pointer justify-center rounded px-3 py-2 text-center font-medium text-yellow-600 "
-          onClick={() => handlePdfImages(params.row.pdfName)}
+          // onClick={() => handlePdfImages(params.row.pdfName)}
         >
           <FaRegFilePdf className="size-6 text-red-500 " />
         </div>

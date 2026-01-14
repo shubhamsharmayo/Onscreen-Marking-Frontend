@@ -256,6 +256,7 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
                 type="number"
                 id="minTime"
                 name="minTime"
+                placeholder="- -"
                 value={formData.minTime}
                 onChange={handleChange}
                 className="sm:text-md box-border  w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:px-4 sm:py-2"
@@ -273,6 +274,7 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
                 id="maxTime"
                 name="maxTime"
                 value={formData.maxTime}
+                placeholder="- -"
                 onChange={handleChange}
                 className="sm:text-md box-border  w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:px-4 sm:py-2"
               />
