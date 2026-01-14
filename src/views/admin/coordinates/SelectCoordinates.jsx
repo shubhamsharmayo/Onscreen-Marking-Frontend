@@ -330,7 +330,7 @@ const SelectCoordinates = () => {
     setQuestionId(
       savedQuestionData.filter(
         (savedQuestion) =>
-          parseInt(savedQuestion.questionsName) === folder.id || undefined
+          parseFloat(savedQuestion.questionsName) === parseFloat(folder.id) || undefined
       )
     );
     setFormData((prevFormData) => ({
@@ -697,7 +697,7 @@ const SelectCoordinates = () => {
         <ViewImageModel
           showViewImageModal={showViewImageModal}
           setShowViewImageModal={setShowViewImageModal}
-          questionId={questionId[0]?._id}
+          questionId={questionId}
           handleSubmitButton={handleSubmitButton}
           setFormData={setFormData}
           showAnswerModel={showAnswerModel}
