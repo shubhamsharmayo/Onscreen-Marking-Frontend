@@ -27,7 +27,10 @@ const ImageModal = ({
   const [viewquestionImages, setViewquestionImages] = useState([]);
   const [viewanswerImages, setViewanswerImages] = useState([]);
 
-  //   console.log(formData);
+  console.log(folderid);
+  console.log(questionId);
+  console.log(questionDone);
+  // console.log(questionId);
 
   const nextImageQuestion = () => {
     if (showAnswerModel) {
@@ -120,10 +123,19 @@ const ImageModal = ({
             },
           }
         );
-
-        setViewquestionImages(response.data[folderid-1].questionImages);
-        setViewanswerImages(response.data[folderid-1].answerImages);
-
+        console.log(response.data);
+        // setViewquestionImages(response.data[folderid-1].questionImages);
+        // setViewanswerImages(response.data[folderid-1].answerImages);
+        response.data.filter((item) => {
+            if(item?.questionId === questionId[0]?._id){
+               
+               setViewquestionImages(item?.questionImages);
+               setViewanswerImages(item?.answerImages);
+            }
+            
+          })
+        
+        
       } catch (error) {
         console.log(error);
         // toast.error(error?.response?.data?.message);
@@ -143,7 +155,7 @@ const ImageModal = ({
             },
           }
         );
-
+        console.log(response?.data)
         setQuestionsPdfPath(response?.data?.questionPdfPath);
         setCountQuestions(response?.data?.countOfQuestionImages);
         setAnswersPdfPath(response?.data?.answerPdfPath);
@@ -268,10 +280,10 @@ const ImageModal = ({
   // console.log(questionDone)
 
   const handleQuestionConfirm = () => {
-    if (!showAnswerModel && formData?.questionImages?.length === 0) {
-      toast.error("Please select at least one image");
-      return;
-    }
+    // if (!showAnswerModel && formData?.questionImages?.length === 0) {
+    //   toast.error("Please select at least one image");
+    //   return;
+    // }
     setShowAnswerModel(!showAnswerModel);
     setCheckboxStatus({});
     setCurrentImageIndex(0);
@@ -331,16 +343,16 @@ const ImageModal = ({
 
             {/* Image Display */}
             <img
-                src={`${process.env.REACT_APP_API_URL}/uploadedPdfs/extractedQuestionPdfImages/${questionsPdfPath}/${viewquestionImages[currentImageIndex]}`} // Use the current image URL
-                alt={`Slide ${currentImageIndex}`}
-                className={`hover:shadow-2x mb-2 h-[350px] w-full cursor-not-allowed overflow-auto rounded-lg border-2 border-green-700 object-contain shadow-lg sm:h-[650px] xl:h-[670px]`}
-                onClick={() => {
-                  handleSelectedImage(
-                    currentImageIndex,
-                    `image_${currentImageIndex}.png`
-                  );
-                }}
-              />
+              src={`${process.env.REACT_APP_API_URL}/uploadedPdfs/extractedQuestionPdfImages/${questionsPdfPath}/${viewquestionImages[currentImageIndex]}`} // Use the current image URL
+              alt={`Slide ${currentImageIndex}`}
+              className={`hover:shadow-2x mb-2 h-[350px] w-full cursor-not-allowed overflow-auto rounded-lg border-2 border-green-700 object-contain shadow-lg sm:h-[650px] xl:h-[670px]`}
+              onClick={() => {
+                handleSelectedImage(
+                  currentImageIndex,
+                  `image_${currentImageIndex}.png`
+                );
+              }}
+            />
 
             {/* Pagination Controls */}
             <div className="flex items-center justify-between">
@@ -353,7 +365,7 @@ const ImageModal = ({
               {/* Confirm Button */}
               <div className="flex justify-center space-x-4">
                 <button
-                  className="rounded-lg bg-blue-600 px-5 py-2.5 text-center text-md font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800"
+                  className="text-md rounded-lg bg-blue-600 px-5 py-2.5 text-center font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800"
                   onClick={handleQuestionConfirm}
                 >
                   See Answer
@@ -454,16 +466,16 @@ const ImageModal = ({
 
             {/* Answer Image Display */}
             <img
-                src={`${process.env.REACT_APP_API_URL}/uploadedPdfs/extractedQuestionPdfImages/${questionsPdfPath}/${viewanswerImages[currentImageIndex]}`} // Use the current image URL
-                alt={`Slide ${currentImageIndex}`}
-                className={`hover:shadow-2x mb-2 h-[350px] w-full cursor-not-allowed overflow-auto rounded-lg border-2 border-green-700 object-contain shadow-lg sm:h-[650px] xl:h-[670px]`}
-                onClick={() => {
-                  handleSelectedImage(
-                    currentImageIndex,
-                    `image_${currentImageIndex}.png`
-                  );
-                }}
-              />
+              src={`${process.env.REACT_APP_API_URL}/uploadedPdfs/extractedAnswerPdfImages/${answersPdfPath}/${viewanswerImages[currentImageIndex]}`} // Use the current image URL
+              alt={`Slide ${currentImageIndex}`}
+              className={`hover:shadow-2x mb-2 h-[350px] w-full cursor-not-allowed overflow-auto rounded-lg border-2 border-green-700 object-contain shadow-lg sm:h-[650px] xl:h-[670px]`}
+              onClick={() => {
+                handleSelectedImage(
+                  currentImageIndex,
+                  `image_${currentImageIndex}.png`
+                );
+              }}
+            />
 
             {/* Pagination Controls */}
             <div className="flex items-center justify-between">
