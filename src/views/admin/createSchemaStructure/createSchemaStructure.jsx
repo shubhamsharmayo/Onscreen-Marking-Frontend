@@ -69,42 +69,7 @@ const CreateSchemaStructure = () => {
     fetchedData();
   }, [id, token]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(
-          `${process.env.REACT_APP_API_URL}/api/schemas/getall/questiondefinitions/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        console.log(response);
-        const data = response?.data?.data || [];
-        setSavedQuestionData(data);
-
-        const totalMarksUsed = data.reduce(
-          (acc, question) => acc + (question?.maxMarks || 0),
-          0
-        );
-        console.log(totalMarksUsed);
-        setRemainingMarks((schemaData?.maxMarks || 0) - totalMarksUsed);
-
-        const remainingQuestions =
-          (schemaData?.totalQuestions || 0) - data.length;
-        setQuestionToAllot(remainingQuestions > 0 ? remainingQuestions : 0);
-      } catch (error) {
-        console.error("Error fetching schema data:", error);
-
-        if (error.response?.status === 404) {
-          setSavedQuestionData([]);
-        }
-      }
-    };
-
-    fetchData();
-  }, [id, token, schemaData, setSavedQuestionData, parentId]);
+  
 
   // NEW: Helper function to calculate total marks of sub-questions
   const calculateSubQuestionsTotalMarks = (parentFolderId) => {
@@ -158,130 +123,235 @@ const CreateSchemaStructure = () => {
     setFolders((prevFolders) => updateFolders(prevFolders));
   };
 
-  const handleDeleteQuestion = async (folder, level, parentFolderId = null) => {
-    const folderId = folder.id;
+const handleDeleteQuestion = async (folder, level, parentFolderId = null) => {
+  const folderId = folder.id;
+  if (deletingStatus[folderId]) return;
 
-    if (deletingStatus[folderId]) return;
+  const confirmDelete = window.confirm(
+    `Are you sure you want to delete ${folder.name}? ${
+      folder.children?.length > 0
+        ? "This will also delete all sub-questions."
+        : ""
+    }`
+  );
+  if (!confirmDelete) return;
 
-    const confirmDelete = window.confirm(
-      `Are you sure you want to delete ${folder.name}? ${
-        folder.children?.length > 0
-          ? "This will also delete all sub-questions."
-          : ""
-      }`
+  setDeletingStatus((prev) => ({ ...prev, [folderId]: true }));
+
+  try {
+    let currentQ = [];
+    let currentSQ = [];
+
+    if (level === 0) {
+      currentQ = savedQuestionData.filter(
+        (item) => parseInt(item.questionsName) === folderId
+      );
+    } else if (level > 0 && parentFolderId) {
+      const parentSubQuestions = subQuestionMap[parentFolderId] || [];
+      currentSQ = parentSubQuestions.filter(
+        (item) => item.questionsName === String(folderId)
+      );
+    }
+
+    const questionToDelete =
+      level > 0 && currentSQ.length > 0 ? currentSQ[0] : currentQ[0];
+
+    if (!questionToDelete || !questionToDelete._id) {
+      toast.warning("No saved question to delete");
+      setDeletingStatus((prev) => ({ ...prev, [folderId]: false }));
+      return;
+    }
+
+    // Delete the question
+    await axios.delete(
+      `${process.env.REACT_APP_API_URL}/api/schemas/delete/questiondefinition/${questionToDelete._id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
     );
 
-    if (!confirmDelete) return;
+    // 🔥 NEW: If it's a main question (level 0), renumber all questions after it
+    if (level === 0) {
+      // Get all main questions that come after the deleted question
+      const questionsToRenumber = savedQuestionData
+        .filter((item) => {
+          const questionNum = parseInt(item.questionsName);
+          return questionNum > folderId && !item.questionsName.includes(".");
+        })
+        .sort((a, b) => parseInt(a.questionsName) - parseInt(b.questionsName));
 
-    setDeletingStatus((prev) => ({ ...prev, [folderId]: true }));
+      // Renumber each question (shift down by 1)
+      for (const question of questionsToRenumber) {
+        const oldQuestionNum = parseInt(question.questionsName);
+        const newQuestionNum = oldQuestionNum - 1;
 
-    try {
-      let currentQ = [];
-      let currentSQ = [];
-
-      if (level === 0) {
-        currentQ = savedQuestionData.filter(
-          (item) => parseInt(item.questionsName) === folderId
+        await axios.put(
+          `${process.env.REACT_APP_API_URL}/api/schemas/update/questiondefinition/${question._id}`,
+          {
+            ...question,
+            questionsName: String(newQuestionNum),
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
-      } else if (level > 0 && parentFolderId) {
-        const parentSubQuestions = subQuestionMap[parentFolderId] || [];
-        currentSQ = parentSubQuestions.filter(
-          (item) => item.questionsName === String(folderId)
+
+        // Also renumber all sub-questions for this question
+        const subQuestions = savedQuestionData.filter(
+          (item) => item.parentQuestionId === question._id
         );
+
+        for (const subQ of subQuestions) {
+          const subQuestionParts = subQ.questionsName.split(".");
+          const newSubQuestionName = `${newQuestionNum}.${subQuestionParts[1]}`;
+
+          await axios.put(
+            `${process.env.REACT_APP_API_URL}/api/schemas/update/questiondefinition/${subQ._id}`,
+            {
+              ...subQ,
+              questionsName: newSubQuestionName,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+        }
       }
 
-      const questionToDelete =
-        level > 0 && currentSQ.length > 0 ? currentSQ[0] : currentQ[0];
-
-      if (!questionToDelete || !questionToDelete._id) {
-        toast.warning("No saved question to delete");
-
-        const removeFolderFromStructure = (folders) => {
-          return folders
-            .filter((f) => f.id !== folderId)
-            .map((folder) => {
-              if (folder.children && folder.children.length > 0) {
-                return {
-                  ...folder,
-                  children: removeFolderFromStructure(folder.children),
-                };
-              }
-              return folder;
-            });
-        };
-
-        setFolders((prevFolders) => removeFolderFromStructure(prevFolders));
-        setDeletingStatus((prev) => ({ ...prev, [folderId]: false }));
-        return;
-      }
-
-      const response = await axios.delete(
-        `${process.env.REACT_APP_API_URL}/api/schemas/delete/questiondefinition/${questionToDelete._id}`,
+      // Update schema's totalQuestions
+      const newTotalQuestions = (schemaData?.totalQuestions || 0) - 1;
+      
+      await axios.put(
+        `${process.env.REACT_APP_API_URL}/api/schemas/update/schema/${id}`,
+        {
+          ...schemaData,
+          totalQuestions: newTotalQuestions,
+        },
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
-
-      toast.success(response?.data?.message || "Question deleted successfully");
-
-      window.location.reload();
-
-      setSavedQuestionData((prev) =>
-        prev.filter((item) => item._id !== questionToDelete._id)
-      );
-
-      if (level > 0 && parentFolderId) {
-        setSubQuestionMap((prev) => {
-          const updated = { ...prev };
-          if (updated[parentFolderId]) {
-            updated[parentFolderId] = updated[parentFolderId].filter(
-              (sq) => sq._id !== questionToDelete._id
-            );
-          }
-          return updated;
-        });
-      }
-
-      if (level === 0 && folder.children?.length > 0) {
-        setSubQuestionMap((prev) => {
-          const updated = { ...prev };
-          delete updated[folderId];
-          return updated;
-        });
-      }
-
-      const removeFolderFromStructure = (folders) => {
-        return folders
-          .filter((f) => f.id !== folderId)
-          .map((folder) => {
-            if (folder.children && folder.children.length > 0) {
-              return {
-                ...folder,
-                children: removeFolderFromStructure(folder.children),
-              };
-            }
-            return folder;
-          });
-      };
-
-      setFolders((prevFolders) => removeFolderFromStructure(prevFolders));
-
-      const totalMarksUsed = savedQuestionData
-        .filter((item) => item._id !== questionToDelete._id)
-        .reduce((acc, question) => acc + (question?.maxMarks || 0), 0);
-
-      setRemainingMarks((schemaData?.maxMarks || 0) - totalMarksUsed);
-    } catch (error) {
-      console.error("Error deleting question:", error);
-      toast.error(
-        error?.response?.data?.message || "Failed to delete question"
-      );
-    } finally {
-      setDeletingStatus((prev) => ({ ...prev, [folderId]: false }));
     }
-  };
+
+    // 🔥 NEW: If it's a sub-question, renumber sibling sub-questions
+    if (level > 0 && parentFolderId) {
+      const parentSubQuestions = subQuestionMap[parentFolderId] || [];
+      const deletedSubQuestionParts = String(folderId).split(".");
+      const deletedSubIndex = parseInt(deletedSubQuestionParts[1]);
+
+      // Get all sub-questions that come after the deleted one
+      const subQuestionsToRenumber = parentSubQuestions
+        .filter((sq) => {
+          const parts = sq.questionsName.split(".");
+          return parseInt(parts[1]) > deletedSubIndex;
+        })
+        .sort((a, b) => {
+          const aIndex = parseInt(a.questionsName.split(".")[1]);
+          const bIndex = parseInt(b.questionsName.split(".")[1]);
+          return aIndex - bIndex;
+        });
+
+      // Renumber each sub-question (shift down by 1)
+      for (const subQ of subQuestionsToRenumber) {
+        const parts = subQ.questionsName.split(".");
+        const oldSubIndex = parseInt(parts[1]);
+        const newSubIndex = oldSubIndex - 1;
+        const newSubQuestionName = `${parentFolderId}.${newSubIndex}`;
+
+        await axios.put(
+          `${process.env.REACT_APP_API_URL}/api/schemas/update/questiondefinition/${subQ._id}`,
+          {
+            ...subQ,
+            questionsName: newSubQuestionName,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+      }
+
+      // Update parent question's numberOfSubQuestions
+      const parentQuestion = savedQuestionData.find(
+        (item) => parseInt(item.questionsName) === parentFolderId
+      );
+
+      if (parentQuestion) {
+        await axios.put(
+          `${process.env.REACT_APP_API_URL}/api/schemas/update/questiondefinition/${parentQuestion._id}`,
+          {
+            ...parentQuestion,
+            numberOfSubQuestions: (parentQuestion.numberOfSubQuestions || 0) - 1,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+      }
+    }
+
+    toast.success("Question deleted and renumbered successfully");
+    
+    // Reload to reflect changes
+    window.location.reload();
+
+  } catch (error) {
+    console.error("Error deleting question:", error);
+    toast.error(
+      error?.response?.data?.message || "Failed to delete question"
+    );
+  } finally {
+    setDeletingStatus((prev) => ({ ...prev, [folderId]: false }));
+  }
+};
+
+useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(
+          `${process.env.REACT_APP_API_URL}/api/schemas/getall/questiondefinitions/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        console.log(response);
+        const data = response?.data?.data || [];
+        setSavedQuestionData(data);
+
+        const totalMarksUsed = data.reduce(
+          (acc, question) => acc + (question?.maxMarks || 0),
+          0
+        );
+        console.log(totalMarksUsed);
+        setRemainingMarks((schemaData?.maxMarks || 0) - totalMarksUsed);
+
+        const remainingQuestions =
+          (schemaData?.totalQuestions || 0) - data.length;
+        setQuestionToAllot(remainingQuestions > 0 ? remainingQuestions : 0);
+      } catch (error) {
+        console.error("Error fetching schema data:", error);
+
+        if (error.response?.status === 404) {
+          setSavedQuestionData([]);
+        }
+      }
+    };
+
+    fetchData();
+  }, [id, token, schemaData, setSavedQuestionData, parentId, handleDeleteQuestion]);
 
   const handleUpdate = async (schemaId, updatedData) => {
     try {
