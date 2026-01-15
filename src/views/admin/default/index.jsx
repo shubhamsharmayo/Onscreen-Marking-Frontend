@@ -62,7 +62,7 @@ const Dashboard = () => {
       try {
         const userData = await getUserDetails(token);
         console.log(userData?.data);
-        setuser(userData.data);
+        setuser(userData?.data);
       } catch (error) {
         console.log(error);
       } finally {
@@ -73,7 +73,7 @@ const Dashboard = () => {
   }, [token]);
 
   useEffect(() => {
-    console.log(user?.role);
+    console.log(user);
 
     if (user?.role === "admin") {
       socket.emit("join-analytics-room");
@@ -159,7 +159,21 @@ const Dashboard = () => {
       setSelectedChartData(dataSets[title]);
     }
   };
-
+// useEffect(() => {
+//     const onlineStatus = async ()=>{
+//      const response = await axios.get(
+//       `${process.env.REACT_APP_API_URL}/api/auth/user-status/693a9e8975b47c9b419a4868`,
+//       {
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//         },
+//       }
+//     );
+//       console.log( response)
+//     }
+  
+//    onlineStatus()
+//   }, [])
   // useEffect(() => {
   //   try {
   //     async function fetchData() {
@@ -185,6 +199,10 @@ const Dashboard = () => {
   if (loading) {
     return;
   }
+
+
+  
+  
 
   return (
     <div className="dashboard relative p-5 dark:text-white">

@@ -7,6 +7,7 @@ const SubQuestionModal = ({ showImageModal, setShowImageModal, schemaId }) => {
   const [pdfFolder, setPdfFolder] = useState("");
   const [totalPages, setTotalPages] = useState(0);
   const [selectedPages, setSelectedPages] = useState({});
+  
 
   useEffect(() => {
     if (!schemaId || !showImageModal) return;
@@ -23,8 +24,8 @@ const SubQuestionModal = ({ showImageModal, setShowImageModal, schemaId }) => {
         );
 
         setPdfFolder(res.data?.supplementaryPdfPath || "");
-        setTotalPages(res.data?.supplementaryPageCount || 0);
-
+        setTotalPages(res.data?.supplimentaryImageCount || 0);
+        console.log(res.data)
         // ✅ reset state when schema changes
         setCurrentPage(1);
         setSelectedPages({});

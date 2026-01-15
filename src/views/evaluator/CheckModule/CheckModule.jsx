@@ -18,6 +18,7 @@ import {
   setCurrentAnswerPdfId,
   setCurrentBookletId,
 } from "store/evaluatorSlice";
+import ProgressBar from './ProgressBar'
 import {
   getTaskById,
   getAnswerPdfById,
@@ -123,18 +124,18 @@ const CheckModule = () => {
     setSocket(newSocket);
 
     newSocket.on("connect", () => {
-      console.log("Socket connected:", newSocket.id);
+      // console.log("Socket connected:", newSocket.id);
 
       newSocket.emit("join-timerRoom", { taskId });
       newSocket.emit("start-evaluation", { taskId, answerPdfId });
     });
 
     newSocket.on("room-joined", (data) => {
-      console.log("room-joined:", data);
+      // console.log("room-joined:", data);
     });
 
     newSocket.on("start-timer-update", (data) => {
-      // console.log("⏱ Received start-timer-update:", data);
+      console.log("⏱ Received start-timer-update:", data);
 
       remainingSecondsRef.current = data.remainingTime * 60;
       setuserTimerData(data);
@@ -166,11 +167,11 @@ const CheckModule = () => {
           remainingTime,
         });
 
-        console.log("📤 Sent timer update:", {
-          taskId,
-          answerPdfId,
-          remainingTime,
-        });
+        // console.log("📤 Sent timer update:", {
+        //   taskId,
+        //   answerPdfId,
+        //   remainingTime,
+        // });
       }
     }, 5000);
 
@@ -181,7 +182,7 @@ const CheckModule = () => {
     if (!socket) return;
 
     const handleAnnotations = (data) => {
-      console.log("Annotations:", data);
+      // console.log("Annotations:", data);
     };
 
     socket.on("annotations-updated", handleAnnotations);
@@ -192,10 +193,10 @@ const CheckModule = () => {
     };
   }, [socket]);
 
-  useInactivityLogout(() => {
-    dispatch(logout());
-    navigate("/auth/sign-in");
-  });
+  // useInactivityLogout(() => {
+  //   dispatch(logout());
+  //   navigate("/auth/sign-in");
+  // });
 
   // -----------------------------------------------------------------
   // Keep your existing data-fetching useEffects — only change: after
@@ -233,6 +234,7 @@ const CheckModule = () => {
           setCurrentAnswerPdfImageId(res[evaluatorState.currentIndex]._id)
         );
         setAnswerImageDetails(res);
+        // console.log(res)
       } catch (error) {
         console.log(error);
       }
@@ -384,6 +386,9 @@ const CheckModule = () => {
                   {taskDetails?.currentFileIndex || "N/A"} of{" "}
                   {taskDetails?.totalBooklets}
                 </span>
+              </div>
+              <div className="flex justify-center items-center">
+                <ProgressBar value={totalMarksToDisplay} max={userTimerData?.maxMarks} min={userTimerData?.minMarks}/><span>{totalMarksToDisplay}/{userTimerData?.maxMarks}</span>
               </div>
             </section>
 
