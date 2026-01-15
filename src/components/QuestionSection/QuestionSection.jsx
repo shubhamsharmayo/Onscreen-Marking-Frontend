@@ -50,18 +50,19 @@ const QuestionDefinition = (props) => {
   //   }
   //   console.log(allQuestions[currentQuestion]._id);
   // }, [allQuestions, currentQuestion]);
-  console.log(props.userTimerData);
+  // console.log(props.userTimerData);
 
-  console.log(currentParentId);
+  // console.log(currentParentId);
   useEffect(() => {
     const fetchQuestionDetails = async (answerPdfDetails, userId) => {
-      console.log(userId);
+      // console.log(userId);
       try {
         socket.emit("get-questions", {
           taskId: answerPdfDetails.taskId,
           answerPdfId: answerPdfDetails._id,
           userId: userId,
         });
+        
         // const response2 = await getQuestionSchemaById(
         //   answerPdfDetails.taskId,
         //   answerPdfDetails._id
@@ -88,7 +89,7 @@ const QuestionDefinition = (props) => {
   }, [props.answerPdfDetails, marked, evaluatorState.rerender]);
 
   socket.on("questions-data", (data) => {
-    console.log(data)
+    // console.log(data)
     setAllQuestions(sortByQuestionsName(data.marks));
    const reducedArr = data.marks
   .filter(item => item.isSubQuestion === false)
@@ -103,7 +104,7 @@ const QuestionDefinition = (props) => {
       (id) => parseFloat(id.questionsName) === currentQuestion
     );
     dispatch(setCurrentQuestionDefinitionId(qID._id));
-    console.log(qID);
+    // console.log(qID);
   });
 
   const handleRotate = (index) => {
@@ -141,7 +142,7 @@ const QuestionDefinition = (props) => {
       // console.log(response);
     } catch (error) {}
   };
-  console.log(allQuestions);
+  // console.log(allQuestions);
   const QuestionData = allQuestions.map((item, index) => {
     const isRotated = rotationStates[index] === 45;
     const allotedMarks = item.allottedMarks;
@@ -188,7 +189,7 @@ const QuestionDefinition = (props) => {
         });
         // console.log(response);
       } catch (error) {}
-      console.log(item, mark);
+      // console.log(item, mark);
     };
 
     return (
@@ -268,7 +269,7 @@ const QuestionDefinition = (props) => {
     );
   });
 
-  console.log(evaluatorState.isLoading);
+  // console.log(evaluatorState.isLoading);
   const handleNextBooklet = async () => {
     try {
       if (currentBookletIndex < taskDetails.totalBooklets) {
@@ -290,7 +291,7 @@ const QuestionDefinition = (props) => {
       setIsLoadingFalse();
     }
   };
-  console.log(evaluatorState.isLoading);
+  // console.log(evaluatorState.isLoading);
   const handlePrevBooklet = async () => {
     try {
       if (currentBookletIndex > 1) {
@@ -301,7 +302,7 @@ const QuestionDefinition = (props) => {
           currentBookletIndex - 1
         );
         dispatch(setCurrentBookletIndex(currentBookletIndex - 1));
-        console.log(response);
+        // console.log(response);
       }
       // console.log(taskDetails);
       //
