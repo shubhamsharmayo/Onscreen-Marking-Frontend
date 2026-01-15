@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useRef } from "react";
 import SchemaEditModal from "./SchemaEditModal";
+import SubQuestionModal from "../../../components/modal/SubQuestionModal";
 import SchemaCreateModal from "./SchemaCreateModal";
 import ConfirmationModal from "components/modal/ConfirmationModal";
 import { useNavigate } from "react-router-dom";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { MdCreateNewFolder } from "react-icons/md";
-import { FaCloudUploadAlt } from "react-icons/fa";
+import { FaCloudUploadAlt, FaFileUpload } from "react-icons/fa";
 import { FiEdit } from "react-icons/fi";
 import { MdAutoDelete } from "react-icons/md";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
@@ -19,7 +20,7 @@ const Schema = () => {
   const [editShowModal, setEditShowModal] = useState(false);
   const [createShowModal, setCreateShowModal] = useState(false);
   const [selectedSchema, setSelectedSchema] = useState(null);
-  const [currentBookletDetails, setCurrentBookletDetails] = useState("");
+  const [showQuestionModal, setShowQuestionModal] = useState(false);
   const [schemaId, setSchemaId] = useState("");
   const [confirmationModal, setConfirmationModal] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -122,6 +123,31 @@ const Schema = () => {
     deleteMutation.mutate({ id: schemaId, token });
     setConfirmationModal(false);
   };
+
+  // const handleSelectCoordinates = async (folder) => {
+  //   // console.log(folder.id);
+  //   // console.log(savedQuestionData);
+  //   setFolderIdQuestion(folder.id); // Set the folder ID
+  //   setShowQuestionModal(true); // Show the modal
+  //   setQuestionId(
+  //     savedQuestionData.filter(
+  //       (savedQuestion) =>
+  //         parseFloat(savedQuestion.questionsName) === parseFloat(folder.id) ||
+  //         undefined
+  //     )
+  //   );
+  //   // console.log(
+  //   //   savedQuestionData.filter(
+  //   //     (savedQuestion) =>
+  //   //       savedQuestion.questionsName === folder.id || undefined
+  //   //   )
+  //   // );
+  //   setFormData((prevFormData) => ({
+  //     ...prevFormData,
+  //     questionImages: [],
+  //     answerImages: [],
+  //   }));
+  // };
   // const handleFileUpload = async (event) => {
   //   const files = Array.from(event.target.files);
   //   if (!files.length) return;
@@ -296,6 +322,24 @@ const Schema = () => {
       ),
     },
     {
+      field: "Map",
+      headerName: "Mapping",
+      flex: 0.9,
+      renderCell: (params) => (
+        <Tooltip title="Map Supplementary PDF">
+          <div
+            className="flex cursor-pointer justify-center px-3 py-2"
+            onClick={() => {
+              setSchemaId(params.row.id);
+              setShowQuestionModal(true);
+            }}
+          >
+            <FaFileUpload className="size-7 text-yellow-600" />
+          </div>
+        </Tooltip>
+      ),
+    },
+    {
       field: "edit",
       headerName: "Edit",
       renderCell: (params) => (
@@ -425,6 +469,14 @@ const Schema = () => {
         selectedSchema={selectedSchema}
         handleUpdate={handleUpdate}
       />
+
+      {showQuestionModal && (
+        <SubQuestionModal
+          showImageModal={showQuestionModal}
+          setShowImageModal={setShowQuestionModal}
+          schemaId={schemaId}
+        />
+      )}
 
       <SchemaCreateModal
         createShowModal={createShowModal}
