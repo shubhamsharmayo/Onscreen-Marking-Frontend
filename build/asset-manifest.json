@@ -1,16 +1,16 @@
 {
   "files": {
-    "main.css": "/static/css/main.fd71b20e.css",
-    "main.js": "/static/js/main.e805218a.js",
+    "main.css": "/static/css/main.0ee1ab77.css",
+    "main.js": "/static/js/main.36f61f56.js",
     "static/media/avatar4.png": "/static/media/avatar4.54d5c1de851c273b2cd9.png",
     "static/media/omr _logo.png": "/static/media/omr _logo.00d5c23ec90da0ab15e4.png",
     "index.html": "/index.html",
     "static/media/checked.svg": "/static/media/checked.eebdda355aff27593261.svg",
-    "main.fd71b20e.css.map": "/static/css/main.fd71b20e.css.map",
-    "main.e805218a.js.map": "/static/js/main.e805218a.js.map"
+    "main.0ee1ab77.css.map": "/static/css/main.0ee1ab77.css.map",
+    "main.36f61f56.js.map": "/static/js/main.36f61f56.js.map"
   },
   "entrypoints": [
-    "static/css/main.fd71b20e.css",
-    "static/js/main.e805218a.js"
+    "static/css/main.0ee1ab77.css",
+    "static/js/main.36f61f56.js"
   ]
 }
