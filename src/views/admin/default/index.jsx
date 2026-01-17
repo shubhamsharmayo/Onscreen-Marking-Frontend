@@ -14,16 +14,19 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import socket from "../../../services/socket/socket";
 import { getUserDetails } from "../../../services/common";
+import OnlineUserModal from "../../../components/modal/OnlineUsersModal";
 
 const Dashboard = () => {
   const [expandedChart, setExpandedChart] = useState(null);
   const [showData, setShowData] = useState(false);
   const [selectedChartData, setSelectedChartData] = useState(null);
+  const [showOnlineUsersModal, setShowOnlineUsersModal] = useState(false);
+
   const [responseData, setResponseData] = useState([]);
   const [arr, setArr] = useState([]);
   const [val, setVal] = useState([]);
   const [analytical, setanalytical] = useState({});
-  const [analyticEval, setanalyticEval] = useState({})
+  const [analyticEval, setanalyticEval] = useState({});
   const [loading, setloading] = useState(false);
   const [user, setuser] = useState();
 
@@ -72,6 +75,24 @@ const Dashboard = () => {
     fetchData();
   }, [token]);
 
+  const fetchOnlineUsers = async () => {
+    try {
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/auth/online/users`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("Online Users API Response:", response.data);
+    } catch (error) {
+      console.error("Error fetching online users:", error);
+      toast.error("Failed to fetch online users");
+    }
+  };
+
   useEffect(() => {
     console.log(user);
 
@@ -85,12 +106,17 @@ const Dashboard = () => {
       socket.emit("join-evaluatorAnalytics-room", { userId });
       socket.on("evaluator-analytics-data", (data) => {
         // console.log(data);
-         setanalyticEval(data);
+        setanalyticEval(data);
       });
     }
   }, [loading]);
 
   const handleBoxClick = (title) => {
+    if (title === "Users") {
+      setShowOnlineUsersModal(true); // API call on click
+      return;
+    }
+
     if (title === "Users") {
       let arrr = [];
       let vall = [];
@@ -159,21 +185,21 @@ const Dashboard = () => {
       setSelectedChartData(dataSets[title]);
     }
   };
-// useEffect(() => {
-//     const onlineStatus = async ()=>{
-//      const response = await axios.get(
-//       `${process.env.REACT_APP_API_URL}/api/auth/user-status/693a9e8975b47c9b419a4868`,
-//       {
-//         headers: {
-//           Authorization: `Bearer ${token}`,
-//         },
-//       }
-//     );
-//       console.log( response)
-//     }
-  
-//    onlineStatus()
-//   }, [])
+  // useEffect(() => {
+  //     const onlineStatus = async ()=>{
+  //      const response = await axios.get(
+  //       `${process.env.REACT_APP_API_URL}/api/auth/user-status/693a9e8975b47c9b419a4868`,
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
+  //       console.log( response)
+  //     }
+
+  //    onlineStatus()
+  //   }, [])
   // useEffect(() => {
   //   try {
   //     async function fetchData() {
@@ -199,10 +225,6 @@ const Dashboard = () => {
   if (loading) {
     return;
   }
-
-
-  
-  
 
   return (
     <div className="dashboard relative p-5 dark:text-white">
@@ -331,14 +353,18 @@ const Dashboard = () => {
           className="bar w-full cursor-pointer rounded-xl border-blue-300 bg-white p-4 transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-100 hover:border hover:shadow-xl dark:bg-navy-700 dark:shadow-gray-800 md:w-full lg:w-7/12"
         >
           <div className="flex h-72 items-center justify-center sm:h-80 md:h-96">
-            <BarChart user={user} analytical={analytical} analyticEval={analyticEval}/>
+            <BarChart
+              user={user}
+              analytical={analytical}
+              analyticEval={analyticEval}
+            />
           </div>
         </div>
 
         {/* Doughnut Chart Section */}
         <div
           onClick={() => openChart("doughnut")}
-          className="line w-full cursor-pointer rounded-xl border-blue-300 bg-white p-4 transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-100 hover:border hover:shadow-xl dark:bg-navy-700 dark:shadow-gray-800 dark:text-white md:w-full lg:w-5/12"
+          className="line w-full cursor-pointer rounded-xl border-blue-300 bg-white p-4 transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-100 hover:border hover:shadow-xl dark:bg-navy-700 dark:text-white dark:shadow-gray-800 md:w-full lg:w-5/12"
         >
           <div className="flex h-72 justify-center sm:h-80 md:h-96">
             <DoughnutChart arr={arr} val={val} />
@@ -356,7 +382,13 @@ const Dashboard = () => {
             className="w-11/12 max-w-4xl rounded-lg bg-white p-6 dark:bg-navy-800"
             onClick={(e) => e.stopPropagation()}
           >
-            {expandedChart === "bar" && <BarChart user={user} analytical={analytical} analyticEval={analyticEval}/>}
+            {expandedChart === "bar" && (
+              <BarChart
+                user={user}
+                analytical={analytical}
+                analyticEval={analyticEval}
+              />
+            )}
             {expandedChart === "doughnut" && (
               <div className="flex items-center justify-center sm:mx-auto md:mx-auto md:w-1/2 lg:mx-auto lg:w-1/2">
                 <DoughnutChart arr={arr} val={val} />
@@ -365,6 +397,11 @@ const Dashboard = () => {
           </div>
         </div>
       )}
+
+      <OnlineUserModal
+        showModal={showOnlineUsersModal}
+        setShowModal={setShowOnlineUsersModal}
+      />
     </div>
   );
 };

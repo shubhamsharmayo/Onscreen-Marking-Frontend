@@ -161,12 +161,12 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
     }
 
     if (Number(formData?.numberOfSupplement) <= 0) {
-      toast.error("Min Time must be positive.");
+      toast.error("Number of Supplimentary Sheet must be positive.");
       return;
     }
 
     if (Number(formData?.PageofSupplement) <= 0) {
-      toast.error("Min Time must be positive.");
+      toast.error("Number of pages in Supplimentary must be positive.");
       return;
     }
 
