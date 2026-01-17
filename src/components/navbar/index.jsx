@@ -8,6 +8,7 @@ import { getUserDetails } from "services/common";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../../store/authSlice";
 import { FaBars } from "react-icons/fa";
+import axios from "axios";
 
 const Navbar = (props) => {
   const { brandText } = props;
@@ -19,7 +20,7 @@ const Navbar = (props) => {
   const authState = useSelector((state) => state.auth);
   const token =
     useSelector((state) => state.auth.token) || localStorage.getItem("token");
-      const [darkmode1, setDarkmode1] = useState(
+  const [darkmode1, setDarkmode1] = useState(
     localStorage.getItem("darktheme") === "true" // convert string → boolean
   );
 
@@ -35,7 +36,6 @@ const Navbar = (props) => {
     fetchData();
   }, [authState.isAuthenticated, navigate]);
 
-  
   useEffect(() => {
     if (darkmode1) {
       document.body.classList.add("dark");
@@ -43,10 +43,43 @@ const Navbar = (props) => {
       document.body.classList.remove("dark");
     }
     localStorage.setItem("darktheme", darkmode1.toString()); // store as "true"/"false"
-  }, [darkmode1])
+  }, [darkmode1]);
+
+  const handleLogout = async () => {
+    try {
+      // Convert system time to IST
+      const istLogoutTime = new Date(
+        new Date().getTime() + 5.5 * 60 * 60 * 1000
+      )
+        .toISOString()
+        .replace("Z", "+05:30");
+
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/auth/logout`,
+        {
+          logoutTime: istLogoutTime,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+    } catch (error) {
+      console.error("Logout API failed:", error);
+    } finally {
+      dispatch(logout());
+      localStorage.removeItem("token");
+      navigate("/auth/sign-in");
+    }
+  };
+
   return (
     <nav className="sticky top-4 z-40 flex flex-row flex-wrap items-center justify-between rounded-xl bg-white/10 p-2 backdrop-blur-xl dark:bg-[#0b14374d]">
-      <FaBars onClick={onOpenSidenav} className="cursor-pointer text-2xl mx-2 xl:hidden dark:text-white" />
+      <FaBars
+        onClick={onOpenSidenav}
+        className="mx-2 cursor-pointer text-2xl dark:text-white xl:hidden"
+      />
       <div className="ml-[6px] ">
         <p className="mr-4 shrink text-[33px] capitalize text-navy-700 dark:text-white">
           <Link
@@ -73,7 +106,7 @@ const Navbar = (props) => {
           className="cursor-pointer text-gray-600"
           onClick={() => setDarkmode1((prev) => !prev)}
         >
-          {darkmode1  ? (
+          {darkmode1 ? (
             <RiSunFill className="h-4 w-4 text-gray-600 dark:text-white" />
           ) : (
             <RiMoonFill className="h-4 w-4 text-gray-600 dark:text-white" />
@@ -109,10 +142,7 @@ const Navbar = (props) => {
                 </button>
 
                 <button
-                  onClick={() => {
-                    dispatch(logout());
-                    navigate("/auth/sign-in");
-                  }}
+                  onClick={handleLogout}
                   className="rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 ease-in-out hover:bg-red-600"
                 >
                   Log Out
