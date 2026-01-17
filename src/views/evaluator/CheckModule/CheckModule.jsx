@@ -18,7 +18,7 @@ import {
   setCurrentAnswerPdfId,
   setCurrentBookletId,
 } from "store/evaluatorSlice";
-import ProgressBar from './ProgressBar'
+import ProgressBar from "./ProgressBar";
 import {
   getTaskById,
   getAnswerPdfById,
@@ -387,8 +387,15 @@ const CheckModule = () => {
                   {taskDetails?.totalBooklets}
                 </span>
               </div>
-              <div className="flex justify-center items-center">
-                <ProgressBar value={totalMarksToDisplay} max={userTimerData?.maxMarks} min={userTimerData?.minMarks}/><span>{totalMarksToDisplay}/{userTimerData?.maxMarks}</span>
+              <div className="flex items-center justify-center">
+                <ProgressBar
+                  value={totalMarksToDisplay}
+                  max={userTimerData?.maxMarks}
+                  min={userTimerData?.minMarks}
+                />
+                <span>
+                  {totalMarksToDisplay}/{userTimerData?.maxMarks}
+                </span>
               </div>
             </section>
 
