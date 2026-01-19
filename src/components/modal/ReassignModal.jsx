@@ -1,67 +1,211 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
-const ReassignModal = ({ showReAssignModal, users, setShowReAssignModal }) => {
+const ReassignModal = ({
+  showReAssignModal,
+  users,
+  setShowReAssignModal,
+  currentTask,
+}) => {
+  const [selectedUserId, setSelectedUserId] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [userTaskStatus, setUserTaskStatus] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  // booklet states
+  const [completedCount, setCompletedCount] = useState(0);
+  const [pendingCount, setPendingCount] = useState(0);
+
+  // transfer states
+  const [transferCount, setTransferCount] = useState(0);
+  const [maxTransferCount, setMaxTransferCount] = useState(0);
+
+  /* ------------------------------------------------
+     FETCH CURRENT USER TASK STATUS
+  ------------------------------------------------- */
+  useEffect(() => {
+    if (!showReAssignModal || !currentTask?.userId?._id) return;
+
+    const fetchUserTaskStatus = async () => {
+      try {
+        setLoading(true);
+
+        const res = await axios.get(
+          `${process.env.REACT_APP_API_URL}/api/tasks/user/task-status/${currentTask.userId._id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        setUserTaskStatus(res.data);
+      } catch (error) {
+        console.error("Failed to fetch user task status", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserTaskStatus();
+  }, [showReAssignModal, currentTask]);
+
+  /* ------------------------------------------------
+     INITIALIZE COMPLETED / PENDING COUNTS
+  ------------------------------------------------- */
+  useEffect(() => {
+    if (!userTaskStatus || !currentTask) return;
+
+    const matchedTask = userTaskStatus.tasks.find(
+      (task) => task.subjectCode === currentTask.subjectCode
+    );
+
+    if (matchedTask) {
+      const completed = matchedTask.booklets.completed;
+      const total = matchedTask.booklets.total;
+      const pending = total - completed;
+
+      setCompletedCount(completed);
+      setPendingCount(pending);
+
+      setTransferCount(pending); // default input value
+      setMaxTransferCount(pending); // max allowed
+    }
+  }, [userTaskStatus, currentTask]);
+
+  /* ------------------------------------------------
+     HANDLE INPUT CHANGE (DYNAMIC PENDING UPDATE)
+  ------------------------------------------------- */
+  const handleTransferChange = (value) => {
+    if (value < 1 || value > maxTransferCount) return;
+
+    setTransferCount(value);
+    setPendingCount(maxTransferCount - value);
+  };
+
+  /* ------------------------------------------------
+     SUBMIT REASSIGN
+  ------------------------------------------------- */
+  const handleReassign = async () => {
+    if (!selectedUserId || transferCount < 1) return;
+
+    const token = localStorage.getItem("token");
+    const decodedToken = JSON.parse(atob(token.split(".")[1]));
+
+    const payload = {
+      fromTaskId: currentTask._id,
+      toUserId: selectedUserId,
+      transferCount: transferCount,
+      reassignedBy: decodedToken.userId,
+    };
+
+    try {
+      setSubmitting(true);
+
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/tasks/reassign/pending-booklets`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setShowReAssignModal(false);
+    } catch (error) {
+      console.error("Reassign failed", error);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (!showReAssignModal || !currentTask) return null;
+
+  /* ------------------------------------------------
+     RENDER
+  ------------------------------------------------- */
   return (
-    <div>
-      <div
-        className={`bg-black fixed inset-0 ${
-          !showReAssignModal ? "z-50" : "z-0"
-        } flex items-center justify-center bg-opacity-50 backdrop-blur-md`}
-      >
-        <div className="mx-auto max-w-[300px] sm:max-w-[360px]  rounded-xl bg-white shadow-lg drop-shadow-md dark:bg-navy-700 dark:text-white">
-          <div className="flex justify-between px-4 py-3">
-            <div>
-              <h2 className="font-bold text-xl sm:text-3xl">
-                All Users
-              </h2>
-            </div>
-            <div
-              className="cursor-pointer text-gray-600 hover:text-red-700"
-              onClick={() => setShowReAssignModal(false)}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="3"
-                  d="M6 18L18 6M6 6l12 12"
-                ></path>
-              </svg>
-            </div>
+    <div className="bg-black fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 backdrop-blur-md">
+      <div className="w-[460px] rounded-xl bg-white shadow-lg dark:bg-navy-700 dark:text-white">
+        {/* HEADER */}
+        <div className="flex justify-between border-b px-4 py-3">
+          <h2 className="text-xl font-bold">Reassign Task</h2>
+          <span
+            className="cursor-pointer text-gray-600 hover:text-red-600"
+            onClick={() => setShowReAssignModal(false)}
+          >
+            ✕
+          </span>
+        </div>
+
+        {/* TASK INFO */}
+        <div className="space-y-1 bg-gray-50 px-4 py-3 text-sm dark:bg-navy-800">
+          <div>
+            <strong>Assigned User:</strong> {currentTask.userId?.name} (
+            {currentTask.userId?.email})
           </div>
-          <hr className="bg-gray-600" />
-          <div className="mx-2 min-w-[400px] space-y-2 px-3 pb-6 pt-3 ">
-            <div className="flex w-full flex-col space-y-2">
-              <div className="flex">
-                <select
-                  name="HeadlineAct"
-                  id="HeadlineAct"
-                  className="mt-1.5 w-8/12 sm:w-10/12 rounded-lg p-2 text-gray-700 sm:max-w-xs 
-                  sm:text-sm justify-center items-center border border-gray-300 dark:border-gray-700 focus:border-none focus:outline-none focus:ring focus:ring-indigo-500 focus:border-indigo-500 dark:bg-navy-700 dark:text-white text-sm sm:text-md"
-                >
-                  {users.map((user) => (
-                    <option>{user.email}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>{" "}
-          <div class="mx-3 text-center">
-            <button
-              class="my-2 mb-3 w-full rounded-md px-16 py-1 text-lg font-bold text-white bg-indigo-600 hover:bg-indigo-700"
-              //   onClick={() => {
-              //     setShowEditModal(false);
-              //   }}
-            >
-              Submit
-            </button>
+        </div>
+
+        {/* PROGRESS & PENDING (DYNAMIC) */}
+        <div className="px-4 py-3 text-sm">
+          <div>
+            <strong>In Progress / Completed:</strong> {completedCount}
           </div>
+          <div>
+            <strong>Pending (after transfer):</strong> {pendingCount}
+          </div>
+        </div>
+
+        {/* TRANSFER INPUT */}
+        <div className="px-4 py-2">
+          <label className="mb-1 block text-sm font-medium">
+            Transfer Pending Booklets
+          </label>
+          <input
+            type="number"
+            min={1}
+            max={maxTransferCount}
+            value={transferCount}
+            onChange={(e) => handleTransferChange(Number(e.target.value))}
+            className="w-full rounded-lg border p-2 dark:bg-navy-700"
+          />
+          <p className="mt-1 text-xs text-gray-500">
+            Max allowed: {maxTransferCount}
+          </p>
+        </div>
+
+        {/* SELECT USER */}
+        <div className="px-4 py-3">
+          <label className="mb-1 block text-sm font-medium">Reassign To</label>
+          <select
+            className="w-full rounded-lg border p-2 dark:bg-navy-700"
+            value={selectedUserId}
+            onChange={(e) => setSelectedUserId(e.target.value)}
+          >
+            <option value="">Select User</option>
+            {users.map((user) => (
+              <option key={user._id} value={user._id}>
+                {user.name} ({user.email})
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* ACTION */}
+        <div className="px-4 pb-4">
+          <button
+            disabled={
+              !selectedUserId ||
+              submitting ||
+              transferCount < 1 ||
+              transferCount > maxTransferCount
+            }
+            onClick={handleReassign}
+            className="w-full rounded-md bg-indigo-600 py-2 font-bold text-white hover:bg-indigo-700 disabled:opacity-50"
+          >
+            {submitting ? "Reassigning..." : "Submit"}
+          </button>
         </div>
       </div>
     </div>

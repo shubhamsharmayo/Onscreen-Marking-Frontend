@@ -351,7 +351,7 @@ const Booklets = () => {
       flex: 1,
       minWidth: 1,
       renderCell: (params) => (
-        <Tooltip title="Hover booklets" arrow placement="top">
+        <Tooltip title="Download Booklets" arrow placement="top">
           <div
             className="flex cursor-pointer justify-center rounded px-3 py-2"
             onClick={() => {
