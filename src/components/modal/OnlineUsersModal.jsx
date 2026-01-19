@@ -151,9 +151,15 @@ const OnlineUsersModal = ({ showModal, setShowModal }) => {
                         {user.role}
                       </td>
                       <td className="border px-3 py-2">
-                        <span className="rounded bg-green-100 px-2 py-1 text-green-700 dark:bg-green-800 dark:text-green-200">
-                          {user.status}
-                        </span>
+                        {user.status === 1 ? (
+                          <span className="rounded bg-green-100 px-2 py-1 text-green-700 dark:bg-green-800 dark:text-green-200">
+                            Online
+                          </span>
+                        ) : (
+                          <span className="rounded bg-red-100 px-2 py-1 text-red-700 dark:bg-red-800 dark:text-red-200">
+                            Offline
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))}

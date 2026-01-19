@@ -1,21 +1,29 @@
 import React, { useEffect, useState } from "react";
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import {
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { jwtDecode } from "jwt-decode";
+import { toast } from "react-toastify";
+
 import AdminLayout from "layouts/admin";
 import EvaluatorLayout from "layouts/evaluator/index.jsx";
 import AuthLayout from "layouts/auth/index.jsx";
-import { useDispatch } from "react-redux";
-import { rehydrateToken } from "./store/authSlice";
 import CheckModule from "views/evaluator/CheckModule/CheckModule";
-import "./App.css";
-import { jwtDecode } from "jwt-decode"; // Correct import for jwt-decode
-import { useNavigate } from "react-router-dom";
+
+import { rehydrateToken } from "./store/authSlice";
 import { getUserDetails } from "services/common";
-import { toast } from "react-toastify";
+import "./App.css";
 
 const App = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const location = useLocation(); // To check current path
+  const location = useLocation();
+
   const token = localStorage.getItem("token");
   const [user, setUser] = useState(token);
 
@@ -32,11 +40,13 @@ const App = () => {
 
   const role = getRoleFromToken();
 
+  /**
+   * Fetch logged-in user details
+   */
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const response = await getUserDetails(token);
-        // console.log(response);
         setUser(response?.data);
       } catch (error) {
         console.log(error);
@@ -44,22 +54,24 @@ const App = () => {
       }
     };
 
-    fetchUser();
-  }, [token, setUser]);
+    if (token) {
+      fetchUser();
+    }
+  }, [token]);
 
-
+  /**
+   * Role-based redirection & auth guard
+   */
   useEffect(() => {
     if (
       !token ||
       user?.message === "Unauthorized" ||
       user?.message === "User not found"
     ) {
-      // Redirect to sign-in only if not already on an auth route
       if (!location.pathname.startsWith("/auth")) {
         navigate("/auth/sign-in");
       }
     } else {
-      // Redirect based on role only if user is on an unauthorized path
       if (role === "admin" && !location.pathname.startsWith("/admin")) {
         navigate("/admin/default");
       } else if (
@@ -69,11 +81,45 @@ const App = () => {
         navigate("/evaluator/default");
       }
     }
-  }, [token, role, location, navigate, user]);
+  }, [token, role, location.pathname, navigate, user]);
 
+  /**
+   * Redux token rehydration
+   */
   useEffect(() => {
     dispatch(rehydrateToken());
   }, [dispatch]);
+
+  /**
+   * 🔴 Auto logout on browser/tab close
+   */
+  useEffect(() => {
+    const handleUnload = () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const blob = new Blob([JSON.stringify({ token })], {
+        type: "application/json",
+      });
+
+      navigator.sendBeacon(
+        `${process.env.REACT_APP_API_URL}/api/auth/auto-logout`,
+        blob
+      );
+    };
+
+    window.addEventListener("beforeunload", handleUnload);
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") {
+        handleUnload();
+      }
+    });
+
+    return () => {
+      window.removeEventListener("beforeunload", handleUnload);
+    };
+  }, []);
 
   return (
     <Routes>
