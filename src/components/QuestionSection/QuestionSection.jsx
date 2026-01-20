@@ -314,7 +314,7 @@ const QuestionDefinition = (props) => {
   };
   const submitHandler = async () => {
     try {
-      // setIsloading(true);
+   
       const res = await submitBookletById(
         currentBookletId,
         props.taskdetails.userId

@@ -49,6 +49,9 @@ const AssignModelComp = ({ setassignModel, currentBookletDetails }) => {
           },
         }
       );
+      // console.log(response?.data)
+      setassignModel(false)
+       toast.success(response?.data.message);
     } catch (error) {
       console.log(error);
     } finally {
@@ -74,6 +77,7 @@ const AssignModelComp = ({ setassignModel, currentBookletDetails }) => {
       );
 
       // Optionally handle the response if needed
+      setassignModel(false)
       console.log("Task created successfully:", response?.data);
       toast.success(response?.data.message);
     } catch (error) {

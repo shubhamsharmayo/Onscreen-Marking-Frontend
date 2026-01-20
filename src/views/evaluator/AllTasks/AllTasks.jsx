@@ -57,6 +57,7 @@ const Dashboard = () => {
   const handleStartTask = (rowData) => {
     console.log(rowData._id);
     navigate(`/evaluator/task/${rowData._id}`);
+    window.location.reload()
   };
   console.log(allTasks);
   const AssignedTasks = allTasks.map((row, index) => (
