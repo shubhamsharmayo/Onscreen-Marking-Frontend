@@ -159,13 +159,23 @@ const Tasks = () => {
                     {filteredTask?.userId?.email}
                   </td>
                   <td
-                    className={`whitespace-nowrap px-4 py-2 font-semibold text-gray-700 ${
-                      filteredTask?.status === "active"
+                    className={`whitespace-nowrap px-4 py-2 font-semibold ${
+                      filteredTask?.status === "inactive"
+                        ? "text-gray-500"
+                        : filteredTask?.status === "active"
                         ? "text-red-600"
-                        : "text-green-600"
-                    } `}
-                  >{console.log(filteredTask)}
-                    {filteredTask?.status === "active" ? "Pending" : "Completed"}
+                        : filteredTask?.status === "complete"
+                        ? "text-green-600"
+                        : "text-gray-400"
+                    }`}
+                  >
+                    {filteredTask?.status === "inactive"
+                      ? "Not Started"
+                      : filteredTask?.status === "active"
+                      ? "Pending"
+                      : filteredTask?.status === "complete"
+                      ? "Completed"
+                      : "-"}
                   </td>
                   <td className="relative">
                     <button
@@ -261,6 +271,8 @@ const Tasks = () => {
               setShowReAssignModal={setShowReAssignModal}
               showReAssignModal={showReAssignModal}
               users={users}
+              currentTask={currentTask} // ✅ IMPORTANT
+              updateTaskInParent={updateTaskInParent}
             />
           )}
 

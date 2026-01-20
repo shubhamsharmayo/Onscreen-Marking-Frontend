@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -27,7 +27,7 @@ const CreateSchemaStructure = () => {
   const [currentQuestion, setCurrentQuestion] = useState([]);
   const [subQuestionsFirst, setSubQuestionsFirst] = useState([]);
   const [error, setError] = useState(false);
-  const [remainingMarks, setRemainingMarks] = useState("");
+  //const [remainingMarks, setRemainingMarks] = useState("");
   const [questionToAllot, setQuestionToAllot] = useState("");
   const [subQuestionMap, setSubQuestionMap] = useState({});
   const hasRunRef = useRef(false);
@@ -89,7 +89,7 @@ const CreateSchemaStructure = () => {
           0
         );
         console.log(totalMarksUsed);
-        setRemainingMarks((schemaData?.maxMarks || 0) - totalMarksUsed);
+        //setRemainingMarks((schemaData?.maxMarks || 0) - totalMarksUsed);
 
         const remainingQuestions =
           (schemaData?.totalQuestions || 0) - data.length;
@@ -105,6 +105,22 @@ const CreateSchemaStructure = () => {
 
     fetchData();
   }, [id, token, schemaData, setSavedQuestionData, parentId]);
+
+  const remainingMarks = useMemo(() => {
+    if (!schemaData) return 0;
+
+    const totalUsed = savedQuestionData.reduce((sum, q) => {
+      // Parent question with sub-questions → count parent max only
+      if (q.isSubQuestion) {
+        return sum + (q.maxMarks || 0);
+      }
+
+      // Normal question
+      return sum + (q.maxMarks || 0);
+    }, 0);
+
+    return (schemaData.maxMarks || 0) - totalUsed;
+  }, [schemaData, savedQuestionData]);
 
   // NEW: Helper function to calculate total marks of sub-questions
   const calculateSubQuestionsTotalMarks = (parentFolderId) => {
@@ -158,75 +174,117 @@ const CreateSchemaStructure = () => {
     setFolders((prevFolders) => updateFolders(prevFolders));
   };
 
- const handleDeleteQuestion = async (folder, level, parentFolderId = null) => {
-  const folderId = folder.id;
-  if (deletingStatus[folderId]) return;
+  const handleDeleteQuestion = async (folder, level, parentFolderId = null) => {
+    const folderId = folder.id;
+    if (deletingStatus[folderId]) return;
 
-  const confirmDelete = window.confirm(
-    `Are you sure you want to delete ${folder.name}? ${
-      folder.children?.length > 0
-        ? "This will also delete all sub-questions."
-        : ""
-    }`
-  );
-  if (!confirmDelete) return;
-
-  setDeletingStatus((prev) => ({ ...prev, [folderId]: true }));
-
-  try {
-    let currentQ = [];
-    let currentSQ = [];
-
-    if (level === 0) {
-      currentQ = savedQuestionData.filter(
-        (item) => parseInt(item.questionsName) === folderId
-      );
-    } else if (level > 0 && parentFolderId) {
-      const parentSubQuestions = subQuestionMap[parentFolderId] || [];
-      currentSQ = parentSubQuestions.filter(
-        (item) => item.questionsName === String(folderId)
-      );
-    }
-
-    const questionToDelete =
-      level > 0 && currentSQ.length > 0 ? currentSQ[0] : currentQ[0];
-
-    if (!questionToDelete || !questionToDelete._id) {
-      toast.warning("No saved question to delete");
-      setDeletingStatus((prev) => ({ ...prev, [folderId]: false }));
-      return;
-    }
-
-    // Delete the question
-    await axios.delete(
-      `${process.env.REACT_APP_API_URL}/api/schemas/delete/questiondefinition/${questionToDelete._id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete ${folder.name}? ${
+        folder.children?.length > 0
+          ? "This will also delete all sub-questions."
+          : ""
+      }`
     );
+    if (!confirmDelete) return;
 
-    // 🔥 NEW: If it's a main question (level 0), renumber all questions after it
-    if (level === 0) {
-      // Get all main questions that come after the deleted question
-      const questionsToRenumber = savedQuestionData
-        .filter((item) => {
-          const questionNum = parseInt(item.questionsName);
-          return questionNum > folderId && !item.questionsName.includes(".");
-        })
-        .sort((a, b) => parseInt(a.questionsName) - parseInt(b.questionsName));
+    setDeletingStatus((prev) => ({ ...prev, [folderId]: true }));
 
-      // Renumber each question (shift down by 1)
-      for (const question of questionsToRenumber) {
-        const oldQuestionNum = parseInt(question.questionsName);
-        const newQuestionNum = oldQuestionNum - 1;
+    try {
+      let currentQ = [];
+      let currentSQ = [];
+
+      if (level === 0) {
+        currentQ = savedQuestionData.filter(
+          (item) => parseInt(item.questionsName) === folderId
+        );
+      } else if (level > 0 && parentFolderId) {
+        const parentSubQuestions = subQuestionMap[parentFolderId] || [];
+        currentSQ = parentSubQuestions.filter(
+          (item) => item.questionsName === String(folderId)
+        );
+      }
+
+      const questionToDelete =
+        level > 0 && currentSQ.length > 0 ? currentSQ[0] : currentQ[0];
+
+      if (!questionToDelete || !questionToDelete._id) {
+        toast.warning("No saved question to delete");
+        setDeletingStatus((prev) => ({ ...prev, [folderId]: false }));
+        return;
+      }
+
+      // Delete the question
+      await axios.delete(
+        `${process.env.REACT_APP_API_URL}/api/schemas/delete/questiondefinition/${questionToDelete._id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // 🔥 NEW: If it's a main question (level 0), renumber all questions after it
+      if (level === 0) {
+        // Get all main questions that come after the deleted question
+        const questionsToRenumber = savedQuestionData
+          .filter((item) => {
+            const questionNum = parseInt(item.questionsName);
+            return questionNum > folderId && !item.questionsName.includes(".");
+          })
+          .sort(
+            (a, b) => parseInt(a.questionsName) - parseInt(b.questionsName)
+          );
+
+        // Renumber each question (shift down by 1)
+        for (const question of questionsToRenumber) {
+          const oldQuestionNum = parseInt(question.questionsName);
+          const newQuestionNum = oldQuestionNum - 1;
+
+          await axios.put(
+            `${process.env.REACT_APP_API_URL}/api/schemas/update/questiondefinition/${question._id}`,
+            {
+              ...question,
+              questionsName: String(newQuestionNum),
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          // Also renumber all sub-questions for this question
+          const subQuestions = savedQuestionData.filter(
+            (item) => item.parentQuestionId === question._id
+          );
+
+          for (const subQ of subQuestions) {
+            const subQuestionParts = subQ.questionsName.split(".");
+            const newSubQuestionName = `${newQuestionNum}.${subQuestionParts[1]}`;
+
+            await axios.put(
+              `${process.env.REACT_APP_API_URL}/api/schemas/update/questiondefinition/${subQ._id}`,
+              {
+                ...subQ,
+                questionsName: newSubQuestionName,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+          }
+        }
+
+        // Update schema's totalQuestions
+        const newTotalQuestions = (schemaData?.totalQuestions || 0) - 1;
 
         await axios.put(
-          `${process.env.REACT_APP_API_URL}/api/schemas/update/questiondefinition/${question._id}`,
+          `${process.env.REACT_APP_API_URL}/api/schemas/update/schema/${id}`,
           {
-            ...question,
-            questionsName: String(newQuestionNum),
+            ...schemaData,
+            totalQuestions: newTotalQuestions,
           },
           {
             headers: {
@@ -234,15 +292,32 @@ const CreateSchemaStructure = () => {
             },
           }
         );
+      }
 
-        // Also renumber all sub-questions for this question
-        const subQuestions = savedQuestionData.filter(
-          (item) => item.parentQuestionId === question._id
-        );
+      // 🔥 NEW: If it's a sub-question, renumber sibling sub-questions
+      if (level > 0 && parentFolderId) {
+        const parentSubQuestions = subQuestionMap[parentFolderId] || [];
+        const deletedSubQuestionParts = String(folderId).split(".");
+        const deletedSubIndex = parseInt(deletedSubQuestionParts[1]);
 
-        for (const subQ of subQuestions) {
-          const subQuestionParts = subQ.questionsName.split(".");
-          const newSubQuestionName = `${newQuestionNum}.${subQuestionParts[1]}`;
+        // Get all sub-questions that come after the deleted one
+        const subQuestionsToRenumber = parentSubQuestions
+          .filter((sq) => {
+            const parts = sq.questionsName.split(".");
+            return parseInt(parts[1]) > deletedSubIndex;
+          })
+          .sort((a, b) => {
+            const aIndex = parseInt(a.questionsName.split(".")[1]);
+            const bIndex = parseInt(b.questionsName.split(".")[1]);
+            return aIndex - bIndex;
+          });
+
+        // Renumber each sub-question (shift down by 1)
+        for (const subQ of subQuestionsToRenumber) {
+          const parts = subQ.questionsName.split(".");
+          const oldSubIndex = parseInt(parts[1]);
+          const newSubIndex = oldSubIndex - 1;
+          const newSubQuestionName = `${parentFolderId}.${newSubIndex}`;
 
           await axios.put(
             `${process.env.REACT_APP_API_URL}/api/schemas/update/questiondefinition/${subQ._id}`,
@@ -257,99 +332,42 @@ const CreateSchemaStructure = () => {
             }
           );
         }
-      }
 
-      // Update schema's totalQuestions
-      const newTotalQuestions = (schemaData?.totalQuestions || 0) - 1;
-      
-      await axios.put(
-        `${process.env.REACT_APP_API_URL}/api/schemas/update/schema/${id}`,
-        {
-          ...schemaData,
-          totalQuestions: newTotalQuestions,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        // Update parent question's numberOfSubQuestions
+        const parentQuestion = savedQuestionData.find(
+          (item) => parseInt(item.questionsName) === parentFolderId
+        );
+
+        if (parentQuestion) {
+          await axios.put(
+            `${process.env.REACT_APP_API_URL}/api/schemas/update/questiondefinition/${parentQuestion._id}`,
+            {
+              ...parentQuestion,
+              numberOfSubQuestions:
+                (parentQuestion.numberOfSubQuestions || 0) - 1,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
         }
-      );
-    }
-
-    // 🔥 NEW: If it's a sub-question, renumber sibling sub-questions
-    if (level > 0 && parentFolderId) {
-      const parentSubQuestions = subQuestionMap[parentFolderId] || [];
-      const deletedSubQuestionParts = String(folderId).split(".");
-      const deletedSubIndex = parseInt(deletedSubQuestionParts[1]);
-
-      // Get all sub-questions that come after the deleted one
-      const subQuestionsToRenumber = parentSubQuestions
-        .filter((sq) => {
-          const parts = sq.questionsName.split(".");
-          return parseInt(parts[1]) > deletedSubIndex;
-        })
-        .sort((a, b) => {
-          const aIndex = parseInt(a.questionsName.split(".")[1]);
-          const bIndex = parseInt(b.questionsName.split(".")[1]);
-          return aIndex - bIndex;
-        });
-
-      // Renumber each sub-question (shift down by 1)
-      for (const subQ of subQuestionsToRenumber) {
-        const parts = subQ.questionsName.split(".");
-        const oldSubIndex = parseInt(parts[1]);
-        const newSubIndex = oldSubIndex - 1;
-        const newSubQuestionName = `${parentFolderId}.${newSubIndex}`;
-
-        await axios.put(
-          `${process.env.REACT_APP_API_URL}/api/schemas/update/questiondefinition/${subQ._id}`,
-          {
-            ...subQ,
-            questionsName: newSubQuestionName,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
       }
 
-      // Update parent question's numberOfSubQuestions
-      const parentQuestion = savedQuestionData.find(
-        (item) => parseInt(item.questionsName) === parentFolderId
+      toast.success("Question deleted and renumbered successfully");
+
+      // Reload to reflect changes
+      window.location.reload();
+    } catch (error) {
+      console.error("Error deleting question:", error);
+      toast.error(
+        error?.response?.data?.message || "Failed to delete question"
       );
-
-      if (parentQuestion) {
-        await axios.put(
-          `${process.env.REACT_APP_API_URL}/api/schemas/update/questiondefinition/${parentQuestion._id}`,
-          {
-            ...parentQuestion,
-            numberOfSubQuestions: (parentQuestion.numberOfSubQuestions || 0) - 1,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-      }
+    } finally {
+      setDeletingStatus((prev) => ({ ...prev, [folderId]: false }));
     }
-
-    toast.success("Question deleted and renumbered successfully");
-    
-    // Reload to reflect changes
-    window.location.reload();
-
-  } catch (error) {
-    console.error("Error deleting question:", error);
-    toast.error(
-      error?.response?.data?.message || "Failed to delete question"
-    );
-  } finally {
-    setDeletingStatus((prev) => ({ ...prev, [folderId]: false }));
-  }
-};
+  };
 
   const handleUpdate = async (schemaId, updatedData) => {
     try {
@@ -403,6 +421,9 @@ const CreateSchemaStructure = () => {
       );
     }
 
+    const existingQuestion =
+      level > 0 && currentSQ.length > 0 ? currentSQ[0] : currentQ[0];
+
     let parentQuestionId = null;
     if (level > 0 && parentFolderId) {
       const parentQuestion = savedQuestionData.find(
@@ -411,9 +432,6 @@ const CreateSchemaStructure = () => {
       parentQuestionId =
         parentQuestion?._id || existingQuestion?.parentQuestionId || null;
     }
-
-    const existingQuestion =
-      level > 0 && currentSQ.length > 0 ? currentSQ[0] : currentQ[0];
 
     const minMarks = Number(
       formRefs.current[`${folderId}-minMarks`] ??
@@ -501,7 +519,7 @@ const CreateSchemaStructure = () => {
       );
     }
 
-    if (maxMarks % marksDifference != 0 || maxMarks < marksDifference)
+    if (maxMarks % marksDifference !== 0 || maxMarks < marksDifference)
       return toast.error(
         "Marks Difference cannot be greater than Max marks or Marks Difference Always Multiple of Max marks"
       );
@@ -749,18 +767,24 @@ const CreateSchemaStructure = () => {
     }
   };
 
-
   useEffect(() => {
-    if (!hasRunRef.current && savedQuestionData.length > 0 && folders.length > 0) {
+    if (
+      !hasRunRef.current &&
+      savedQuestionData.length > 0 &&
+      folders.length > 0
+    ) {
       hasRunRef.current = true;
-      
+
       // Auto-expand folders that have sub-questions
       folders.forEach((folder) => {
         const currentQuestionInfo = savedQuestionData.filter((item) =>
           item.questionsName.startsWith(String(folder.id))
         );
-        
-        if (currentQuestionInfo.length > 0 && currentQuestionInfo[0]?.isSubQuestion) {
+
+        if (
+          currentQuestionInfo.length > 0 &&
+          currentQuestionInfo[0]?.isSubQuestion
+        ) {
           handleFolderClick(folder.id);
         }
       });
@@ -897,15 +921,17 @@ const CreateSchemaStructure = () => {
 
             <div className="w-20">
               <input
-                key={`${folderId}-maxMarks-${displayData[0]?._id || "new"}`}
-                onChange={(e) =>
-                  handleMarkChange(`${folder.id}-maxMarks`, e.target.value, e)
-                }
+                key={`max-${folderId}-${displayData[0]?._id || "new"}-${
+                  displayData[0]?.maxMarks ?? 0
+                }`}
                 type="number"
                 inputMode="numeric"
                 placeholder="Max"
-                className="w-full rounded border border-gray-300 px-2 py-1 text-center focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white"
-                defaultValue={displayData[0]?.maxMarks || ""}
+                defaultValue={displayData[0]?.maxMarks ?? ""}
+                onChange={(e) => {
+                  formRefs.current[`${folderId}-maxMarks`] = e.target.value;
+                }}
+                className="w-full rounded border border-gray-300 py-1 text-center focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white"
               />
             </div>
 
