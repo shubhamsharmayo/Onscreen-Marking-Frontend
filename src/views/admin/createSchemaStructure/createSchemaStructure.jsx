@@ -767,18 +767,24 @@ const CreateSchemaStructure = () => {
     }
   };
 
-
   useEffect(() => {
-    if (!hasRunRef.current && savedQuestionData.length > 0 && folders.length > 0) {
+    if (
+      !hasRunRef.current &&
+      savedQuestionData.length > 0 &&
+      folders.length > 0
+    ) {
       hasRunRef.current = true;
-      
+
       // Auto-expand folders that have sub-questions
       folders.forEach((folder) => {
         const currentQuestionInfo = savedQuestionData.filter((item) =>
           item.questionsName.startsWith(String(folder.id))
         );
-        
-        if (currentQuestionInfo.length > 0 && currentQuestionInfo[0]?.isSubQuestion) {
+
+        if (
+          currentQuestionInfo.length > 0 &&
+          currentQuestionInfo[0]?.isSubQuestion
+        ) {
           handleFolderClick(folder.id);
         }
       });

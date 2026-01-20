@@ -38,6 +38,30 @@ const token = localStorage.getItem("token");
     };
   }, [currentPage]);
 
+  function convertPartialPageData(data) {
+  const areas = {};
+
+  data.forEach((page) => {
+    if (page.type === "PARTIAL_PAGE") {
+      areas[page.pageNumber] = page.coordinates.map(
+        ({ x, y, width, height }) => ({
+          x,
+          y,
+          width,
+          height,
+        })
+      );
+    }
+  });
+
+  return {
+    coordination: {
+      type: "PARTIAL_PAGE",
+      areas,
+    },
+  };
+}
+
   /* ---------------- Fetch Schema ---------------- */
   useEffect(() => {
     if (!schemaId || !showImageModal) return;
@@ -52,10 +76,13 @@ const token = localStorage.getItem("token");
             },
           }
         );
+       const data =  convertPartialPageData(res?.data?.supplementaryPages)
 
+        console.log(data)
+        setSelections(data);
         setTotalPages(res.data?.supplimentaryImageCount || 0);
         setCurrentPage(1);
-        setSelections({});
+        
         setSelectedPages({});
       } catch {
         toast.error("Failed to load supplementary PDF");

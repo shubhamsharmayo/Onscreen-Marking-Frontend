@@ -67,8 +67,8 @@ const CheckModule = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  console.log(totalMarksToDisplay);
-  console.log(TotalMarks);
+  // console.log(totalMarksToDisplay);
+  // console.log(TotalMarks);
   // token MUST be defined before socket connect code
   const token =
     useSelector((state) => state.auth.token) || localStorage.getItem("token");
@@ -197,6 +197,11 @@ const CheckModule = () => {
   //   dispatch(logout());
   //   navigate("/auth/sign-in");
   // });
+// useEffect(() => {
+  
+
+ 
+// }, [third])
 
   // -----------------------------------------------------------------
   // Keep your existing data-fetching useEffects — only change: after
@@ -217,6 +222,7 @@ const CheckModule = () => {
         dispatch(setCurrentBookletId(answerPdfDetails._id));
         dispatch(setBaseImageUrl(extractedBookletPath));
         setAnswerSheetCount(answerPdfDetails);
+         
       } catch (error) {
         console.log(error);
       } finally {
@@ -260,9 +266,12 @@ const CheckModule = () => {
     "/pageicons/yellow.png",
   ];
   const Imgicons = answerImageDetails.map((item, index) => {
+    // console.log(item)
     const isActive =
       String(item.name.split("_")[1].split(".")[0]) ===
       String(evaluatorState.currentIndex);
+      // console.log(item.name.split("_")[1].split(".")[0])
+      // console.log(evaluatorState.currentIndex)
 
     const statusBgMap = {
       notVisited: "bg-red-200",
@@ -347,6 +356,9 @@ const CheckModule = () => {
     };
     if (authState.isAuthenticated !== undefined) fetchData();
   }, [authState.isAuthenticated, token]);
+
+
+ 
 
   // ---------- Render ----------
   if (showloader) {

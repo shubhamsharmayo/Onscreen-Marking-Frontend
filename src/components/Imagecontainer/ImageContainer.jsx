@@ -5,6 +5,7 @@ import { BiCommentAdd } from "react-icons/bi";
 import { IoIosArrowDown } from "react-icons/io";
 import { GrRedo, GrUndo } from "react-icons/gr";
 import { useDispatch, useSelector } from "react-redux";
+import { toast } from "react-toastify";
 import Tools from "./Tools";
 import throttle from "lodash.throttle";
 import { jwtDecode } from "jwt-decode";
@@ -556,12 +557,32 @@ const ImageContainer = (props) => {
       const scrollOffsetX = containerRef.current.scrollLeft;
       const scrollOffsetY = containerRef.current.scrollTop;
       const currentTimeStamp = new Date().toLocaleString();
+      const isCurrentBlank =
+        currentIcon === "/blank.jpg" ;
+
+      const blankExists = iconsStore.some(
+        (icon) =>
+          icon.page === currentIndex &&
+          (icon.iconUrl === "/blank.jpg" )
+      );
+
+      // 🚫 block any new annotation if blank exists
+     
       setTimeout(() => {
-        dispatch(setRerender());
-      }, 1000);
+          dispatch(setRerender());
+        }, 1000);
+
+
+
 
       if (currentIcon !== "/blank.jpg" && currentIcon !== "/not_attempt.png") {
-        const iconBody = {
+         if (blankExists && !isCurrentBlank) {
+        toast.error(
+          "This page is already marked as blank. Remove the blank annotation to continue."
+        );
+       
+      }else{
+            const iconBody = {
           answerPdfImageId: currentAnswerImageId,
           questionDefinitionId: currentQuestionDefinitionId,
           iconUrl: currentIcon,
@@ -577,7 +598,7 @@ const ImageContainer = (props) => {
           answerPdfId: currentAnswerPdfId,
           id: currentTimeStamp,
           userId: props.taskdetails?.userId,
-          parentQuestionId:currentParentId
+          parentQuestionId: currentParentId,
         };
         const totalMarksBody = {
           ...currentMarkDetails,
@@ -598,6 +619,10 @@ const ImageContainer = (props) => {
         dispatch(addMark(totalMarksBody));
         // const res = await createIcon(iconBody);
         dispatch(addAnnotation(iconBody));
+      }
+    
+        
+
         // console.log({ ...res });
         // setIcons([
         //   ...icons,
