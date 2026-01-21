@@ -5,6 +5,7 @@ import { BiCommentAdd } from "react-icons/bi";
 import { IoIosArrowDown } from "react-icons/io";
 import { GrRedo, GrUndo } from "react-icons/gr";
 import { useDispatch, useSelector } from "react-redux";
+import { toast } from "react-toastify";
 import Tools from "./Tools";
 import throttle from "lodash.throttle";
 import { jwtDecode } from "jwt-decode";
@@ -200,6 +201,14 @@ const ImageContainer = (props) => {
     // setAnnotations(updated);
     dispatch(addComment(newAnnotation));
   };
+
+  useEffect(() => {
+    const blankExists = iconsStore.some(
+      (icon) => icon.page === currentIndex && icon.iconUrl === "/blank.jpg"
+    );
+
+    props.setblankCheck(blankExists);
+  }, [iconsStore, currentIndex]);
   // console.log(commentStore);
 
   const handleDragStop = (id, x, y) => {
@@ -556,48 +565,64 @@ const ImageContainer = (props) => {
       const scrollOffsetX = containerRef.current.scrollLeft;
       const scrollOffsetY = containerRef.current.scrollTop;
       const currentTimeStamp = new Date().toLocaleString();
+      const isCurrentBlank = currentIcon === "/blank.jpg";
+
+      const blankExists = iconsStore.some(
+        (icon) => icon.page === currentIndex && icon.iconUrl === "/blank.jpg"
+      );
+      // console.log(blankExists)
+
+      // 🚫 block any new annotation if blank exists
+
       setTimeout(() => {
         dispatch(setRerender());
       }, 1000);
 
       if (currentIcon !== "/blank.jpg" && currentIcon !== "/not_attempt.png") {
-        const iconBody = {
-          answerPdfImageId: currentAnswerImageId,
-          questionDefinitionId: currentQuestionDefinitionId,
-          iconUrl: currentIcon,
-          question: currentQuestionNo,
-          timeStamps: currentTimeStamp,
-          page: currentIndex,
-          x: (e.clientX - containerRect.left) / scale,
-          y: (e.clientY - containerRect.top) / scale,
-          width: 150,
-          height: 80,
-          mark: currentMarkDetails.allottedMarks,
-          taskId: props.id,
-          answerPdfId: currentAnswerPdfId,
-          id: currentTimeStamp,
-          userId: props.taskdetails?.userId,
-          parentQuestionId:currentParentId
-        };
-        const totalMarksBody = {
-          ...currentMarkDetails,
-          id: currentTimeStamp,
-          // allottedMarks: currentMarkDetails.totalAllocatedMarks,
-          taskId: props.id,
-          page: currentIndex,
-          question: currentQuestionNo,
-          userId: props.taskdetails?.userId,
+        if (blankExists && !isCurrentBlank) {
+          toast.error(
+            "This page is already marked as blank. Remove the blank annotation to continue."
+          );
+        } else {
+          const iconBody = {
+            answerPdfImageId: currentAnswerImageId,
+            questionDefinitionId: currentQuestionDefinitionId,
+            iconUrl: currentIcon,
+            question: currentQuestionNo,
+            timeStamps: currentTimeStamp,
+            page: currentIndex,
+            x: (e.clientX - containerRect.left) / scale,
+            y: (e.clientY - containerRect.top) / scale,
+            width: 150,
+            height: 80,
+            mark: currentMarkDetails.allottedMarks,
+            taskId: props.id,
+            answerPdfId: currentAnswerPdfId,
+            id: currentTimeStamp,
+            userId: props.taskdetails?.userId,
+            parentQuestionId: currentParentId,
+          };
+          const totalMarksBody = {
+            ...currentMarkDetails,
+            id: currentTimeStamp,
+            // allottedMarks: currentMarkDetails.totalAllocatedMarks,
+            taskId: props.id,
+            page: currentIndex,
+            question: currentQuestionNo,
+            userId: props.taskdetails?.userId,
 
-          parentQuestionId: currentParentId,
-          // timeStamps: currentTimeStamp,
-        };
-        // console.log(totalMarksBody);
-        // const response = await postMarkById(totalMarksBody);
-        // socket.emit("get-marks", iconBody)
-        socket.emit("add-marks", totalMarksBody);
-        dispatch(addMark(totalMarksBody));
-        // const res = await createIcon(iconBody);
-        dispatch(addAnnotation(iconBody));
+            parentQuestionId: currentParentId,
+            // timeStamps: currentTimeStamp,
+          };
+          // console.log(totalMarksBody);
+          // const response = await postMarkById(totalMarksBody);
+          // socket.emit("get-marks", iconBody)
+          socket.emit("add-marks", totalMarksBody);
+          dispatch(addMark(totalMarksBody));
+          // const res = await createIcon(iconBody);
+          dispatch(addAnnotation(iconBody));
+        }
+
         // console.log({ ...res });
         // setIcons([
         //   ...icons,

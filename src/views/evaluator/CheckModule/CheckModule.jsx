@@ -30,6 +30,7 @@ import EvalQuestionModal from "components/modal/EvalQuestionModal";
 import LineLoader from "UI/LineLoader/LineLoader";
 import { io } from "socket.io-client";
 import useInactivityLogout from "../../../hook/InactivityTracker";
+import { toast } from "react-toastify";
 const CheckModule = () => {
   const [answerSheetCount, setAnswerSheetCount] = useState(null);
   const [answerImageDetails, setAnswerImageDetails] = useState([]);
@@ -44,10 +45,12 @@ const CheckModule = () => {
   const [remainingTimeStr, setRemainingTimeStr] = useState("00:00:00");
   // numeric seconds remaining from server
   const remainingSecondsRef = useRef(null);
+  const pageTimer = useRef(null);
   // server paused flag
   const isPausedRef = useRef(true);
   // interval id for local ticking
   const tickIntervalRef = useRef(null);
+  const PagetickIntervalRef = useRef(null);
 
   const [timeInSeconds, settimeInSeconds] = useState(0);
 
@@ -62,13 +65,15 @@ const CheckModule = () => {
   const currentTaskDetails = evaluatorState.currentTaskDetails;
   const { id } = useParams();
   const [userTimerData, setuserTimerData] = useState({});
+  const [pageTimerCount, setpageTimerCount] = useState("00:00:00");
+  const [blankCheck, setblankCheck] = useState(false)
 
   const [socket, setSocket] = useState(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  console.log(totalMarksToDisplay);
-  console.log(TotalMarks);
+  // console.log(totalMarksToDisplay);
+  // console.log(TotalMarks);
   // token MUST be defined before socket connect code
   const token =
     useSelector((state) => state.auth.token) || localStorage.getItem("token");
@@ -102,6 +107,40 @@ const CheckModule = () => {
       }
     }, 1000);
   }, []);
+  const startLocalTickPage = useCallback(() => {
+     if (PagetickIntervalRef.current) return;
+    pageTimer.current = 0;
+    PagetickIntervalRef.current = setInterval(() => {
+      // decrement local seconds
+      if (typeof pageTimer.current === "number") {
+        pageTimer.current = Math.max(0, pageTimer.current + 1);
+        setpageTimerCount(formatSeconds(pageTimer.current));
+      }
+    }, 1000);
+  }, []);
+
+  const stopLocalTickPage = useCallback(() => {
+  if (PagetickIntervalRef.current) {
+    clearInterval(PagetickIntervalRef.current);
+    PagetickIntervalRef.current = null;
+  }
+}, []);
+
+  useEffect(() => {
+  if (blankCheck) {
+    stopLocalTickPage();     // ⛔ stop timer
+  } else {
+    startLocalTickPage();    // ▶ resume timer
+  }
+}, [blankCheck, startLocalTickPage, stopLocalTickPage,evaluatorState.currentIndex]);
+  
+
+  useEffect(() => {
+  return () => {
+    stopLocalTickPage();
+  };
+}, [evaluatorState.currentIndex, stopLocalTickPage]);
+  // console.log(pageTimerCount);
 
   // const stopLocalTick = useCallback(() => {
   //   if (tickIntervalRef.current) {
@@ -131,11 +170,11 @@ const CheckModule = () => {
     });
 
     newSocket.on("room-joined", (data) => {
-      // console.log("room-joined:", data);
+      console.log("room-joined:", data);
     });
 
     newSocket.on("start-timer-update", (data) => {
-      console.log("⏱ Received start-timer-update:", data);
+      // console.log("⏱ Received start-timer-update:", data);
 
       remainingSecondsRef.current = data.remainingTime * 60;
       setuserTimerData(data);
@@ -197,6 +236,9 @@ const CheckModule = () => {
   //   dispatch(logout());
   //   navigate("/auth/sign-in");
   // });
+  // useEffect(() => {
+
+  // }, [third])
 
   // -----------------------------------------------------------------
   // Keep your existing data-fetching useEffects — only change: after
@@ -226,6 +268,10 @@ const CheckModule = () => {
     if (id) getTaskDetails();
   }, [id, currentBookletIndex, dispatch]);
 
+
+
+  
+
   useEffect(() => {
     const getEvaluatorTasks = async (taskId) => {
       try {
@@ -253,6 +299,8 @@ const CheckModule = () => {
     icons,
   ]);
 
+  const isDisabled = pageTimer.current > 15 || blankCheck;
+
   // ---- Image icons & handling (unchanged) ----
   const svgFiles = [
     "/pageicons/red.png",
@@ -260,9 +308,12 @@ const CheckModule = () => {
     "/pageicons/yellow.png",
   ];
   const Imgicons = answerImageDetails.map((item, index) => {
+    // console.log(item)
     const isActive =
       String(item.name.split("_")[1].split(".")[0]) ===
       String(evaluatorState.currentIndex);
+    // console.log(item.name.split("_")[1].split(".")[0])
+    // console.log(evaluatorState.currentIndex)
 
     const statusBgMap = {
       notVisited: "bg-red-200",
@@ -275,7 +326,14 @@ const CheckModule = () => {
     return (
       <div
         key={index}
-        onClick={() => handleUpdateImageDetail(item, index)}
+        onClick={() => {
+              if (!isDisabled) {
+                toast.warning("spend atleast 15 seconds")
+                return
+              };
+
+          handleUpdateImageDetail(item, index);
+        }}
         className={`
         my-1 flex h-[8rem] w-[5rem] cursor-pointer
         flex-wrap items-center justify-center rounded
@@ -348,6 +406,9 @@ const CheckModule = () => {
     if (authState.isAuthenticated !== undefined) fetchData();
   }, [authState.isAuthenticated, token]);
 
+
+  console.log(blankCheck)
+
   // ---------- Render ----------
   if (showloader) {
     return (
@@ -417,6 +478,13 @@ const CheckModule = () => {
                 >
                   {remainingTimeStr}
                 </span>
+                <br />
+                <span className="text-black font-semibold">page Time</span>:
+                <span className={`ml-2 font-mono ${
+                    pageTimer.current > 15 || blankCheck
+                      ? "font-semibold text-green-600"
+                      : "text-gray-800"
+                  }`}>{pageTimerCount}</span>
               </div>
             </section>
           </div>
@@ -536,6 +604,7 @@ const CheckModule = () => {
               ImageObj={imageObj}
               id={id}
               taskdetails={taskdetails}
+              setblankCheck={setblankCheck}
             />
           </div>
 
