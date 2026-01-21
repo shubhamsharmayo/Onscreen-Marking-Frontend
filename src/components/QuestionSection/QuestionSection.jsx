@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 import CustomAddButton from "UI/CustomAddButton";
 import IconButton from "@mui/material/IconButton";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
@@ -34,6 +35,10 @@ const QuestionDefinition = (props) => {
   const [rotationStates, setRotationStates] = useState({});
   const [marked, setMarked] = useState(false);
   const [totalMarks, setTotalMarks] = useState(null);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [selectedReason, setSelectedReason] = useState("");
+  const [otherReason, setOtherReason] = useState("");
+  const [rejectLoading, setRejectLoading] = useState(false);
   const evaluatorState = useSelector((state) => state.evaluator);
   const taskDetails = evaluatorState.currentTaskDetails;
   const currentBookletIndex = evaluatorState.currentBookletIndex;
@@ -44,6 +49,13 @@ const QuestionDefinition = (props) => {
   const marksStore = useSelector((state) => state.annotation.marksStore);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const rejectionReasons = [
+    "Incorrect booklet uploaded",
+    "Pages missing or unreadable",
+    "Booklet not related to assigned task",
+    "Other",
+  ];
   // useEffect(() => {
   //   if (allQuestions.length !== 0) {
   //     setCurrentQuestionDefinitionId(allQuestions[currentQuestion]._id);
@@ -62,7 +74,7 @@ const QuestionDefinition = (props) => {
           answerPdfId: answerPdfDetails._id,
           userId: userId,
         });
-        
+
         // const response2 = await getQuestionSchemaById(
         //   answerPdfDetails.taskId,
         //   answerPdfDetails._id
@@ -91,21 +103,69 @@ const QuestionDefinition = (props) => {
   socket.on("questions-data", (data) => {
     // console.log(data)
     setAllQuestions(sortByQuestionsName(data.marks));
-   const reducedArr = data.marks
-  .filter(item => item.isSubQuestion === false)
-  .reduce((total, item) => total + item.allottedMarks, 0);
-   const total = data.marks
-  .filter(item => item.isSubQuestion === false)
-  .reduce((total, item) => total + item.maxMarks, 0);
+    const reducedArr = data.marks
+      .filter((item) => item.isSubQuestion === false)
+      .reduce((total, item) => total + item.allottedMarks, 0);
+    const total = data.marks
+      .filter((item) => item.isSubQuestion === false)
+      .reduce((total, item) => total + item.maxMarks, 0);
     setTotalMarks(reducedArr);
-    props.settotalMarksToDisplay(reducedArr)
-    props.setTotalMarks(total)
+    props.settotalMarksToDisplay(reducedArr);
+    props.setTotalMarks(total);
     const qID = data.marks.filter(
       (id) => parseFloat(id.questionsName) === currentQuestion
     );
     dispatch(setCurrentQuestionDefinitionId(qID._id));
     // console.log(qID);
   });
+
+  const handleRejectSubmit = async () => {
+    if (!selectedReason) {
+      toast.warning("Please select a rejection reason");
+      return;
+    }
+
+    if (selectedReason === "Other" && !otherReason.trim()) {
+      toast.warning("Please enter rejection reason");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+
+    const payload = {
+      answerPdfId: currentBookletId,
+      taskId: taskDetails._id,
+      userId: props.taskdetails.userId,
+      reason: selectedReason === "Other" ? otherReason.trim() : selectedReason,
+      rejectedAt: new Date().toISOString(),
+    };
+
+    try {
+      setRejectLoading(true);
+
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/tasks/rejectbooklet/${currentBookletId}`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      toast.success(res.data?.message || "Booklet rejected successfully");
+
+      setShowRejectModal(false);
+      setSelectedReason("");
+      setOtherReason("");
+      navigate("/evaluator/assignedtasks");
+    } catch (error) {
+      console.error("Reject booklet failed", error);
+      toast.error(error?.response?.data?.message || "Failed to reject booklet");
+    } finally {
+      setRejectLoading(false);
+    }
+  };
 
   const handleRotate = (index) => {
     setRotationStates({
@@ -312,12 +372,19 @@ const QuestionDefinition = (props) => {
       setIsLoadingFalse();
     }
   };
+
   const submitHandler = async () => {
     try {
-   
+      // remainingSecondsRef = seconds left
+      const remainingMinutes = Math.floor(props.remainingSecondsRef / 60);
+
+      // totalTime = total allowed time (minutes)
+      const timeTaken = props.userTimerData.totalTime - remainingMinutes;
+
       const res = await submitBookletById(
         currentBookletId,
-        props.taskdetails.userId
+        props.taskdetails.userId,
+        timeTaken // ✅ THIS IS 18 (example)
       );
 
       if (res.success) {
@@ -327,12 +394,11 @@ const QuestionDefinition = (props) => {
         toast.warning(res.message);
       }
     } catch (error) {
-      console.log(error);
-      toast.error(error);
-    } finally {
-      // setIsloading(false);
+      console.error(error);
+      toast.error("Failed to submit booklet");
     }
   };
+
   return (
     <div className="h-[100%] ">
       {/* <div className="flex  h-[7%] w-[100%]">
@@ -399,6 +465,7 @@ const QuestionDefinition = (props) => {
       <div className=" mt-2 h-[10%]">
         <button
           type="button"
+          onClick={() => setShowRejectModal(true)}
           className="mb-2  w-[100%] border border-red-700 px-5 py-2.5 text-center text-sm font-medium text-red-700 hover:bg-red-800 hover:text-white focus:outline-none focus:ring-4 focus:ring-red-300 dark:border-red-500 dark:text-red-500 dark:hover:bg-red-600 dark:hover:text-white dark:focus:ring-red-900"
         >
           REJECT BOOKLET
@@ -421,6 +488,69 @@ const QuestionDefinition = (props) => {
           SUBMIT BOOKLET AND NEXT
         </button>
       </div>
+
+      {showRejectModal && (
+        <div className="bg-black fixed inset-0 z-50 flex items-center justify-center bg-opacity-50">
+          <div className="w-[420px] rounded-lg bg-white p-6 shadow-lg">
+            <h2 className="mb-4 text-lg font-semibold text-gray-800">
+              Reject Booklet
+            </h2>
+
+            {/* Reasons */}
+            <div className="space-y-3">
+              {rejectionReasons.map((reason, index) => (
+                <label
+                  key={index}
+                  className="flex cursor-pointer items-center gap-2"
+                >
+                  <input
+                    type="radio"
+                    name="rejectReason"
+                    value={reason}
+                    checked={selectedReason === reason}
+                    onChange={() => setSelectedReason(reason)}
+                    className="accent-red-600"
+                  />
+                  <span className="text-sm text-gray-700">{reason}</span>
+                </label>
+              ))}
+            </div>
+
+            {/* Other reason textarea */}
+            {selectedReason === "Other" && (
+              <textarea
+                className="mt-4 w-full rounded-md border border-gray-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                rows={3}
+                placeholder="Enter rejection reason"
+                value={otherReason}
+                onChange={(e) => setOtherReason(e.target.value)}
+              />
+            )}
+
+            {/* Actions */}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowRejectModal(false);
+                  setSelectedReason("");
+                  setOtherReason("");
+                }}
+                className="rounded-md border px-4 py-2 text-sm hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleRejectSubmit}
+                disabled={rejectLoading}
+                className="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 disabled:opacity-60"
+              >
+                {rejectLoading ? "Submitting..." : "Submit"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

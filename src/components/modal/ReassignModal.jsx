@@ -118,6 +118,7 @@ const ReassignModal = ({
     } finally {
       setSubmitting(false);
     }
+    window.location.reload();
   };
 
   if (!showReAssignModal || !currentTask) return null;

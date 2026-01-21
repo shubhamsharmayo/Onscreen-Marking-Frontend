@@ -63,6 +63,11 @@ const SelectSchemaModal = ({
     }
   }, [selectedSchema, schemas]);
 
+  const trimText = (text, maxLength = 15) => {
+    if (!text) return "";
+    return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
+  };
+
   // Handle submit function
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -222,8 +227,10 @@ const SelectSchemaModal = ({
                   : "bg-indigo-600 hover:bg-indigo-800 focus:ring-indigo-400"
               }`}
             >
-              <span>
-                {questionSheet ? questionSheet.name : "Question Sheet"}
+              <span title={questionSheet?.name}>
+                {questionSheet
+                  ? trimText(questionSheet.name, 15)
+                  : "Question Sheet"}
               </span>
               <input
                 type="file"
@@ -242,7 +249,9 @@ const SelectSchemaModal = ({
                   : "bg-indigo-600 hover:bg-indigo-800 focus:ring-indigo-400"
               }`}
             >
-              <span>{answerSheet ? answerSheet.name : "Answer Sheet"}</span>
+              <span title={answerSheet?.name}>
+                {answerSheet ? trimText(answerSheet.name, 15) : "Answer Sheet"}
+              </span>
               <input
                 type="file"
                 accept=".pdf, .tiff, .tif"

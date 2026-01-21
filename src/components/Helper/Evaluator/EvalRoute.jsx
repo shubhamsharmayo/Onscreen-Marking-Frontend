@@ -221,24 +221,26 @@ export const getSubjectIdImgUrl = async (subjectCode, questionDefinitionId) => {
   }
 };
 
-export const submitBookletById = async (answerPdfId,userId) => {
+export const submitBookletById = async (
+  answerPdfId,
+  userId,
+  timeTakenInMinutes
+) => {
   const token = localStorage.getItem("token");
 
-  try {
-    const response = await axios.put(
-      `${process.env.REACT_APP_API_URL}/api/tasks/completedbooklet/${answerPdfId}/${userId}
-      `,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-    return response.data; // return the full response to handle status outside
-  } catch (error) {
-    console.error(error);
-    return error.response.data; // return full error response to handle status outside
-  }
+  const response = await axios.put(
+    `${process.env.REACT_APP_API_URL}/api/tasks/completedbooklet/${answerPdfId}/${userId}`,
+    {
+      submitted: timeTakenInMinutes, // ✅ minutes only
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  return response.data;
 };
 
 export const submitImageById = async (formData) => {
