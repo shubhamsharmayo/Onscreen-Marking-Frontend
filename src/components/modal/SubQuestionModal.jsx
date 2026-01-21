@@ -15,7 +15,7 @@ const SubQuestionModal = ({ showImageModal, setShowImageModal, schemaId }) => {
 
   const imageRef = useRef(null);
   const containerRef = useRef(null);
-const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token");
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
   /* ---------------- Image Dimensions ---------------- */
@@ -38,6 +38,30 @@ const token = localStorage.getItem("token");
     };
   }, [currentPage]);
 
+  function convertPartialPageData(data) {
+    const areas = {};
+
+    data.forEach((page) => {
+      if (page.type === "PARTIAL_PAGE") {
+        areas[page.pageNumber] = page.coordinates.map(
+          ({ x, y, width, height }) => ({
+            x,
+            y,
+            width,
+            height,
+          })
+        );
+      }
+    });
+
+    return {
+      coordination: {
+        type: "PARTIAL_PAGE",
+        areas,
+      },
+    };
+  }
+
   /* ---------------- Fetch Schema ---------------- */
   useEffect(() => {
     if (!schemaId || !showImageModal) return;
@@ -52,10 +76,13 @@ const token = localStorage.getItem("token");
             },
           }
         );
+        const data = convertPartialPageData(res?.data?.supplementaryPages);
 
+        console.log(data);
+        setSelections(data);
         setTotalPages(res.data?.supplimentaryImageCount || 0);
         setCurrentPage(1);
-        setSelections({});
+
         setSelectedPages({});
       } catch {
         toast.error("Failed to load supplementary PDF");
@@ -72,7 +99,7 @@ const token = localStorage.getItem("token");
       [page]: !prev[page],
     }));
   };
-console.log(selectedPages)
+  console.log(selectedPages);
   /* ---------------- Coordinate Helper ---------------- */
   const getClampedCoords = (e) => {
     const rect = imageRef.current.getBoundingClientRect();
@@ -117,7 +144,6 @@ console.log(selectedPages)
       ...prev,
       [currentPage]: [...(prev[currentPage] || []), draftSelection],
     }));
-    
 
     setDragStart(null);
     setDraftSelection(null);
@@ -127,43 +153,41 @@ console.log(selectedPages)
   useEffect(() => {
     setDragStart(null);
     setDraftSelection(null);
-    
   }, [currentPage, selectionType]);
-  console.log(selections)
+  console.log(selections);
 
+  const handleSubmit = async () => {
+    try {
+      const coordination =
+        selectionType === 1
+          ? {
+              type: "WHOLE_PAGE",
+              areas: Object.keys(selectedPages)
+                .filter((page) => selectedPages[page])
+                .map(Number),
+            }
+          : {
+              type: "PARTIAL_PAGE",
+              areas: selections,
+            };
 
- const handleSubmit = async () => {
-  try {
-    const coordination =
-      selectionType === 1
-        ? {
-            type: "WHOLE_PAGE",
-            areas: Object.keys(selectedPages)
-              .filter((page) => selectedPages[page])
-              .map(Number),
-          }
-        : {
-            type: "PARTIAL_PAGE",
-            areas: selections,
-          };
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/schemas/getcoordinates/${schemaId}`,
+        { coordination },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-    const response = await axios.post(
-      `${process.env.REACT_APP_API_URL}/api/schemas/getcoordinates/${schemaId}`,
-      { coordination },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    console.log(response.data);
-    toast.success("Coordinates submitted successfully");
-  } catch (error) {
-    console.error(error);
-    toast.error("Failed to submit coordinates");
-  }
-};
+      console.log(response.data);
+      toast.success("Coordinates submitted successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to submit coordinates");
+    }
+  };
 
   if (!showImageModal) return null;
 
@@ -174,7 +198,7 @@ console.log(selectedPages)
   )}/image_${currentPage}.png`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="bg-black fixed inset-0 z-50 flex items-center justify-center bg-opacity-50">
       <div className="relative w-11/12 max-w-3xl rounded bg-white p-4">
         <button
           className="absolute right-2 top-1 text-2xl"
@@ -186,14 +210,14 @@ console.log(selectedPages)
         <h2 className="mb-2 text-lg font-bold">Supplementary PDF</h2>
 
         {/* Selection Mode */}
-        <div className="flex justify-center gap-3 mb-3">
+        <div className="mb-3 flex justify-center gap-3">
           <button
             className={`rounded px-4 py-2 text-white ${
               selectionType === 1 ? "bg-indigo-800" : "bg-indigo-600"
             }`}
             onClick={() => {
               setSelectionType(1);
-              setSelections({})
+              setSelections({});
             }}
           >
             Whole Page
@@ -296,7 +320,7 @@ console.log(selectedPages)
         </div>
 
         {/* Pagination */}
-        <div className="mt-3 flex justify-between items-center">
+        <div className="mt-3 flex items-center justify-between">
           <button
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             className="rounded bg-indigo-600 px-4 py-2 text-white"
@@ -312,9 +336,7 @@ console.log(selectedPages)
           </span>
 
           <button
-            onClick={() =>
-              setCurrentPage((p) => Math.min(totalPages, p + 1))
-            }
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             className="rounded bg-indigo-600 px-4 py-2 text-white"
           >
             Next

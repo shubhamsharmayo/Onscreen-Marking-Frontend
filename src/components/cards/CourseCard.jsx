@@ -47,7 +47,7 @@ const CourseCard = ({
     <div>
       <div
         key={subject?._id}
-        className="... block max-w-full overflow-hidden rounded-lg bg-white p-4 shadow-sm shadow-indigo-50 transition"
+        className="... block max-w-full overflow-hidden rounded-lg bg-white  p-4 shadow-sm shadow-indigo-50 transition dark:bg-navy-700 dark:text-white dark:shadow-gray-800"
       >
         <div className="mt-2">
           <dl>

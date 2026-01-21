@@ -164,7 +164,7 @@ const Tasks = () => {
                         ? "text-gray-500"
                         : filteredTask?.status === "active"
                         ? "text-red-600"
-                        : filteredTask?.status === "complete"
+                        : filteredTask?.status === "success"
                         ? "text-green-600"
                         : "text-gray-400"
                     }`}
@@ -173,7 +173,7 @@ const Tasks = () => {
                       ? "Not Started"
                       : filteredTask?.status === "active"
                       ? "Pending"
-                      : filteredTask?.status === "complete"
+                      : filteredTask?.status === "success"
                       ? "Completed"
                       : "-"}
                   </td>
