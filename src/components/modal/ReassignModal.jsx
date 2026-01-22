@@ -163,14 +163,23 @@ const ReassignModal = ({
           <label className="mb-1 block text-sm font-medium">
             Transfer Pending Booklets
           </label>
-          <input
-            type="number"
-            min={1}
-            max={maxTransferCount}
+
+          <select
             value={transferCount}
             onChange={(e) => handleTransferChange(Number(e.target.value))}
             className="w-full rounded-lg border p-2 dark:bg-navy-700"
-          />
+          >
+            <option value="" disabled>
+              Select count
+            </option>
+
+            {Array.from({ length: maxTransferCount }, (_, index) => (
+              <option key={index + 1} value={index + 1}>
+                {index + 1}
+              </option>
+            ))}
+          </select>
+
           <p className="mt-1 text-xs text-gray-500">
             Max allowed: {maxTransferCount}
           </p>

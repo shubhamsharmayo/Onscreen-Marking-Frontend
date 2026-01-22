@@ -23,6 +23,7 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
     hiddenPage: [],
     minTime: "",
     maxTime: "",
+    perPage: "",
     PageofSupplement: "",
     numberOfSupplement: "",
   });
@@ -120,6 +121,7 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
       !formData?.minTime ||
       !formData?.numberOfSupplement === 0 ||
       !formData?.PageofSupplement === 0 ||
+      !formData?.perPage ||
       !formData?.maxTime
     ) {
       toast.error("All fields are required.");
@@ -208,21 +210,41 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
 
         <form onSubmit={handleSubmit} className="sm:space-y-6">
           {/* Schema Name */}
-          <div className="mb-2 sm:mb-0">
-            <label
-              className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg"
-              htmlFor="name"
-            >
-              Schema Name:
-            </label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              className="sm:text-md w box-border w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:px-4 sm:py-2"
-            />
+
+          <div className="flex flex-col justify-between space-x-3 sm:flex-row">
+            <div className="mb-2 sm:mb-0">
+              <label
+                className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg"
+                htmlFor="name"
+              >
+                Schema Name:
+              </label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                className="sm:text-md w box-border w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:px-4 sm:py-2"
+              />
+            </div>
+            <div className="mb-2 sm:mb-0">
+              <label
+                className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg"
+                htmlFor="maxMarks"
+              >
+                Page Time (in Sec)
+              </label>
+              <input
+                type="number"
+                id="perPage"
+                name="perPage"
+                value={formData.perPage}
+                placeholder="Per Page Time"
+                onChange={handleChange}
+                className="sm:text-md box-border  w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:px-4 sm:py-2"
+              />
+            </div>
           </div>
           {/* Total Questions */}
           <div className="flex flex-col justify-between space-x-3 sm:flex-row">

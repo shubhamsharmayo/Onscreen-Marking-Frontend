@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -20,8 +20,25 @@ const ImageModal = ({
   const [questionsPdfPath, setQuestionsPdfPath] = useState(null);
   const [answersPdfPath, setAnswersPdfPath] = useState(undefined);
   const [countQuestions, setCountQuestions] = useState(0);
+  const [selectedPages, setSelectedPages] = useState({});
+
+  const [selections, setSelections] = useState({});
   const [countAnswers, setCountAnswers] = useState(0);
-  const [checkboxStatus, setCheckboxStatus] = useState({}); // Object to hold checkbox status for each image
+  const [checkboxStatus, setCheckboxStatus] = useState({});
+  const [selectionType, setSelectionType] = useState(1); // Object to hold checkbox status for each image
+  const [draftSelection, setDraftSelection] = useState(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [dragStart, setDragStart] = useState(null);
+  const containerRef = useRef(null);
+  const imageRef = useRef(null);
+  const [imageMeta, setImageMeta] = useState({
+    naturalWidth: 0,
+    naturalHeight: 0,
+    renderedWidth: 0,
+    renderedHeight: 0,
+    scale: 1,
+  });
+
   const { id } = useParams();
 
   // console.log(questionId);
@@ -49,6 +66,11 @@ const ImageModal = ({
       );
     }
   };
+
+  const hasPartialSelection = (pageIndex) =>
+    selections[pageIndex] && selections[pageIndex].length > 0;
+
+  const isWholePageSelected = (pageIndex) => checkboxStatus[pageIndex] === true;
 
   useEffect(() => {
     const fetchedData = async () => {
@@ -126,6 +148,140 @@ const ImageModal = ({
   const prefilledQuestionTobeShown = questionDone?.filter(
     (question) => question.questionId === questionId
   );
+
+  const removeSelection = (pageIndex, selectionIndex) => {
+    setSelections((prev) => {
+      const updated = [...(prev[pageIndex] || [])];
+      updated.splice(selectionIndex, 1);
+
+      return {
+        ...prev,
+        [pageIndex]: updated,
+      };
+    });
+  };
+
+  const togglePageSelection = (page) => {
+    setSelectedPages((prev) => ({
+      ...prev,
+      [page]: !prev[page],
+    }));
+  };
+
+  const getClampedCoords = (e) => {
+    const rect = imageRef.current.getBoundingClientRect();
+
+    let x = e.clientX - rect.left;
+    let y = e.clientY - rect.top;
+
+    x = Math.max(0, Math.min(x, rect.width));
+    y = Math.max(0, Math.min(y, rect.height));
+
+    return { x, y };
+  };
+
+  const handleMouseDown = (e) => {
+    if (selectionType !== 2) return;
+
+    if (checkboxStatus[currentImageIndex]) {
+      clearWholePageSelection(currentImageIndex);
+    }
+
+    if (isWholePageSelected(currentImageIndex)) {
+      toast.error("Remove whole page selection before partial selection");
+      return;
+    }
+
+    const { x, y } = getClampedCoords(e);
+    setDragStart({ x, y });
+    setDraftSelection(null);
+  };
+
+  const handleMouseMove = (e) => {
+    if (!e.buttons || !dragStart) return;
+
+    const { x, y } = getClampedCoords(e);
+
+    setDraftSelection({
+      x: Math.min(dragStart.x, x),
+      y: Math.min(dragStart.y, y),
+      width: Math.abs(x - dragStart.x),
+      height: Math.abs(y - dragStart.y),
+    });
+  };
+
+  const handleMouseUp = () => {
+    if (!dragStart || !draftSelection) {
+      setDragStart(null);
+      return;
+    }
+
+    // Auto-remove whole page selection if present
+    if (isWholePageSelected(currentImageIndex)) {
+      setCheckboxStatus((prev) => ({
+        ...prev,
+        [currentImageIndex]: false,
+      }));
+
+      setFormData((prev) => ({
+        ...prev,
+        questionImages: prev.questionImages?.filter(
+          (img) => img !== `image_${currentImageIndex}.png`
+        ),
+        answerImages: prev.answerImages?.filter(
+          (img) => img !== `image_${currentImageIndex}.png`
+        ),
+      }));
+    }
+
+    setSelections((prev) => ({
+      ...prev,
+      [currentImageIndex]: [
+        ...(prev[currentImageIndex] || []),
+        toNaturalCoords(draftSelection),
+      ],
+    }));
+
+    setDragStart(null);
+    setDraftSelection(null);
+  };
+
+  const clearWholePageSelection = (pageIndex) => {
+    // Clear checkbox state
+    setCheckboxStatus((prev) => ({
+      ...prev,
+      [pageIndex]: false,
+    }));
+
+    // Remove from formData
+    setFormData((prev) => ({
+      ...prev,
+      questionImages: prev.questionImages?.filter(
+        (img) => img !== `image_${pageIndex}.png`
+      ),
+      answerImages: prev.answerImages?.filter(
+        (img) => img !== `image_${pageIndex}.png`
+      ),
+    }));
+  };
+
+  const toNaturalCoords = (rect) => {
+    const scale = imageMeta.scale;
+
+    return {
+      x: rect.x / scale,
+      y: rect.y / scale,
+      width: rect.width / scale,
+      height: rect.height / scale,
+    };
+  };
+
+  const toRendered = (rect) => ({
+    left: rect.x * imageMeta.scale,
+    top: rect.y * imageMeta.scale,
+    width: rect.width * imageMeta.scale,
+    height: rect.height * imageMeta.scale,
+  });
 
   const handleSelectedImage = (index, imageName) => {
     setCheckboxStatus((prevStatus) => {
@@ -253,7 +409,7 @@ const ImageModal = ({
             </button>
 
             {/* Image Display */}
-            <img
+            {/* <img
               src={`${process.env.REACT_APP_API_URL}/uploadedPdfs/extractedQuestionPdfImages/${questionsPdfPath}/image_${currentImageIndex}.png`} // Use the current image URL
               alt={`Slide ${currentImageIndex}`}
               className={`mb-2 h-[350px] w-full cursor-pointer overflow-auto rounded-lg object-contain sm:h-[650px] xl:h-[670px] ${
@@ -267,10 +423,10 @@ const ImageModal = ({
                   `image_${currentImageIndex}.png`
                 );
               }}
-            />
+            /> */}
 
             {/* Pagination Controls */}
-            <div className="flex items-center justify-between">
+            <div className="mb-5 flex items-center justify-between">
               <button
                 onClick={prevImage}
                 className="rounded-lg bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-800"
@@ -286,6 +442,14 @@ const ImageModal = ({
                   Confirm
                 </button>
               </div>
+              <button
+                className={` rounded px-4 py-2 text-white ${
+                  selectionType === 2 ? "bg-indigo-800" : "bg-indigo-600"
+                }`}
+                onClick={() => setSelectionType(2)}
+              >
+                Partial Page
+              </button>
               <button
                 onClick={nextImage}
                 className="rounded-lg bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-800"
@@ -336,6 +500,143 @@ const ImageModal = ({
                 </fieldset>
               </div>
             </div>
+
+            <div
+              ref={containerRef}
+              className="flex justify-center"
+              style={{ height: "40rem", overflow: "hidden" }}
+            >
+              <div className="overflow-auto">
+                <div
+                  className="relative"
+                  style={{
+                    width: imageMeta.renderedWidth,
+                    height: imageMeta.renderedHeight,
+                  }}
+                >
+                  <img
+                    ref={imageRef}
+                    alt={`Slide ${currentImageIndex}`}
+                    src={`${process.env.REACT_APP_API_URL}/uploadedPdfs/extractedQuestionPdfImages/${questionsPdfPath}/image_${currentImageIndex}.png`}
+                    className={`mb-2  w-full cursor-pointer overflow-auto rounded-lg object-contain sm:h-[650px] xl:h-[670px] ${
+                      checkboxStatus[currentImageIndex]
+                        ? "border-2 border-green-700 shadow-lg hover:shadow-2xl"
+                        : ""
+                    }`}
+                    draggable={false}
+                    style={{
+                      // width: "100%",
+                      // height: "100%",
+                      width: imageMeta.renderedWidth,
+                      height: imageMeta.renderedHeight,
+                      cursor: selectionType === 1 ? "crosshair" : "pointer",
+                      display: "block",
+                    }}
+                    onClick={() => {
+                      if (selectionType === 1) {
+                        if (hasPartialSelection(currentImageIndex)) {
+                          toast.error(
+                            "Remove partial selection before whole page selection"
+                          );
+                          return;
+                        }
+
+                        togglePageSelection(currentImageIndex);
+                        handleSelectedImage(
+                          currentImageIndex,
+                          `image_${currentImageIndex}.png`
+                        );
+                      }
+                    }}
+                    onLoad={(e) => {
+                      const naturalWidth = e.target.naturalWidth;
+                      const naturalHeight = e.target.naturalHeight;
+
+                      const containerWidth = containerRef.current.clientWidth;
+
+                      const scale = containerWidth / naturalWidth;
+
+                      setImageMeta({
+                        naturalWidth,
+                        naturalHeight,
+                        renderedWidth: naturalWidth * scale,
+                        renderedHeight: naturalHeight * scale,
+                        scale,
+                      });
+                    }}
+                    onMouseDown={handleMouseDown}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUp}
+                    onError={() =>
+                      toast.error(
+                        `Page ${currentImageIndex} could not be loaded`
+                      )
+                    }
+                  />
+                  {selections[currentImageIndex]?.map((sel, i) => {
+                    const r = toRendered(sel);
+                    return (
+                      <div
+                        key={i}
+                        style={{
+                          position: "absolute",
+                          left: r.left,
+                          top: r.top,
+                          width: r.width,
+                          height: r.height,
+                          border: "2px solid #16a34a",
+                          backgroundColor: "rgba(22, 163, 74, 0.25)",
+                          pointerEvents: "none",
+                        }}
+                      >
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeSelection(currentImageIndex, i);
+                          }}
+                          style={{
+                            position: "absolute",
+                            top: "-10px",
+                            right: "-10px",
+                            width: "20px",
+                            height: "20px",
+                            borderRadius: "50%",
+                            backgroundColor: "#dc2626",
+                            color: "#fff",
+                            fontSize: "12px",
+                            fontWeight: "bold",
+                            border: "none",
+                            cursor: "pointer",
+                            pointerEvents: "auto",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    );
+                  })}
+
+                  {draftSelection && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: draftSelection.x,
+                        top: draftSelection.y,
+                        width: draftSelection.width,
+                        height: draftSelection.height,
+                        border: "2px solid #2563eb",
+                        backgroundColor: "rgba(37, 99, 235, 0.25)",
+                        pointerEvents: "none",
+                      }}
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -375,7 +676,7 @@ const ImageModal = ({
 
             {/* Answer Image Display */}
 
-            <img
+            {/* <img
               src={`${process.env.REACT_APP_API_URL}/uploadedPdfs/extractedAnswerPdfImages/${answersPdfPath}/image_${currentImageIndex}.png`}
               alt={`Slide ${currentImageIndex}`}
               className={`mb-2 h-[350px] w-full cursor-pointer overflow-auto rounded-lg object-contain sm:h-[650px] xl:h-[670px] ${
@@ -389,10 +690,10 @@ const ImageModal = ({
                   `image_${currentImageIndex}.png`
                 );
               }}
-            />
+            /> */}
 
             {/* Pagination Controls */}
-            <div className="flex items-center justify-between">
+            <div className="mb-5 flex items-center justify-between">
               <button
                 onClick={prevImage}
                 className="rounded-lg bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-800"
@@ -412,6 +713,14 @@ const ImageModal = ({
                   {isAvailable ? "Update" : "Submit"}
                 </button>
               </div>
+              <button
+                className={`rounded px-4 py-2 text-white ${
+                  selectionType === 2 ? "bg-indigo-800" : "bg-indigo-600"
+                }`}
+                onClick={() => setSelectionType(2)}
+              >
+                Partial Page
+              </button>
               <button
                 onClick={nextImage}
                 className="rounded-lg bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-800"
@@ -462,6 +771,143 @@ const ImageModal = ({
                     </label>
                   </div>
                 </fieldset>
+              </div>
+            </div>
+
+            <div
+              ref={containerRef}
+              className="flex justify-center"
+              style={{ height: "40rem", overflow: "hidden" }}
+            >
+              <div className="overflow-auto">
+                <div
+                  className="relative"
+                  style={{
+                    width: imageMeta.renderedWidth,
+                    height: imageMeta.renderedHeight,
+                  }}
+                >
+                  <img
+                    ref={imageRef}
+                    src={`${process.env.REACT_APP_API_URL}/uploadedPdfs/extractedAnswerPdfImages/${answersPdfPath}/image_${currentImageIndex}.png`}
+                    className={`mb-2 h-[350px] w-full cursor-pointer overflow-auto rounded-lg object-contain sm:h-[650px] xl:h-[670px] ${
+                      checkboxStatus[currentImageIndex]
+                        ? "border-2 border-green-700"
+                        : ""
+                    }`}
+                    alt={`Slide ${currentImageIndex}`}
+                    draggable={false}
+                    style={{
+                      // width: "100%",
+                      // height: "80%",
+                      width: imageMeta.renderedWidth,
+                      height: imageMeta.renderedHeight,
+                      cursor: selectionType === 1 ? "crosshair" : "pointer",
+                      display: "block",
+                    }}
+                    onClick={() => {
+                      if (selectionType === 1) {
+                        if (hasPartialSelection(currentImageIndex)) {
+                          toast.error(
+                            "Remove partial selection before whole page selection"
+                          );
+                          return;
+                        }
+
+                        togglePageSelection(currentImageIndex);
+                        handleSelectedImage(
+                          currentImageIndex,
+                          `image_${currentImageIndex}.png`
+                        );
+                      }
+                    }}
+                    onLoad={(e) => {
+                      const naturalWidth = e.target.naturalWidth;
+                      const naturalHeight = e.target.naturalHeight;
+
+                      const containerWidth = containerRef.current.clientWidth;
+
+                      const scale = containerWidth / naturalWidth;
+
+                      setImageMeta({
+                        naturalWidth,
+                        naturalHeight,
+                        renderedWidth: naturalWidth * scale,
+                        renderedHeight: naturalHeight * scale,
+                        scale,
+                      });
+                    }}
+                    onMouseDown={handleMouseDown}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUp}
+                    onError={() =>
+                      toast.error(
+                        `Page ${currentImageIndex} could not be loaded`
+                      )
+                    }
+                  />
+                  {selections[currentImageIndex]?.map((sel, i) => {
+                    const r = toRendered(sel);
+                    return (
+                      <div
+                        key={i}
+                        style={{
+                          position: "absolute",
+                          left: r.left,
+                          top: r.top,
+                          width: r.width,
+                          height: r.height,
+                          border: "2px solid #16a34a",
+                          backgroundColor: "rgba(22, 163, 74, 0.25)",
+                          pointerEvents: "none",
+                        }}
+                      >
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeSelection(currentImageIndex, i);
+                          }}
+                          style={{
+                            position: "absolute",
+                            top: "-10px",
+                            right: "-10px",
+                            width: "20px",
+                            height: "20px",
+                            borderRadius: "50%",
+                            backgroundColor: "#dc2626",
+                            color: "#fff",
+                            fontSize: "12px",
+                            fontWeight: "bold",
+                            border: "none",
+                            cursor: "pointer",
+                            pointerEvents: "auto",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    );
+                  })}
+
+                  {draftSelection && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: draftSelection.x,
+                        top: draftSelection.y,
+                        width: draftSelection.width,
+                        height: draftSelection.height,
+                        border: "2px solid #2563eb",
+                        backgroundColor: "rgba(37, 99, 235, 0.25)",
+                        pointerEvents: "none",
+                      }}
+                    />
+                  )}
+                </div>
               </div>
             </div>
           </div>
