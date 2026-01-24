@@ -22,6 +22,7 @@ const SchemaQuestion = ({
     numberOfPage: "",
     hiddenPage: [],
     minTime: "",
+    perPage: "",
     maxTime: "",
     PageofSupplement: "",
     numberOfSupplement: "",
@@ -40,6 +41,7 @@ const SchemaQuestion = ({
         numberOfSupplement: selectedSchema.numberOfSupplement || "",
         // evaluationTime: selectedSchema.evaluationTime || "",
         minTime: selectedSchema.minTime || "",
+        perPage: selectedSchema.perPage || "",
         maxTime: selectedSchema.maxTime || "",
         isActive: selectedSchema.isActive || true,
         status: false,
@@ -104,6 +106,7 @@ const SchemaQuestion = ({
       // !formData.evaluationTime ||
       !formData.minTime ||
       !formData.maxTime ||
+      !formData.perPage ||
       !formData?.numberOfSupplement === 0 ||
       !formData?.PageofSupplement === 0 ||
       !formData.numberOfPage ||

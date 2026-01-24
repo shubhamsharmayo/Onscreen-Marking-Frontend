@@ -241,6 +241,7 @@ const Schema = () => {
     // evaluationTime: data.evaluationTime,
     minTime: data.minTime,
     maxTime: data.maxTime,
+    perPage: data.perPage,
     PageofSupplement: data.PageofSupplement,
 
     numberOfPage: data.numberOfPage,

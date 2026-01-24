@@ -24,6 +24,7 @@ const SchemaEditModal = ({
     hiddenPage: [],
     minTime: "",
     maxTime: "",
+    perPage: "",
     PageofSupplement: "",
     numberOfSupplement: "",
   });
@@ -42,6 +43,7 @@ const SchemaEditModal = ({
         // evaluationTime: selectedSchema.evaluationTime || "",
         minTime: selectedSchema.minTime || "",
         maxTime: selectedSchema.maxTime || "",
+        perPage: selectedSchema.perPage || "",
         isActive: selectedSchema.isActive || true,
         status: false,
         numberOfPage: selectedSchema.numberOfPage || "",
@@ -109,6 +111,7 @@ const SchemaEditModal = ({
       !formData?.numberOfSupplement === "" ||
       !formData?.PageofSupplement === "" ||
       !formData.numberOfPage ||
+      !formData.perPage ||
       formData?.hiddenPage?.length === 0
     ) {
       toast.error("All fields are required.");
@@ -214,17 +217,32 @@ const SchemaEditModal = ({
 
         <div className="sm:space-y-6">
           {/* Input for Schema Name */}
-          <div className="mb-2 sm:mb-0">
-            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg">
-              Schema Name
-            </label>
-            <input
-              type="text"
-              name="name"
-              value={formData?.name}
-              onChange={handleInputChange}
-              className="sm:text-md w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:p-3"
-            />
+          <div className="flex flex-col justify-between sm:flex-row">
+            <div className="mb-2 sm:mb-0">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg">
+                Schema Name
+              </label>
+              <input
+                type="text"
+                name="name"
+                value={formData?.name}
+                onChange={handleInputChange}
+                className="sm:text-md w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:p-3"
+              />
+            </div>
+            {/* Input for Compulsory Questions */}
+            <div className="mb-2 sm:mb-0">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg">
+                Per Page (in Sec):
+              </label>
+              <input
+                type="number"
+                name="perPage"
+                value={formData?.perPage}
+                onChange={handleInputChange}
+                className="sm:text-md w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-3"
+              />
+            </div>
           </div>
           {/* Input for Maximum Marks */}
           <div className="flex flex-col justify-between sm:flex-row">

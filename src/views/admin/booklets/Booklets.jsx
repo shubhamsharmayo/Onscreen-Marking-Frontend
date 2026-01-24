@@ -23,6 +23,30 @@ import Tooltip from "@mui/material/Tooltip";
 //   timeout: 20000,
 // });
 
+const TwoLineHeader = ({ title }) => {
+  const words = title.split(" ");
+
+  return (
+    <div
+      style={{
+        textAlign: "center",
+        whiteSpace: "normal",
+        lineHeight: "1.1",
+        fontWeight: 700,
+      }}
+    >
+      {words.length > 1 ? (
+        <>
+          <div>{words[0]}</div>
+          <div>{words.slice(1).join(" ")}</div>
+        </>
+      ) : (
+        <div>{title}</div>
+      )}
+    </div>
+  );
+};
+
 const Booklets = () => {
   const [rows, setRows] = useState([]);
   const navigate = useNavigate();
@@ -228,21 +252,24 @@ const Booklets = () => {
     // 🔽 First 3 columns – smaller
     {
       field: "folderName",
-      headerName: "Course Code",
-      flex: 0.8,
+      headerName: "Subject Code",
+      flex: 1,
       minWidth: 1 / 2,
+      renderHeader: () => <TwoLineHeader title="Subject Code" />,
     },
     {
       field: "className",
       headerName: "Class",
-      flex: 0.8,
+      flex: 1,
       minWidth: 1,
+      renderHeader: () => <TwoLineHeader title="Class" />,
     },
     {
       field: "scannedFolder",
       headerName: "Scanned Data",
-      flex: 0.8,
+      flex: 1,
       minWidth: 1,
+      renderHeader: () => <TwoLineHeader title="Scanned Data" />,
     },
 
     // Normal size
@@ -251,33 +278,38 @@ const Booklets = () => {
       headerName: "Unallocated",
       flex: 1,
       minWidth: 1,
+      renderHeader: () => <TwoLineHeader title="Unallocated" />,
     },
     {
       field: "allocated",
       headerName: "Allocated",
       flex: 1,
       minWidth: 1,
+      renderHeader: () => <TwoLineHeader title="Allocated" />,
     },
     {
       field: "evaluated",
       headerName: "Evaluated",
       flex: 1,
       minWidth: 1,
+      renderHeader: () => <TwoLineHeader title="Evaluated" />,
     },
 
     // 🔼 Bigger
     {
       field: "evaluation_pending",
       headerName: "Evaluation Pending",
-      flex: 1.4,
+      flex: 1,
       minWidth: 1,
+      renderHeader: () => <TwoLineHeader title="Evaluation Pending" />,
     },
 
     {
       field: "upload",
       headerName: "Upload",
-      flex: 0.9,
+      flex: 1,
       minWidth: 1,
+      renderHeader: () => <TwoLineHeader title="Upload" />,
       renderCell: (params) => (
         <>
           <Tooltip title="Upload the zip file" arrow placement="top">
@@ -308,8 +340,9 @@ const Booklets = () => {
     {
       field: "processBooklets",
       headerName: "Process Booklets",
-      flex: 1.2,
+      flex: 1,
       minWidth: 1,
+      renderHeader: () => <TwoLineHeader title="Process Booklets" />,
       renderCell: (params) => (
         <Tooltip title="Process the booklets" arrow placement="top">
           <div
@@ -330,6 +363,7 @@ const Booklets = () => {
       headerName: "Assign Task",
       flex: 1,
       minWidth: 1,
+      renderHeader: () => <TwoLineHeader title="Assign Task" />,
       renderCell: (params) => (
         <Tooltip title="Assign the task to operator" arrow placement="top">
           <div
@@ -350,6 +384,7 @@ const Booklets = () => {
       headerName: "Download Booklets",
       flex: 1,
       minWidth: 1,
+      renderHeader: () => <TwoLineHeader title="Download Booklets" />,
       renderCell: (params) => (
         <Tooltip title="Download Booklets" arrow placement="top">
           <div
