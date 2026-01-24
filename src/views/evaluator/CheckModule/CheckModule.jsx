@@ -41,6 +41,8 @@ const CheckModule = () => {
   const [totalMarksToDisplay, settotalMarksToDisplay] = useState(null);
   const [TotalMarks, setTotalMarks] = useState(null);
   const hasInitializedIndex = useRef(false);
+  const [submitModel, setsubmitModel] = useState(false);
+  
 
   // Local timer display string (HH:MM:SS)
   const [remainingTimeStr, setRemainingTimeStr] = useState("00:00:00");
@@ -68,6 +70,10 @@ const CheckModule = () => {
   const [userTimerData, setuserTimerData] = useState({});
   const [pageTimerCount, setpageTimerCount] = useState("00:00:00");
   const [blankCheck, setblankCheck] = useState(false);
+  const [confirmationData, setconfirmationData] = useState({
+  marks: [],
+  marksData: []
+})
 
   const [socket, setSocket] = useState(null);
   const dispatch = useDispatch();
@@ -243,35 +249,38 @@ const CheckModule = () => {
     navigate("/auth/sign-in");
   });
 
-  // useEffect(() => {
-  //   if (!id || !answerPdfDetails || socket) return;
+//   useEffect(() => {
+//   if (!id || !answerPdfDetails || !socket) return;
 
-  //   const taskId = id;
-  //   const answerPdfId = answerPdfDetails._id;
+//   const taskId = id;
+//   const answerPdfId = answerPdfDetails._id;
 
-  //   const newSocket = io(process.env.REACT_APP_API_URL, {
-  //     auth: { token },
-  //     transports: ["websocket", "polling"],
-  //   });
-  //   console.log(newSocket)
+//   // ✅ emit request
+//   socket.emit("get-marks-data", {
+//     taskId,
+//     answerPdfId,
+//     userId: currentTaskDetails?.userId,
+//   });
 
-  //   newSocket.emit("get-marks-data",{
-  //     taskId,
-  //     answerPdfId,
-  //     userId:currentTaskDetails?.userId
-  //   })
-  //   newSocket.on("final-marks-data",(data)=>{
-  //     console.log(data)
-  //   })
+//   // ✅ named handler
+//   const handleFinalMarksData = (data) => {
+//     console.log("final-marks-data:", data);
+//     setconfirmationData(data);
+//   };
 
+//   // ✅ register listener
+//   socket.on("final-marks-data", handleFinalMarksData);
+
+//   // ✅ cleanup (VERY IMPORTANT)
+//   return () => {
+//     socket.off("final-marks-data", handleFinalMarksData);
+//   };
+
+// }, [id, answerPdfDetails, submitModel, socket]);
   
-    
-  // }, [id, answerPdfDetails, token])
-  
-  
 
 
-
+// console.log(confirmationData)
 
   // -----------------------------------------------------------------
   // Keep your existing data-fetching useEffects — only change: after
@@ -660,6 +669,8 @@ const CheckModule = () => {
               id={id}
               taskdetails={taskdetails}
               setblankCheck={setblankCheck}
+              
+              
             />
           </div>
 
@@ -671,6 +682,13 @@ const CheckModule = () => {
               userTimerData={userTimerData}
               settotalMarksToDisplay={settotalMarksToDisplay}
               setTotalMarks={setTotalMarks}
+              setsubmitModel={setsubmitModel}
+              submitModel={submitModel}
+              socket={socket}
+              id={id}
+              setconfirmationData={setconfirmationData}
+              confirmationData={confirmationData}
+              answerPdfDetailsId={answerPdfDetails}
             />
           </div>
         </div>
