@@ -6,6 +6,8 @@ import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import { getQuestionSchemaById } from "components/Helper/Evaluator/EvalRoute";
 import { postMarkById } from "components/Helper/Evaluator/EvalRoute";
 import { useDispatch, useSelector } from "react-redux";
+// import socket from "../../services/socket/socket";
+import { io } from "socket.io-client";
 import {
   setCurrentIcon,
   setIsDraggingIcon,
@@ -29,6 +31,7 @@ function sortByQuestionsName(arr) {
     return Number(a.questionsName) - Number(b.questionsName);
   });
 }
+
 const QuestionDefinition = (props) => {
   const [selectedQuestion, setSelectedQuestion] = useState(0);
   const [allQuestions, setAllQuestions] = useState([]);
@@ -39,7 +42,7 @@ const QuestionDefinition = (props) => {
   const [selectedReason, setSelectedReason] = useState("");
   const [otherReason, setOtherReason] = useState("");
   const [rejectLoading, setRejectLoading] = useState(false);
-  const [submitModel, setsubmitModel] = useState(false);
+
   const evaluatorState = useSelector((state) => state.evaluator);
   const taskDetails = evaluatorState.currentTaskDetails;
   const currentBookletIndex = evaluatorState.currentBookletIndex;
@@ -47,9 +50,37 @@ const QuestionDefinition = (props) => {
   const currentAnswerPdfImageId = evaluatorState.currentAnswerPdfImageId;
   const currentBookletId = evaluatorState.currentBookletId;
   const currentParentId = evaluatorState.currentSubQuestionParentId;
+  const currentTaskDetails = evaluatorState.currentTaskDetails;
   const marksStore = useSelector((state) => state.annotation.marksStore);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  // const {socket} = props
+  console.log(socket);
+
+  const sortByQuestionNumber = (a, b) => {
+    const aParts = a.questionsName.split(".").map(Number);
+    const bParts = b.questionsName.split(".").map(Number);
+
+    const len = Math.max(aParts.length, bParts.length);
+
+    for (let i = 0; i < len; i++) {
+      const diff = (aParts[i] || 0) - (bParts[i] || 0);
+      if (diff !== 0) return diff;
+    }
+
+    return 0;
+  };
+
+  const sortedMarksData = [...(props.confirmationData?.marksData || [])].sort(
+    sortByQuestionNumber
+  );
+
+  const token =
+    useSelector((state) => state.auth.token) || localStorage.getItem("token");
+
+  useEffect(() => {
+    console.log(props.confirmationData);
+  }, [props.setsubmitModel, socket, props.submitModel]);
 
   const rejectionReasons = [
     "Incorrect booklet uploaded",
@@ -57,6 +88,12 @@ const QuestionDefinition = (props) => {
     "Booklet not related to assigned task",
     "Other",
   ];
+
+  //  console.log({
+  //     taskId,
+  //     answerPdfId,
+  //     userId: currentTaskDetails?.userId,
+  //   });
   // useEffect(() => {
   //   if (allQuestions.length !== 0) {
   //     setCurrentQuestionDefinitionId(allQuestions[currentQuestion]._id);
@@ -65,7 +102,38 @@ const QuestionDefinition = (props) => {
   // }, [allQuestions, currentQuestion]);
   // console.log(props.userTimerData);
 
-  // console.log(currentParentId);
+
+
+const handleSubmitConfirm = () => {
+  if (!socket) return;
+
+    const taskId = props.id;
+    const answerPdfId = props.answerPdfDetailsId._id;
+
+  socket.emit("get-marks-data", {
+   taskId,
+      answerPdfId,
+      userId: currentTaskDetails?.userId,
+  });
+
+  props.setsubmitModel(true);
+};
+
+
+  useEffect(() => {
+    if (!socket) return;
+
+  const handler = (data) => {
+    props.setconfirmationData(data);
+  };
+
+  socket.on("updated-marks-data", handler);
+
+  return () => socket.off("updated-marks-data", handler);
+  }, [props.id, props.answerPdfDetailsId, socket]);
+
+  console.log(props.confirmationData);
+
   useEffect(() => {
     const fetchQuestionDetails = async (answerPdfDetails, userId) => {
       // console.log(userId);
@@ -389,8 +457,11 @@ const QuestionDefinition = (props) => {
       );
 
       if (res.success) {
-        toast.success(res.message);
-        navigate("/evaluator/assignedtasks");
+       
+          
+          toast.success(res.message);
+          navigate("/evaluator/assignedtasks");
+        
       } else {
         toast.warning(res.message);
       }
@@ -476,7 +547,7 @@ const QuestionDefinition = (props) => {
           disabled={
             props.remainingSecondsRef / 60 < props.userTimerData.minTime
           }
-          onClick={submitHandler}
+          onClick={handleSubmitConfirm}
           className={`w-full border px-5 py-2.5 text-center text-sm font-medium
     ${
       props.remainingSecondsRef / 60 < props.userTimerData.minTime
@@ -490,27 +561,81 @@ const QuestionDefinition = (props) => {
         </button>
       </div>
 
-      {/* {submitModel && (
+      {props.submitModel && (
         <div className="bg-black fixed inset-0 z-50 flex items-center justify-center bg-opacity-50">
-          <div className="w-[420px] rounded-lg bg-white p-6 shadow-lg">
-             <div className="mt-6 flex justify-end gap-3">
+          <div className="w-[50%] rounded-lg bg-white p-6 shadow-lg">
+            <div className="w-full rounded-lg border border-gray-300 bg-white p-3">
+              <h3 className="mb-3 text-sm font-semibold text-gray-700">
+                Marks Summary
+              </h3>
+
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr className="bg-gray-100 text-left">
+                    <th className="border px-3 py-2">Question No</th>
+                    <th className="border px-3 py-2 text-center">Marks</th>
+                    <th className="border px-3 py-2 text-center">Page No</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {sortedMarksData.map((item) => {
+                    const pageData = props.confirmationData?.marks?.find(
+                      (m) => m.questionDefinitionId === item._id
+                    );
+
+                    return (
+                      <tr key={item._id} className="hover:bg-gray-50">
+                        {/* Question Number */}
+                        <td className="border px-3 py-2 font-medium text-gray-800">
+                          Q{item.questionsName}
+                        </td>
+
+                        {/* Marks */}
+                        <td className="border px-3 py-2 text-center">
+                          <span
+                            className={`font-semibold ${
+                              item.allottedMarks > 0
+                                ? "text-green-700"
+                                : "text-red-600"
+                            }`}
+                          >
+                            {item.allottedMarks}
+                          </span>
+                          <span className="text-gray-500">
+                            {" "}
+                            / {item.maxMarks}
+                          </span>
+                        </td>
+
+                        {/* Page Number */}
+                        <td className="border px-3 py-2 text-center text-gray-700">
+                          {(pageData?.page ?? null) !== null
+                            ? Number(pageData.page) - 1
+                            : "-"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
               <button
-                onClick={()=>setsubmitModel(false)}
+                onClick={() => props.setsubmitModel(false)}
                 className="rounded-md border px-4 py-2 text-sm hover:bg-gray-100"
               >
                 Cancel
               </button>
 
-              <button
-               
-                className="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 disabled:opacity-60"
-              >
-                 Submit
+              <button className="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 disabled:opacity-60"
+              onClick={submitHandler}>
+                Submit
               </button>
             </div>
           </div>
         </div>
-      )} */}
+      )}
 
       {showRejectModal && (
         <div className="bg-black fixed inset-0 z-50 flex items-center justify-center bg-opacity-50">
