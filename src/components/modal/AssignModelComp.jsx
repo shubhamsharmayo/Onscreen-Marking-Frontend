@@ -12,6 +12,9 @@ const AssignModelComp = ({ setassignModel, currentBookletDetails }) => {
     currentBookletDetails?.unAllocated
   );
   const [selectedBooklets, setSelectedBooklets] = useState({});
+  const [questionDefData, setquestionDefData] = useState({});
+  const [assignType, setassignType] = useState(1);
+  const [questionAssignments, setQuestionAssignments] = useState({});
   console.log(currentBookletDetails);
   console.log(maxBookletNumber);
 
@@ -50,8 +53,8 @@ const AssignModelComp = ({ setassignModel, currentBookletDetails }) => {
         }
       );
       // console.log(response?.data)
-      setassignModel(false)
-       toast.success(response?.data.message);
+      setassignModel(false);
+      toast.success(response?.data.message);
     } catch (error) {
       console.log(error);
     } finally {
@@ -59,16 +62,25 @@ const AssignModelComp = ({ setassignModel, currentBookletDetails }) => {
     }
   };
 
-  const handleSubmitButton = async () => {
+  const handleSubmitButton = async (questionId) => {
+    const data = questionAssignments[questionId];
+    console.log(questionId);
     try {
       setloading(true);
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/api/tasks/create/task`, // API endpoint
-        {
-          userId: numberOfBooklets.id,
-          subjectCode: currentBookletDetails?.folderName,
-          bookletsToAssign: numberOfBooklets.BookletToAssign,
-        },
+        assignType === 1
+          ? {
+              userId: numberOfBooklets.id,
+              subjectCode: currentBookletDetails?.folderName,
+              bookletsToAssign: numberOfBooklets.BookletToAssign,
+            }
+          : {
+              questiondefinitionId: questionId,
+              userId: data.userId,
+              bookletsToAssign: data.bookletCount,
+              subjectCode: currentBookletDetails?.folderName,
+            },
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -77,8 +89,8 @@ const AssignModelComp = ({ setassignModel, currentBookletDetails }) => {
       );
 
       // Optionally handle the response if needed
-      setassignModel(false)
-      console.log("Task created successfully:", response?.data);
+
+      setassignModel(false);
       toast.success(response?.data.message);
     } catch (error) {
       console.log(error);
@@ -89,6 +101,67 @@ const AssignModelComp = ({ setassignModel, currentBookletDetails }) => {
     }
   };
 
+  useEffect(() => {
+    try {
+      const fetchUsers = async () => {
+        const response = await axios.get(
+          `${process.env.REACT_APP_API_URL}/api/subjects/get/questions-by-folder/${currentBookletDetails?.subjectCode}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+        console.log(response);
+
+        setquestionDefData(response?.data);
+      };
+      fetchUsers();
+    } catch (error) {
+      // console.log(error);
+      toast.error(error);
+    }
+  }, [assignType]);
+
+  // const handleQuestionAssign = async (questionId) => {
+  //   const data = questionAssignments[questionId];
+
+  //   if (!data?.userId || !data?.bookletCount) {
+  //     toast.error("Please select user and booklet count");
+  //     return;
+  //   }
+
+  //   try {
+  //     setloading(true);
+
+  //     const payload = {
+  //       questionDefinationId: questionId,
+  //       userId: data.userId,
+  //       bookletsToAssign: data.bookletCount,
+  //       subjectCode: currentBookletDetails?.folderName,
+  //     };
+
+  //     // const response = await axios.post(
+  //     //   `${process.env.REACT_APP_API_URL}/api/tasks/create/question-task`,
+  //     //   payload,
+  //     //   {
+  //     //     headers: {
+  //     //       Authorization: `Bearer ${localStorage.getItem("token")}`,
+  //     //     },
+  //     //   }
+  //     // );
+
+  //     // toast.success(response?.data?.message || "Assigned successfully");
+
+  //     console.log(payload);
+  //   } catch (error) {
+  //     console.error(error);
+  //     toast.error("Assignment failed");
+  //   } finally {
+  //     setloading(false);
+  //   }
+  // };
+
   return (
     <div>
       <div className="bg-black fixed inset-0 z-50 m-2 flex items-center justify-center bg-opacity-50 backdrop-blur-md">
@@ -98,6 +171,16 @@ const AssignModelComp = ({ setassignModel, currentBookletDetails }) => {
               <h2 className="font-bold" style={{ fontSize: "32px" }}>
                 Assign Task
               </h2>
+              <select
+                className="bg-transparent h-10 w-[1/2] overflow-auto rounded-lg border border-gray-300 px-2 text-sm text-gray-700 focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white"
+                onChange={(e) => {
+                  setassignType(Number(e.target.value));
+                  console.log(Number(e.target.value));
+                }}
+              >
+                <option value="1">By Booklets</option>
+                <option value="2">By Questions</option>
+              </select>
               <h3>Unallocated : {currentBookletDetails?.unAllocated}</h3>
             </div>
             <div
@@ -144,7 +227,7 @@ const AssignModelComp = ({ setassignModel, currentBookletDetails }) => {
             <div></div>
           </div>
           <hr className="bg-gray-600" />
-          {manualModel && (
+          {manualModel && assignType === 1 && (
             <div>
               {user &&
                 user?.map((x) => (
@@ -154,10 +237,6 @@ const AssignModelComp = ({ setassignModel, currentBookletDetails }) => {
                       className="bg-transparent h-10 w-[1/2] overflow-auto rounded-lg border border-gray-300 px-2 text-sm text-gray-700 focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white"
                       onChange={(e) => {
                         setnumberOfBooklets({
-                          BookletToAssign: e.target.value,
-                          id: x.userId,
-                        });
-                        console.log({
                           BookletToAssign: e.target.value,
                           id: x.userId,
                         });
@@ -190,6 +269,92 @@ const AssignModelComp = ({ setassignModel, currentBookletDetails }) => {
                     </div>
                   </div>
                 ))}
+            </div>
+          )}
+          {manualModel && assignType === 2 && (
+            <div className="max-h-[500px] overflow-y-auto pr-2">
+              {questionDefData?.questions?.map((item) => (
+                <div
+                  key={item._id}
+                  className="mb-3 flex justify-around rounded-lg border bg-white p-4 shadow-sm dark:bg-navy-900"
+                >
+                  <div className="mb-2 text-sm font-medium">
+                    {item.questionsName}
+                  </div>
+
+                  {/* USER SELECT */}
+                  <select
+                    className="bg-transparent h-10 w-[1/2] overflow-auto rounded-lg border border-gray-300 px-2 text-sm text-gray-700 focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white"
+                    onChange={(e) => {
+                      const selectedUser = user.find(
+                        (u) => u.userId === e.target.value
+                      );
+
+                      if (!selectedUser) return;
+
+                      setQuestionAssignments((prev) => ({
+                        ...prev,
+                        [item._id]: {
+                          userId: selectedUser.userId,
+                          remaining: selectedUser.remaining,
+                          bookletCount: "",
+                        },
+                      }));
+                    }}
+                  >
+                    <option value="">Select User</option>
+                    {user.map((u) => (
+                      <option key={u.userId} value={u.userId}>
+                        {u.email}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* BOOKLET SELECT */}
+                  {questionAssignments[item._id]?.userId && (
+                    <select
+                      className="bg-transparent h-10 w-[1/2] overflow-auto rounded-lg border border-gray-300 px-2 text-sm text-gray-700 focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white"
+                      onChange={(e) => {
+                        setQuestionAssignments((prev) => ({
+                          ...prev,
+                          [item._id]: {
+                            ...prev[item._id],
+                            bookletCount: Number(e.target.value),
+                          },
+                        }));
+                      }}
+                    >
+                      <option value="">Select Booklets</option>
+
+                      {Array.from(
+                        {
+                          length:
+                            questionAssignments[item._id].remaining <
+                            currentBookletDetails?.unAllocated
+                              ? questionAssignments[item._id].remaining
+                              : currentBookletDetails?.unAllocated,
+                        },
+                        (_, i) => i + 1
+                      ).map((num) => (
+                        <option key={num} value={num}>
+                          {num}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  <button
+                    className="mt-3 w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700
+             disabled:opacity-50 sm:w-32"
+                    disabled={
+                      !questionAssignments[item._id]?.userId ||
+                      !questionAssignments[item._id]?.bookletCount
+                    }
+                    onClick={() => handleSubmitButton(item._id)}
+                  >
+                    Assign
+                  </button>
+                </div>
+              ))}
             </div>
           )}
         </div>
