@@ -19,7 +19,7 @@ const useAnnotationSync = (taskId, page, answerPdfId,taskdetails) => {
     // console.log({taskId,page,answerPdfId});
 
     socket.emit("load-page-data", { taskId, page, answerPdfId, userId:taskdetails });
-
+    console.log({ taskId, page, answerPdfId, userId:taskdetails })
     // Load initial data
     socket.on("page-data-loaded", (data) => {
       // if (data.taskId === taskId && data.page === page) {

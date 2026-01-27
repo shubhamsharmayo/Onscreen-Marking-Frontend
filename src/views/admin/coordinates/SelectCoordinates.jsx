@@ -34,6 +34,8 @@ const SelectCoordinates = () => {
     questionId: "",
     questionImages: [],
     answerImages: [],
+    questionCoordinates: [], // ✅ NEW
+    answerCoordinates: [],
   });
   const [showAnswerModel, setShowAnswerModel] = useState(false);
   const [getSubjectbyIdData, setGetsubjectbyIdData] = useState([]);
@@ -132,11 +134,25 @@ const SelectCoordinates = () => {
   const navigate = useNavigate();
 
   const handleSubmitButton = async () => {
+    //  if (
+    //    formData.questionImages.length === 0 ||
+    //    formData.answerImages.length === 0
+    //  ) {
+    //    toast.error("Please select at least one image");
+    //    return;
+    //  }
+
+    const hasQuestionWhole = formData.questionImages.length > 0;
+    const hasAnswerWhole = formData.answerImages.length > 0;
+
+    const hasQuestionPartial = formData.questionCoordinates.length > 0;
+    const hasAnswerPartial = formData.answerCoordinates.length > 0;
+
     if (
-      formData.questionImages.length === 0 ||
-      formData.answerImages.length === 0
+      (!hasQuestionWhole && !hasQuestionPartial) ||
+      (!hasAnswerWhole && !hasAnswerPartial)
     ) {
-      toast.error("Please select at least one image");
+      toast.error("Please select question/answer images or mark partial areas");
       return;
     }
 
@@ -173,7 +189,10 @@ const SelectCoordinates = () => {
         questionId: "",
         questionImages: [],
         answerImages: [],
+        questionCoordinates: [],
+        answerCoordinates: [],
       });
+
       toast.success("Coordinates added successfully");
     } catch (error) {
       // Rollback optimistic update if there's an error
@@ -191,11 +210,25 @@ const SelectCoordinates = () => {
     const primaryQuestionToUpdate = questionDone.filter(
       (item) => item.questionId === questionIdtoUpdate
     );
+    //  if (
+    //    formData.questionImages.length === 0 ||
+    //    formData.answerImages.length === 0
+    //  ) {
+    //    toast.error("Please select at least one image");
+    //    return;
+    //  }
+
+    const hasQuestionWhole = formData.questionImages.length > 0;
+    const hasAnswerWhole = formData.answerImages.length > 0;
+
+    const hasQuestionPartial = formData.questionCoordinates.length > 0;
+    const hasAnswerPartial = formData.answerCoordinates.length > 0;
+
     if (
-      formData.questionImages.length === 0 ||
-      formData.answerImages.length === 0
+      (!hasQuestionWhole && !hasQuestionPartial) ||
+      (!hasAnswerWhole && !hasAnswerPartial)
     ) {
-      toast.error("Please select at least one image");
+      toast.error("Please select question/answer images or mark partial areas");
       return;
     }
 
@@ -330,7 +363,8 @@ const SelectCoordinates = () => {
     setQuestionId(
       savedQuestionData.filter(
         (savedQuestion) =>
-          parseFloat(savedQuestion.questionsName) === parseFloat(folder.id) || undefined
+          parseFloat(savedQuestion.questionsName) === parseFloat(folder.id) ||
+          undefined
       )
     );
     setFormData((prevFormData) => ({
