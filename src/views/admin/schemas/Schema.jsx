@@ -321,7 +321,7 @@ const Schema = () => {
           />
         </>
       ),
-    },
+    }, //
     {
       field: "Map",
       headerName: "Mapping",

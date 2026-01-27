@@ -22,11 +22,16 @@ const ImageModal = ({
   const [countQuestions, setCountQuestions] = useState(0);
   const [selectedPages, setSelectedPages] = useState({});
 
-  const [selections, setSelections] = useState({});
   const [countAnswers, setCountAnswers] = useState(0);
-  const [checkboxStatus, setCheckboxStatus] = useState({});
+  // const [checkboxStatus, setCheckboxStatus] = useState({});
   const [selectionType, setSelectionType] = useState(1); // Object to hold checkbox status for each image
   const [draftSelection, setDraftSelection] = useState(null);
+  const [questionSelections, setQuestionSelections] = useState({});
+  const [answerSelections, setAnswerSelections] = useState({});
+
+  const [questionCheckbox, setQuestionCheckbox] = useState({});
+  const [answerCheckbox, setAnswerCheckbox] = useState({});
+
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [dragStart, setDragStart] = useState(null);
   const containerRef = useRef(null);
@@ -40,6 +45,24 @@ const ImageModal = ({
   });
 
   const { id } = useParams();
+
+  const isAnswer = showAnswerModel;
+
+  const selections = isAnswer ? answerSelections : questionSelections;
+  const setSelections = isAnswer ? setAnswerSelections : setQuestionSelections;
+
+  const checkboxStatus = isAnswer ? answerCheckbox : questionCheckbox;
+  const setCheckboxStatus = isAnswer ? setAnswerCheckbox : setQuestionCheckbox;
+
+  useEffect(() => {
+    if (!questionId) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      questionId: questionId,
+      courseSchemaRelationId: id,
+    }));
+  }, [questionId, id]);
 
   // console.log(questionId);
 
@@ -153,6 +176,16 @@ const ImageModal = ({
     setSelections((prev) => {
       const updated = [...(prev[pageIndex] || [])];
       updated.splice(selectionIndex, 1);
+      setFormData((prev) => {
+        const key = isAnswer ? "answerCoordinates" : "questionCoordinates";
+
+        return {
+          ...prev,
+          [key]: prev[key].filter(
+            (c, idx) => !(c.page === pageIndex && idx === selectionIndex)
+          ),
+        };
+      });
 
       return {
         ...prev,
@@ -234,11 +267,48 @@ const ImageModal = ({
       }));
     }
 
+    const naturalRect = toNaturalCoords(draftSelection);
+
+    // store visually
     setSelections((prev) => ({
       ...prev,
-      [currentImageIndex]: [
-        ...(prev[currentImageIndex] || []),
-        toNaturalCoords(draftSelection),
+      [currentImageIndex]: [...(prev[currentImageIndex] || []), naturalRect],
+    }));
+
+    const imageName = `image_${currentImageIndex}.png`;
+
+    setFormData((prev) => {
+      if (isAnswer) {
+        const already = prev.answerImages.includes(imageName);
+        return {
+          ...prev,
+          answerImages: already
+            ? prev.answerImages
+            : [...prev.answerImages, imageName],
+        };
+      } else {
+        const already = prev.questionImages.includes(imageName);
+        return {
+          ...prev,
+          questionImages: already
+            ? prev.questionImages
+            : [...prev.questionImages, imageName],
+        };
+      }
+    });
+
+    // 🔴 ADD THIS BLOCK — SEND TO PAYLOAD
+    setFormData((prev) => ({
+      ...prev,
+      [isAnswer ? "answerCoordinates" : "questionCoordinates"]: [
+        ...(prev[isAnswer ? "answerCoordinates" : "questionCoordinates"] || []),
+        {
+          page: currentImageIndex,
+          x: naturalRect.x,
+          y: naturalRect.y,
+          width: naturalRect.width,
+          height: naturalRect.height,
+        },
       ],
     }));
 
@@ -343,11 +413,20 @@ const ImageModal = ({
   // console.log(questionDone)
 
   const handleQuestionConfirm = () => {
-    if (!showAnswerModel && formData?.questionImages?.length === 0) {
-      toast.error("Please select at least one image");
+    const hasWholePage = formData.questionImages.length > 0;
+    const hasPartial = formData.questionCoordinates.length > 0;
+
+    if (!hasWholePage && !hasPartial) {
+      toast.error("Please select at least one image or draw a partial area");
       return;
     }
-    setShowAnswerModel(!showAnswerModel);
+
+    if (!showAnswerModel && !hasWholePage && !hasPartial) {
+      toast.error("Please select at least one image or draw a partial area");
+      return;
+    }
+
+    setShowAnswerModel(true);
     setCheckboxStatus({});
     setCurrentImageIndex(1);
   };
@@ -364,6 +443,12 @@ const ImageModal = ({
       setFormData((prevFormData) => ({
         ...prevFormData,
         answerImages: [],
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        questionCoordinates: [],
+        answerCoordinates: [],
       }));
     }
   };
@@ -442,6 +527,14 @@ const ImageModal = ({
                   Confirm
                 </button>
               </div>
+              <button
+                className={`rounded px-4 py-2 text-white ${
+                  selectionType === 1 ? "bg-green-800" : "bg-green-600"
+                }`}
+                onClick={() => setSelectionType(1)}
+              >
+                Whole Page
+              </button>
               <button
                 className={` rounded px-4 py-2 text-white ${
                   selectionType === 2 ? "bg-indigo-800" : "bg-indigo-600"
@@ -715,6 +808,14 @@ const ImageModal = ({
               </div>
               <button
                 className={`rounded px-4 py-2 text-white ${
+                  selectionType === 1 ? "bg-green-800" : "bg-green-600"
+                }`}
+                onClick={() => setSelectionType(1)}
+              >
+                Whole Page
+              </button>
+              <button
+                className={`rounded px-4 py-2 text-white ${
                   selectionType === 2 ? "bg-indigo-800" : "bg-indigo-600"
                 }`}
                 onClick={() => setSelectionType(2)}
@@ -798,8 +899,6 @@ const ImageModal = ({
                     alt={`Slide ${currentImageIndex}`}
                     draggable={false}
                     style={{
-                      // width: "100%",
-                      // height: "80%",
                       width: imageMeta.renderedWidth,
                       height: imageMeta.renderedHeight,
                       cursor: selectionType === 1 ? "crosshair" : "pointer",

@@ -3,6 +3,10 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 import SchemaQuestion from "../schemas/SchemaQuestion";
+import { FaFileUpload, FaMapMarkerAlt } from "react-icons/fa";
+import SubQuestionModal from "../../../components/modal/QuestionMappingModal";
+import Tooltip from "@mui/material/Tooltip";
+import { FaCloudUploadAlt } from "react-icons/fa";
 
 const CreateSchemaStructure = () => {
   const [schemaData, setSchemaData] = useState(null);
@@ -17,6 +21,7 @@ const CreateSchemaStructure = () => {
   const [questionData, setQuestionData] = useState({});
   const [editShowModal, setEditShowModal] = useState(false);
   const [selectedSchema, setSelectedSchema] = useState(null);
+  const [schemaId, setSchemaId] = useState("");
   const [loading, setLoading] = useState(false);
 
   const [savingStatus, setSavingStatus] = useState({});
@@ -28,9 +33,14 @@ const CreateSchemaStructure = () => {
   const [subQuestionsFirst, setSubQuestionsFirst] = useState([]);
   const [error, setError] = useState(false);
   //const [remainingMarks, setRemainingMarks] = useState("");
+  const [showQuestionModal, setShowQuestionModal] = useState(false);
+  const [activeQuestionId, setActiveQuestionId] = useState(null);
+
   const [questionToAllot, setQuestionToAllot] = useState("");
   const [subQuestionMap, setSubQuestionMap] = useState({});
   const hasRunRef = useRef(false);
+  const fileInputRef = useRef(null);
+  const coordinateStore = useRef({});
 
   const navigate = useNavigate();
 
@@ -70,6 +80,18 @@ const CreateSchemaStructure = () => {
   }, [id, token]);
 
   useEffect(() => {
+    const handler = (e) => {
+      const { questionKey, coordinatePayload } = e.detail; // ✅ correct key
+      coordinateStore.current[String(questionKey)] = coordinatePayload; // ensure string key
+      toast.success("Coordinates attached to question");
+    };
+
+    window.addEventListener("questionCoordinatesSelected", handler);
+    return () =>
+      window.removeEventListener("questionCoordinatesSelected", handler);
+  }, []);
+
+  useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
@@ -106,6 +128,44 @@ const CreateSchemaStructure = () => {
     fetchData();
   }, [id, token, schemaData, setSavedQuestionData, parentId]);
 
+  const handleSchemaFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const allowedTypes = [
+      "application/pdf",
+      "application/zip",
+      "application/x-zip-compressed",
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Only PDF or ZIP files are allowed");
+      event.target.value = "";
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("answerFile", file);
+
+    try {
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/schemas/uploadAnswerPdf/${id}`, // ✅ SCHEMA ID
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      toast.success(response.data?.message || "File uploaded successfully");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Upload failed");
+    } finally {
+      event.target.value = "";
+    }
+  };
+
   const remainingMarks = useMemo(() => {
     if (!schemaData) return 0;
 
@@ -125,8 +185,19 @@ const CreateSchemaStructure = () => {
   // NEW: Helper function to calculate total marks of sub-questions
   const calculateSubQuestionsTotalMarks = (parentFolderId) => {
     const subQuestions = subQuestionMap[parentFolderId] || [];
-    return subQuestions.reduce((total, sq) => total + (sq.maxMarks || 0), 0);
+
+    return subQuestions.reduce((total, sq) => {
+      if (!sq) return total; // 🛑 prevent crash
+      return total + (Number(sq.maxMarks) || 0);
+    }, 0);
   };
+
+  const totalPages = Number(schemaData?.numberOfPage || 0);
+
+  // hiddenPage is index-based → convert to page numbers
+  const hiddenPages = useMemo(() => {
+    return (schemaData?.hiddenPage || []).map((p) => Number(p) + 1);
+  }, [schemaData]);
 
   const clampMarks = (value, min, max) => {
     if (value === "" || value === null) return "";
@@ -134,12 +205,22 @@ const CreateSchemaStructure = () => {
   };
 
   // NEW: Helper function to get parent question max marks
-  const getParentMaxMarks = (parentFolderId) => {
-    const parentQuestion = savedQuestionData.find(
-      (item) => parseInt(item.questionsName) === parentFolderId
-    );
-    return parentQuestion?.maxMarks || 0;
-  };
+  // const getParentMaxMarks = (parentFolderId) => {
+  //   const parentQuestion = savedQuestionData.find(
+  //     (item) => parseInt(item.questionsName) === parentFolderId
+  //   );
+  //   return parentQuestion?.maxMarks || 0;
+  // };
+
+  //   const handleOpenMapping = (questionId) => {
+  //   setActiveQuestionId(questionId);
+  //   setShowMappingModal(true);
+  // };
+  //
+  // const handleOpenLocate = (questionId) => {
+  //   setActiveQuestionId(questionId);
+  //   setShowLocateModal(true);
+  // };
 
   const generateFolders = (count) => {
     const folders = [];
@@ -433,6 +514,9 @@ const CreateSchemaStructure = () => {
         parentQuestion?._id || existingQuestion?.parentQuestionId || null;
     }
 
+    const pages =
+      formRefs.current[`${folderId}-page`] ?? existingQuestion?.page ?? [];
+
     const minMarks = Number(
       formRefs.current[`${folderId}-minMarks`] ??
         existingQuestion?.minMarks ??
@@ -457,6 +541,9 @@ const CreateSchemaStructure = () => {
         0
     );
 
+    const page =
+      formRefs.current[`${folderId}-page`] ?? existingQuestion?.page ?? "";
+
     let numberOfSubQuestions = "";
     let compulsorySubQuestions = "";
 
@@ -477,6 +564,13 @@ const CreateSchemaStructure = () => {
         ? existingQuestion?.compulsorySubQuestions
         : "";
     }
+
+    const getParentMaxMarks = (parentFolderId) => {
+      const parentQuestion = savedQuestionData.find(
+        (item) => String(item.questionsName) === String(parentFolderId)
+      );
+      return Number(parentQuestion?.maxMarks) || 0;
+    };
 
     // NEW: Validation for sub-questions - check if sum exceeds parent max marks
     if (level > 0 && parentFolderId) {
@@ -510,6 +604,29 @@ const CreateSchemaStructure = () => {
       }
     }
 
+    // PAGE VALIDATION
+    if (pages.length > 0) {
+      // 1️⃣ Page must be within total pages
+      const invalidPage = pages.find((p) => p < 1 || p > totalPages);
+
+      if (invalidPage) {
+        toast.error(`Page ${invalidPage} exceeds total pages (${totalPages})`);
+        return;
+      }
+
+      // 2️⃣ Page must not be hidden
+      const hiddenSelected = pages.find((p) => hiddenPages.includes(p));
+
+      if (hiddenSelected) {
+        toast.error(`Page ${hiddenSelected} is hidden and cannot be selected`);
+        return;
+      }
+
+      // 3️⃣ Remove duplicates
+      const uniquePages = [...new Set(pages)];
+      formRefs.current[`${folderId}-page`] = uniquePages;
+    }
+
     const effectiveRemainingMarks =
       remainingMarks + (existingQuestion?.maxMarks || 0);
 
@@ -535,9 +652,11 @@ const CreateSchemaStructure = () => {
       maxMarks,
       bonusMarks,
       marksDifference,
+      page: pages.length ? pages : [],
       numberOfSubQuestions: parseInt(numberOfSubQuestions) || 0,
       compulsorySubQuestions: parseInt(compulsorySubQuestions) || 0,
       parentQuestionId: parentQuestionId,
+      coordinates: coordinateStore.current[String(folderId)] || null,
     };
 
     console.log(updatedQuestionData);
@@ -884,13 +1003,17 @@ const CreateSchemaStructure = () => {
     }
 
     // NEW: Calculate and display remaining marks for parent questions with sub-questions
+    const question = displayData?.[0] || null;
+
     const showSubQuestionMarksInfo =
-      level === 0 && displayData[0]?.isSubQuestion;
+      level === 0 && question?.isSubQuestion === true;
+
     const subQuestionsTotal = showSubQuestionMarksInfo
       ? calculateSubQuestionsTotalMarks(folderId)
       : 0;
+
     const remainingSubMarks = showSubQuestionMarksInfo
-      ? (displayData[0]?.maxMarks || 0) - subQuestionsTotal
+      ? (Number(question?.maxMarks) || 0) - subQuestionsTotal
       : 0;
 
     return (
@@ -980,6 +1103,55 @@ const CreateSchemaStructure = () => {
                 defaultValue={displayData[0]?.marksDifference || ""}
                 className="w-full rounded border border-gray-300 py-1 text-center focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white"
               />
+            </div>
+
+            <div className="w-40">
+              <input
+                key={`${folderId}-page-${displayData[0]?._id || "new"}`}
+                type="text"
+                placeholder="Pages (e.g. 1,3,5)"
+                defaultValue={
+                  Array.isArray(displayData[0]?.page)
+                    ? displayData[0].page.join(",")
+                    : ""
+                }
+                onChange={(e) => {
+                  const value = e.target.value;
+
+                  // allow empty
+                  if (value.trim() === "") {
+                    formRefs.current[`${folderId}-page`] = [];
+                    return;
+                  }
+
+                  // allow numbers + comma only
+                  if (!/^[\d,\s]+$/.test(value)) return;
+
+                  const pages = value
+                    .split(",")
+                    .map((p) => Number(p.trim()))
+                    .filter((p) => !Number.isNaN(p));
+
+                  formRefs.current[`${folderId}-page`] = pages;
+                }}
+                className="w-full rounded border border-gray-300 py-1 text-center
+      focus:outline-none focus:ring focus:ring-indigo-500
+      dark:border-gray-700 dark:bg-navy-900 dark:text-white"
+              />
+            </div>
+
+            <div className="flex w-12 items-center justify-center">
+              <Tooltip title="Map Supplementary PDF" arrow>
+                <div
+                  className="flex cursor-pointer justify-center rounded px-3 py-2 hover:bg-yellow-100 dark:hover:bg-yellow-900"
+                  onClick={() => {
+                    setActiveQuestionId(folder.id); // 🔥 USE QUESTION NUMBER
+                    setShowQuestionModal(true);
+                  }}
+                >
+                  <FaFileUpload className="text-yellow-600" size={18} />
+                </div>
+              </Tooltip>
             </div>
 
             <div className="flex w-28 items-center justify-center gap-2">
@@ -1126,6 +1298,19 @@ const CreateSchemaStructure = () => {
             Edit Question Schema
           </div>
         </span>
+
+        <span>
+          <Tooltip title="Upload Answer PDF / ZIP" arrow>
+            <div
+              className="inline-flex cursor-pointer items-center rounded border border-green-600 bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <FaCloudUploadAlt className="mr-2" />
+              Upload File
+            </div>
+          </Tooltip>
+        </span>
+
         <span
           className="cursor-pointer rounded-lg bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
           onClick={handleFinalSubmit}
@@ -1141,6 +1326,23 @@ const CreateSchemaStructure = () => {
         selectedSchema={selectedSchema}
         handleUpdate={handleUpdate}
         loading={loading}
+      />
+
+      {showQuestionModal && (
+        <SubQuestionModal
+          showImageModal={showQuestionModal}
+          setShowImageModal={setShowQuestionModal}
+          schemaId={id} // ✅ from useParams
+          questionId={activeQuestionId} // ✅ selected question
+        />
+      )}
+
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept=".pdf,.zip"
+        style={{ display: "none" }}
+        onChange={handleSchemaFileUpload}
       />
     </div>
   );

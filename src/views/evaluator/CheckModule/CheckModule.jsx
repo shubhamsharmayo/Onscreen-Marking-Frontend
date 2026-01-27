@@ -40,6 +40,7 @@ const CheckModule = () => {
   const [taskdetails, settaskdetails] = useState({});
   const [totalMarksToDisplay, settotalMarksToDisplay] = useState(null);
   const [TotalMarks, setTotalMarks] = useState(null);
+  const hasInitializedIndex = useRef(false);
 
   // Local timer display string (HH:MM:SS)
   const [remainingTimeStr, setRemainingTimeStr] = useState("00:00:00");
@@ -66,7 +67,7 @@ const CheckModule = () => {
   const { id } = useParams();
   const [userTimerData, setuserTimerData] = useState({});
   const [pageTimerCount, setpageTimerCount] = useState("00:00:00");
-  const [blankCheck, setblankCheck] = useState(false)
+  const [blankCheck, setblankCheck] = useState(false);
 
   const [socket, setSocket] = useState(null);
   const dispatch = useDispatch();
@@ -108,7 +109,7 @@ const CheckModule = () => {
     }, 1000);
   }, []);
   const startLocalTickPage = useCallback(() => {
-     if (PagetickIntervalRef.current) return;
+    if (PagetickIntervalRef.current) return;
     pageTimer.current = 0;
     PagetickIntervalRef.current = setInterval(() => {
       // decrement local seconds
@@ -120,26 +121,30 @@ const CheckModule = () => {
   }, []);
 
   const stopLocalTickPage = useCallback(() => {
-  if (PagetickIntervalRef.current) {
-    clearInterval(PagetickIntervalRef.current);
-    PagetickIntervalRef.current = null;
-  }
-}, []);
+    if (PagetickIntervalRef.current) {
+      clearInterval(PagetickIntervalRef.current);
+      PagetickIntervalRef.current = null;
+    }
+  }, []);
 
   useEffect(() => {
-  if (blankCheck) {
-    stopLocalTickPage();     // ⛔ stop timer
-  } else {
-    startLocalTickPage();    // ▶ resume timer
-  }
-}, [blankCheck, startLocalTickPage, stopLocalTickPage,evaluatorState.currentIndex]);
-  
+    if (blankCheck) {
+      stopLocalTickPage(); // ⛔ stop timer
+    } else {
+      startLocalTickPage(); // ▶ resume timer
+    }
+  }, [
+    blankCheck,
+    startLocalTickPage,
+    stopLocalTickPage,
+    evaluatorState.currentIndex,
+  ]);
 
   useEffect(() => {
-  return () => {
-    stopLocalTickPage();
-  };
-}, [evaluatorState.currentIndex, stopLocalTickPage]);
+    return () => {
+      stopLocalTickPage();
+    };
+  }, [evaluatorState.currentIndex, stopLocalTickPage]);
   // console.log(pageTimerCount);
 
   // const stopLocalTick = useCallback(() => {
@@ -162,12 +167,7 @@ const CheckModule = () => {
     });
     setSocket(newSocket);
 
-    newSocket.on("connect", () => {
-      // console.log("Socket connected:", newSocket.id);
-
-      newSocket.emit("join-timerRoom", { taskId });
-      newSocket.emit("start-evaluation", { taskId, answerPdfId });
-    });
+  
 
     newSocket.on("room-joined", (data) => {
       console.log("room-joined:", data);
@@ -182,6 +182,12 @@ const CheckModule = () => {
       // console.log(data);
       // Start ticking as soon as we get timer
       startLocalTick();
+    });
+      newSocket.on("connect", () => {
+      // console.log("Socket connected:", newSocket.id);
+
+      newSocket.emit("join-timerRoom", { taskId });
+      newSocket.emit("start-evaluation", { taskId, answerPdfId });
     });
 
     return () => {
@@ -232,13 +238,40 @@ const CheckModule = () => {
     };
   }, [socket]);
 
-  // useInactivityLogout(() => {
-  //   dispatch(logout());
-  //   navigate("/auth/sign-in");
-  // });
-  // useEffect(() => {
+  useInactivityLogout(() => {
+    dispatch(logout());
+    navigate("/auth/sign-in");
+  });
 
-  // }, [third])
+  // useEffect(() => {
+  //   if (!id || !answerPdfDetails || socket) return;
+
+  //   const taskId = id;
+  //   const answerPdfId = answerPdfDetails._id;
+
+  //   const newSocket = io(process.env.REACT_APP_API_URL, {
+  //     auth: { token },
+  //     transports: ["websocket", "polling"],
+  //   });
+  //   console.log(newSocket)
+
+  //   newSocket.emit("get-marks-data",{
+  //     taskId,
+  //     answerPdfId,
+  //     userId:currentTaskDetails?.userId
+  //   })
+  //   newSocket.on("final-marks-data",(data)=>{
+  //     console.log(data)
+  //   })
+
+  
+    
+  // }, [id, answerPdfDetails, token])
+  
+  
+
+
+
 
   // -----------------------------------------------------------------
   // Keep your existing data-fetching useEffects — only change: after
@@ -268,9 +301,21 @@ const CheckModule = () => {
     if (id) getTaskDetails();
   }, [id, currentBookletIndex, dispatch]);
 
+  useEffect(() => {
+    if (
+      hasInitializedIndex.current ||
+      !answerImageDetails?.length ||
+      !answerImageDetails[0]?.name
+    ) {
+      return;
+    }
 
+    const index = answerImageDetails[0].name.split("_")[1].split(".")[0];
 
-  
+    dispatch(setIndex({ index }));
+
+    hasInitializedIndex.current = true; // ✅ lock it forever
+  }, [answerImageDetails, dispatch]);
 
   useEffect(() => {
     const getEvaluatorTasks = async (taskId) => {
@@ -299,6 +344,11 @@ const CheckModule = () => {
     icons,
   ]);
 
+
+
+  // console.log(answerPdfDetails)
+  // console.log(currentTaskDetails)
+
   const isDisabled = pageTimer.current > 15 || blankCheck;
 
   // ---- Image icons & handling (unchanged) ----
@@ -308,7 +358,6 @@ const CheckModule = () => {
     "/pageicons/yellow.png",
   ];
   const Imgicons = answerImageDetails.map((item, index) => {
-    // console.log(item)
     const isActive =
       String(item.name.split("_")[1].split(".")[0]) ===
       String(evaluatorState.currentIndex);
@@ -327,10 +376,10 @@ const CheckModule = () => {
       <div
         key={index}
         onClick={() => {
-              if (!isDisabled) {
-                toast.warning("spend atleast 15 seconds")
-                return
-              };
+          if (!isDisabled) {
+            toast.warning("spend atleast 15 seconds");
+            return;
+          }
 
           handleUpdateImageDetail(item, index);
         }}
@@ -363,6 +412,7 @@ const CheckModule = () => {
       setImageObj(obj);
       dispatch(setCurrentAnswerPdfImageId(item._id));
       // const name =  item.name.split("_")[1].split(".")[0];
+      // console.log(name)
       dispatch(setIndex({ index: item.name.split("_")[1].split(".")[0] }));
 
       const onImageCaptured = async (blob) => {
@@ -388,6 +438,8 @@ const CheckModule = () => {
     }
   };
 
+  // console.log( currentIndex )
+
   // ---------- user/profile fetching - unchanged ----------
   const [darkmode, setDarkmode] = useState(false);
   const [userDetails, setUserDetails] = useState("");
@@ -406,8 +458,7 @@ const CheckModule = () => {
     if (authState.isAuthenticated !== undefined) fetchData();
   }, [authState.isAuthenticated, token]);
 
-
-  console.log(blankCheck)
+  // console.log(blankCheck)
 
   // ---------- Render ----------
   if (showloader) {
@@ -480,11 +531,15 @@ const CheckModule = () => {
                 </span>
                 <br />
                 <span className="text-black font-semibold">page Time</span>:
-                <span className={`ml-2 font-mono ${
+                <span
+                  className={`ml-2 font-mono ${
                     pageTimer.current > 15 || blankCheck
                       ? "font-semibold text-green-600"
                       : "text-gray-800"
-                  }`}>{pageTimerCount}</span>
+                  }`}
+                >
+                  {pageTimerCount}
+                </span>
               </div>
             </section>
           </div>

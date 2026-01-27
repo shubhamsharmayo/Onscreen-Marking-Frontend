@@ -39,6 +39,7 @@ const QuestionDefinition = (props) => {
   const [selectedReason, setSelectedReason] = useState("");
   const [otherReason, setOtherReason] = useState("");
   const [rejectLoading, setRejectLoading] = useState(false);
+  const [submitModel, setsubmitModel] = useState(false);
   const evaluatorState = useSelector((state) => state.evaluator);
   const taskDetails = evaluatorState.currentTaskDetails;
   const currentBookletIndex = evaluatorState.currentBookletIndex;
@@ -488,6 +489,28 @@ const QuestionDefinition = (props) => {
           SUBMIT BOOKLET AND NEXT
         </button>
       </div>
+
+      {/* {submitModel && (
+        <div className="bg-black fixed inset-0 z-50 flex items-center justify-center bg-opacity-50">
+          <div className="w-[420px] rounded-lg bg-white p-6 shadow-lg">
+             <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={()=>setsubmitModel(false)}
+                className="rounded-md border px-4 py-2 text-sm hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+
+              <button
+               
+                className="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 disabled:opacity-60"
+              >
+                 Submit
+              </button>
+            </div>
+          </div>
+        </div>
+      )} */}
 
       {showRejectModal && (
         <div className="bg-black fixed inset-0 z-50 flex items-center justify-center bg-opacity-50">
