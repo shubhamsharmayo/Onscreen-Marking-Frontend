@@ -55,7 +55,7 @@ const QuestionDefinition = (props) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   // const {socket} = props
-  console.log(socket);
+  console.log(props.taskdetails);
 
   const sortByQuestionNumber = (a, b) => {
     const aParts = a.questionsName.split(".").map(Number);
@@ -165,12 +165,12 @@ const handleSubmitConfirm = () => {
     };
 
     if (props.answerPdfDetails) {
-      fetchQuestionDetails(props.answerPdfDetails, props.taskdetails.userId);
+      fetchQuestionDetails(props.answerPdfDetails, props.taskdetails.userId, props.taskdetails.questiondefinitionId);
     }
   }, [props.answerPdfDetails, marked, evaluatorState.rerender]);
 
   socket.on("questions-data", (data) => {
-    // console.log(data)
+    console.log(data)
     setAllQuestions(sortByQuestionsName(data.marks));
     const reducedArr = data.marks
       .filter((item) => item.isSubQuestion === false)

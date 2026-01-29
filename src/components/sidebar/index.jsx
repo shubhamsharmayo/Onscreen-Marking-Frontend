@@ -33,14 +33,23 @@ const Sidebar = ({ open, onClose }) => {
               route?.layout === "/evaluator"
           );
         }
+         else if (data?.role === "principal" ) {
+          filteredRoutes = routes.filter(
+            (route) =>
+              data?.permissions?.includes(route?.name) &&
+              !route?.hidden &&
+              route?.layout === "/principal"
+          );
+        }
         setCurrentRoutes(filteredRoutes);
+       
       } catch (error) {
         console.log(error);
       }
     };
     fetchUser();
   }, [token]);
-
+ console.log(currentRoutes)
   return (
     <div
       className={`sm:none duration-175 linear fixed !z-50 flex min-h-full flex-col bg-white pb-10 shadow-2xl shadow-white/5 transition-all dark:!bg-navy-800 dark:text-white md:!z-50 lg:!z-50 xl:!z-0 ${
