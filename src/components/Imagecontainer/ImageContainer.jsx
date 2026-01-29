@@ -152,6 +152,7 @@ const ImageContainer = (props) => {
   // console.log(canvasStates)
 
   const imageSrc = `${process.env.REACT_APP_API_URL}\\${baseImageUrl}\\image_${currentIndex}.png`;
+  // const imageSrc = `${process.env.REACT_APP_API_URL}\\${baseImageUrl}\\question_page${}_area1.png`;
 
   console.log(commentStore);
 

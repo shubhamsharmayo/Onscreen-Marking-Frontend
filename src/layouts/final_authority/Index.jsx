@@ -6,7 +6,7 @@ import Footer from "components/footer/Footer";
 import routes from "routes.js";
 import NotFoundEvaluator from "layouts/NotFound/Evaluator/NotFoundEvaluator";
 
-export default function Evaluator(props) {
+export default function Principal(props) {
   const { ...rest } = props;
   const location = useLocation();
   const [open, setOpen] = React.useState(true);
@@ -36,12 +36,14 @@ export default function Evaluator(props) {
     return activeRoute;
   };
   const getActiveNavbar = (routes) => {
+    // console.log(routes)
     let activeNavbar = false;
     for (let i = 0; i < routes.length; i++) {
-      // console.log( window.location.href.indexOf(routes[i].layout + routes[i].path))
+      // console.log(window.location.href.indexOf(routes[i].layout + routes[i].path))
       if (
         window.location.href.indexOf(routes[i].layout + routes[i].path) !== -1
       ) {
+        console.log(routes[i].secondary)
         return routes[i].secondary;
       }
     }
@@ -49,7 +51,7 @@ export default function Evaluator(props) {
   };
   const getRoutes = (routes) => {
     return routes.map((prop, key) => {
-      if (prop.layout === "/evaluator") {
+      if (prop.layout === "/principal") {
         return (
           <Route path={`/${prop.path}`} element={prop.component} key={key} />
         );
@@ -58,7 +60,7 @@ export default function Evaluator(props) {
       }
     });
   };
-  // console.log(getRoutes(routes))
+  console.log(getRoutes(routes))
   document.documentElement.dir = "ltr";
 
   return (
@@ -81,7 +83,7 @@ export default function Evaluator(props) {
                 {getRoutes(routes)}
                 <Route
                   path="/"
-                  element={<Navigate to="/evaluator/default" replace />}
+                  element={<Navigate to="/principal/default" replace />}
                 />
                 <Route path="*" element={<NotFoundEvaluator />} />
               </Routes>

@@ -14,6 +14,7 @@ import AdminLayout from "layouts/admin";
 import EvaluatorLayout from "layouts/evaluator/index.jsx";
 import AuthLayout from "layouts/auth/index.jsx";
 import CheckModule from "views/evaluator/CheckModule/CheckModule";
+import Principal from 'layouts/final_authority/Index'
 
 import { rehydrateToken } from "./store/authSlice";
 import { getUserDetails } from "services/common";
@@ -79,6 +80,8 @@ const App = () => {
         !location.pathname.startsWith("/evaluator")
       ) {
         navigate("/evaluator/default");
+      }else if(role === "principal" && !location.pathname.startsWith("/principal")){
+        navigate("/principal/default");
       }
     }
   }, [token, role, location.pathname, navigate, user]);
@@ -127,6 +130,7 @@ const App = () => {
       <Route path="admin/*" element={<AdminLayout />} />
       <Route path="evaluator/task/:id" element={<CheckModule />} />
       <Route path="evaluator/*" element={<EvaluatorLayout />} />
+      <Route path="principal/*" element={<Principal />} />
       <Route path="/" element={<Navigate to="/admin/default" replace />} />
     </Routes>
   );
