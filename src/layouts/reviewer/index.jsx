@@ -4,9 +4,9 @@ import Navbar from "components/navbar";
 import Sidebar from "components/sidebar";
 import Footer from "components/footer/Footer";
 import routes from "routes.js";
-import NotFoundEvaluator from "layouts/NotFound/Evaluator/NotFoundEvaluator";
+import NotFoundReviewer from "layouts/NotFound/Reviewer/NotFoundReviewer";
 
-export default function Evaluator(props) {
+export default function Reviewer(props) {
   const { ...rest } = props;
   const location = useLocation();
   const [open, setOpen] = React.useState(true);
@@ -38,7 +38,6 @@ export default function Evaluator(props) {
   const getActiveNavbar = (routes) => {
     let activeNavbar = false;
     for (let i = 0; i < routes.length; i++) {
-      // console.log( window.location.href.indexOf(routes[i].layout + routes[i].path))
       if (
         window.location.href.indexOf(routes[i].layout + routes[i].path) !== -1
       ) {
@@ -49,7 +48,7 @@ export default function Evaluator(props) {
   };
   const getRoutes = (routes) => {
     return routes.map((prop, key) => {
-      if (prop.layout === "/evaluator") {
+      if (prop.layout === "/reviewer") {
         return (
           <Route path={`/${prop.path}`} element={prop.component} key={key} />
         );
@@ -93,9 +92,9 @@ export default function Evaluator(props) {
                 {getRoutes(routes)}
                 <Route
                   path="/"
-                  element={<Navigate to="/evaluator/default" replace />}
+                  element={<Navigate to="/reviewer/default" replace />}
                 />
-                <Route path="*" element={<NotFoundEvaluator />} />
+                <Route path="*" element={<NotFoundReviewer />} />
               </Routes>
             </div>
             {/* <div className="pt-5s mx-auto mb-auto h-full min-h-[84vh] p-2 md:pr-2">

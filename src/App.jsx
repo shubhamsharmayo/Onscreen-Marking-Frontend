@@ -12,8 +12,10 @@ import { toast } from "react-toastify";
 
 import AdminLayout from "layouts/admin";
 import EvaluatorLayout from "layouts/evaluator/index.jsx";
+import ReviewerLayout from "layouts/reviewer/index.jsx";
 import AuthLayout from "layouts/auth/index.jsx";
 import CheckModule from "views/evaluator/CheckModule/CheckModule";
+import CheckModuler from "views/reviewer/CheckModule/CheckModule";
 import Principal from 'layouts/final_authority/Index'
 
 import { rehydrateToken } from "./store/authSlice";
@@ -80,6 +82,11 @@ const App = () => {
         !location.pathname.startsWith("/evaluator")
       ) {
         navigate("/evaluator/default");
+      } else if (
+        ["reviewer"].includes(role) &&
+        !location.pathname.startsWith("/reviewer")
+      ) {
+        navigate("/reviewer/default");
       }else if(role === "principal" && !location.pathname.startsWith("/principal")){
         navigate("/principal/default");
       }
@@ -130,6 +137,8 @@ const App = () => {
       <Route path="admin/*" element={<AdminLayout />} />
       <Route path="evaluator/task/:id" element={<CheckModule />} />
       <Route path="evaluator/*" element={<EvaluatorLayout />} />
+      <Route path="reviewer/task/:id" element={<CheckModuler />} />
+      <Route path="reviewer/*" element={<ReviewerLayout />} />
       <Route path="principal/*" element={<Principal />} />
       <Route path="/" element={<Navigate to="/admin/default" replace />} />
     </Routes>

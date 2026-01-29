@@ -18,6 +18,8 @@ export function SidebarLinks(props) {
         route.layout === "/rtl" ||
         route.layout === "/evaluator" ||
         route.layout === "/evaluator" ||
+        route.layout === "/reviewer" ||
+        route.layout === "/reviewer"
         route.layout === "/principal"
       ) {
         return (

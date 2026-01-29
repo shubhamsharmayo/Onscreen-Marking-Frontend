@@ -32,6 +32,13 @@ const Sidebar = ({ open, onClose }) => {
               !route?.hidden &&
               route?.layout === "/evaluator"
           );
+        } else if (data?.role === "reviewer") {
+          filteredRoutes = routes.filter(
+            (route) =>
+              data?.permissions?.includes(route?.name) &&
+              !route?.hidden &&
+              route?.layout === "/reviewer"
+          );
         }
          else if (data?.role === "principal" ) {
           filteredRoutes = routes.filter(

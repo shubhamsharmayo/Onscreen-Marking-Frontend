@@ -34,7 +34,10 @@ const Dashboard = () => {
   const userId = localStorage.getItem("userId");
 
   const dataSets = {
-    Users: { labels: ["Admin", "Evaluator", "Moderator"], data: [10, 15, 20] },
+    Users: {
+      labels: ["Admin", "Evaluator", "Moderator", "Reviewer"],
+      data: [10, 15, 20],
+    },
     "Scanned Data": {
       labels: ["Sheet1", "Sheet2", "Sheet3"],
       data: [300, 450, 600],

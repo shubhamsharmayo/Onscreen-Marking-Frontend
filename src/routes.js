@@ -1,5 +1,6 @@
 import MainDashboard from "views/admin/default";
 import EvaluatorTasks from "views/evaluator/AllTasks/AllTasks";
+import ReviewerTasks from "views/reviewer/AllTasks/AllTasks";
 import Upload from "views/admin/upload";
 import Classes from "views/admin/classes";
 import Profile from "views/admin/profile";
@@ -170,11 +171,29 @@ const routes = [
   },
 
   {
+    name: "Reviewer Dashboard",
+    layout: "/reviewer",
+    path: "default",
+    icon: <MdHome className="h-6 w-6" />,
+    component: <MainDashboard />,
+    hidden: false,
+  },
+
+  {
     name: "Assigned Tasks",
     layout: "/evaluator",
     path: "assignedtasks",
     icon: <BiTask className="h-6 w-6" />,
     component: <EvaluatorTasks />,
+    hidden: false,
+  },
+
+  {
+    name: "Reviewer Tasks",
+    layout: "/reviewer",
+    path: "assignedtasks",
+    icon: <BiTask className="h-6 w-6" />,
+    component: <ReviewerTasks />,
     hidden: false,
   },
 
