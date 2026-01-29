@@ -102,34 +102,31 @@ const QuestionDefinition = (props) => {
   // }, [allQuestions, currentQuestion]);
   // console.log(props.userTimerData);
 
-
-
-const handleSubmitConfirm = () => {
-  if (!socket) return;
+  const handleSubmitConfirm = () => {
+    if (!socket) return;
 
     const taskId = props.id;
     const answerPdfId = props.answerPdfDetailsId._id;
 
-  socket.emit("get-marks-data", {
-   taskId,
+    socket.emit("get-marks-data", {
+      taskId,
       answerPdfId,
       userId: currentTaskDetails?.userId,
-  });
+    });
 
-  props.setsubmitModel(true);
-};
-
+    props.setsubmitModel(true);
+  };
 
   useEffect(() => {
     if (!socket) return;
 
-  const handler = (data) => {
-    props.setconfirmationData(data);
-  };
+    const handler = (data) => {
+      props.setconfirmationData(data);
+    };
 
-  socket.on("updated-marks-data", handler);
+    socket.on("updated-marks-data", handler);
 
-  return () => socket.off("updated-marks-data", handler);
+    return () => socket.off("updated-marks-data", handler);
   }, [props.id, props.answerPdfDetailsId, socket]);
 
   console.log(props.confirmationData);
@@ -401,25 +398,37 @@ const handleSubmitConfirm = () => {
   // console.log(evaluatorState.isLoading);
   const handleNextBooklet = async () => {
     try {
-      if (currentBookletIndex < taskDetails.totalBooklets) {
-        setIsLoadingTrue();
-        const taskId = taskDetails._id;
-        const response = await changeCurrentIndexById(
-          taskId,
-          taskDetails.currentFileIndex + 1
-        );
-        console.log(response);
-        dispatch(setCurrentBookletIndex(response));
-        // console.log(response);
+      setIsLoadingTrue();
+
+      // ✅ Step 1: Submit current booklet first
+      const submitted = await submitCurrentBooklet();
+      if (!submitted) return;
+
+      const isLastBooklet =
+        Number(taskDetails.currentFileIndex) >=
+        Number(taskDetails.totalBooklets);
+
+      // ✅ Step 2: If LAST booklet → just finish
+      if (isLastBooklet) {
+        navigate("/evaluator/assignedtasks");
+        return;
       }
-      // console.log(taskDetails);
-      //
+
+      // ✅ Step 3: Otherwise move to next booklet
+      const taskId = taskDetails._id;
+      const nextIndex = Number(taskDetails.currentFileIndex) + 1;
+
+      const response = await changeCurrentIndexById(taskId, nextIndex);
+
+      dispatch(setCurrentBookletIndex(response));
     } catch (error) {
       console.log(error);
+      toast.error("Something went wrong");
     } finally {
       setIsLoadingFalse();
     }
   };
+
   // console.log(evaluatorState.isLoading);
   const handlePrevBooklet = async () => {
     try {
@@ -442,6 +451,31 @@ const handleSubmitConfirm = () => {
     }
   };
 
+  const submitCurrentBooklet = async () => {
+    try {
+      const remainingMinutes = Math.floor(props.remainingSecondsRef / 60);
+      const timeTaken = props.userTimerData.totalTime - remainingMinutes;
+
+      const res = await submitBookletById(
+        currentBookletId,
+        props.taskdetails.userId,
+        timeTaken
+      );
+
+      if (!res.success) {
+        toast.warning(res.message);
+        return false;
+      }
+
+      toast.success(res.message);
+      return true; // ✅ tell caller submit worked
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to submit booklet");
+      return false;
+    }
+  };
+
   const submitHandler = async () => {
     try {
       // remainingSecondsRef = seconds left
@@ -457,11 +491,8 @@ const handleSubmitConfirm = () => {
       );
 
       if (res.success) {
-       
-          
-          toast.success(res.message);
-          navigate("/evaluator/assignedtasks");
-        
+        toast.success(res.message);
+        navigate("/evaluator/assignedtasks");
       } else {
         toast.warning(res.message);
       }
@@ -470,7 +501,6 @@ const handleSubmitConfirm = () => {
       toast.error("Failed to submit booklet");
     }
   };
-
   return (
     <div className="h-[100%] ">
       {/* <div className="flex  h-[7%] w-[100%]">
@@ -628,8 +658,10 @@ const handleSubmitConfirm = () => {
                 Cancel
               </button>
 
-              <button className="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 disabled:opacity-60"
-              onClick={submitHandler}>
+              <button
+                className="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 disabled:opacity-60"
+                onClick={handleNextBooklet}
+              >
                 Submit
               </button>
             </div>

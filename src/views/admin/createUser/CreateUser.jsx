@@ -29,6 +29,7 @@ const CreateUser = () => {
   const hardcodedPermissions = {
     evaluator: ["Evaluator Dashboard", "Assigned Tasks", "Profile"],
     moderator: ["Evaluator Dashboard", "Assigned Tasks", "Profile"],
+    reviewer: ["Reviewer Dashboard", "Reviewer Tasks", "Profile"],
   };
 
   useEffect(() => {
@@ -41,6 +42,14 @@ const CreateUser = () => {
         setShowSubjects(false);
         setShowMaximumAllot(false);
       } else if (userDetails?.role === "evaluator") {
+        setUserDetails({
+          ...userDetails,
+          subjectCode: selectedChips,
+          permissions: hardcodedPermissions[userDetails?.role] || [],
+        });
+        setShowSubjects(true);
+        setShowMaximumAllot(true);
+      } else if (userDetails?.role === "reviewer") {
         setUserDetails({
           ...userDetails,
           subjectCode: selectedChips,
@@ -116,6 +125,18 @@ const CreateUser = () => {
     }
 
     if (userDetails.role === "evaluator" && selectedChips.length === 0) {
+      toast.error("Please select at least one subject");
+      setLoading(false);
+      return;
+    }
+
+    if (userDetails.role === "reviewer" && !userDetails.maxBooklets) {
+      toast.error("Please enter max allocation");
+      setLoading(false);
+      return;
+    }
+
+    if (userDetails.role === "reviewer" && selectedChips.length === 0) {
       toast.error("Please select at least one subject");
       setLoading(false);
       return;
@@ -349,6 +370,7 @@ const CreateUser = () => {
                   <option value="admin">Admin</option>
                   <option value="moderator">Moderator</option>
                   <option value="evaluator">Evaluator</option>
+                  <option value="reviewer">Reviewer</option>
                 </select>
               </div>
 
