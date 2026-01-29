@@ -25,6 +25,7 @@ import { CiMemoPad } from "react-icons/ci";
 import Booklets from "views/admin/booklets/Booklets";
 import ProcessingBooklets from "views/admin/booklets/ProcessingBooklets";
 import ResultGeneration from "views/admin/resultGenertion/ResultGeneration";
+import Statistics from 'views/Principal/Statistics/Statistics'
 
 const routes = [
   {
@@ -204,6 +205,26 @@ const routes = [
     component: <ResultGeneration />,
     hidden: false,
   },
+
+   {
+    name: "Principal Dashboard",
+    layout: "/principal",
+    path: "default",
+    icon: <MdHome className="h-6 w-6" />,
+    component: <MainDashboard />,
+    hidden: false,
+  },
+  {
+    
+    name: "Statistics",
+    layout: "/principal",
+    path: "statistics",
+    icon: <CiMemoPad className="h-6 w-6" />,
+    component: <Statistics />,
+    hidden: false,
+  
+  }
+
 ];
 
 export default routes;

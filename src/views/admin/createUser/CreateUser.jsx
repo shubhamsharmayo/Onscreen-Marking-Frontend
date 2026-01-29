@@ -30,6 +30,7 @@ const CreateUser = () => {
     evaluator: ["Evaluator Dashboard", "Assigned Tasks", "Profile"],
     moderator: ["Evaluator Dashboard", "Assigned Tasks", "Profile"],
     reviewer: ["Reviewer Dashboard", "Reviewer Tasks", "Profile"],
+    principal: ["Principal Dashboard", "Statistics", "Profile"],
   };
 
   useEffect(() => {
@@ -58,6 +59,17 @@ const CreateUser = () => {
         setShowSubjects(true);
         setShowMaximumAllot(true);
       } else {
+      } else if(userDetails?.role === "Principal"){
+        setUserDetails({
+          ...userDetails,
+          permissions: routes.map((route) => route.name),
+        });
+        setShowSubjects(false);
+        setShowMaximumAllot(false);
+      }
+        
+        
+        else{
         setUserDetails({
           ...userDetails,
           permissions: hardcodedPermissions[userDetails?.role] || [],
@@ -368,7 +380,7 @@ const CreateUser = () => {
                 >
                   <option value="">Select a role</option>
                   <option value="admin">Admin</option>
-                  <option value="moderator">Moderator</option>
+                  <option value="principal">Principal</option>
                   <option value="evaluator">Evaluator</option>
                   <option value="reviewer">Reviewer</option>
                 </select>

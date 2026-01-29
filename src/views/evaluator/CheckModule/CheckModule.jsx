@@ -78,6 +78,8 @@ const CheckModule = () => {
   const [socket, setSocket] = useState(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [questionDef, setquestionDef] = useState({})
+
 
   // console.log(totalMarksToDisplay);
   // console.log(TotalMarks);
@@ -293,13 +295,14 @@ const CheckModule = () => {
         const response = await getTaskById(id);
         console.log(response?.task);
         settaskdetails(response?.task);
-        const { answerPdfDetails, extractedBookletPath, task } = response;
+        const { answerPdfDetails, extractedBookletPath, task, questionImagesFolderUrl, questionDef, questionImages } = response;
+        setquestionDef(questionDef)
         setAnswerPdfDetails(answerPdfDetails);
         dispatch(setCurrentAnswerPdfId(answerPdfDetails._id));
         dispatch(setCurrentTaskDetails(task));
         dispatch(setCurrentBookletIndex(task.currentFileIndex));
         dispatch(setCurrentBookletId(answerPdfDetails._id));
-        dispatch(setBaseImageUrl(extractedBookletPath));
+        dispatch(setBaseImageUrl(questionImagesFolderUrl));
         setAnswerSheetCount(answerPdfDetails);
       } catch (error) {
         console.log(error);
@@ -309,6 +312,7 @@ const CheckModule = () => {
     };
     if (id) getTaskDetails();
   }, [id, currentBookletIndex, dispatch]);
+  console.log(questionDef)
 
   useEffect(() => {
     if (
@@ -689,6 +693,7 @@ const CheckModule = () => {
               setconfirmationData={setconfirmationData}
               confirmationData={confirmationData}
               answerPdfDetailsId={answerPdfDetails}
+             
             />
           </div>
         </div>

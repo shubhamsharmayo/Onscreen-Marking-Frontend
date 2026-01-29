@@ -20,6 +20,7 @@ export function SidebarLinks(props) {
         route.layout === "/evaluator" ||
         route.layout === "/reviewer" ||
         route.layout === "/reviewer"
+        route.layout === "/principal"
       ) {
         return (
           <Link key={index} to={route.layout + "/" + route.path}>
