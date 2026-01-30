@@ -82,12 +82,12 @@ const ReviewerQuestion = (props) => {
     console.log(props.confirmationData);
   }, [props.setsubmitModel, socket, props.submitModel]);
 
-  const rejectionReasons = [
-    "Incorrect booklet uploaded",
-    "Pages missing or unreadable",
-    "Booklet not related to assigned task",
-    "Other",
-  ];
+  // const rejectionReasons = [
+  //   "Incorrect booklet uploaded",
+  //   "Pages missing or unreadable",
+  //   "Booklet not related to assigned task",
+  //   "Other",
+  // ];
 
   //  console.log({
   //     taskId,
@@ -182,58 +182,98 @@ const ReviewerQuestion = (props) => {
     setTotalMarks(reducedArr);
     props.settotalMarksToDisplay(reducedArr);
     props.setTotalMarks(total);
-    const qID = data.marks.filter(
-      (id) => parseFloat(id.questionsName) === currentQuestion
+    const qMatch = data.marks.find(
+      (q) => parseFloat(q.questionsName) === currentQuestion
     );
-    dispatch(setCurrentQuestionDefinitionId(qID._id));
+
+    if (qMatch) {
+      dispatch(setCurrentQuestionDefinitionId(qMatch._id));
+    }
+
     // console.log(qID);
   });
 
-  const handleRejectSubmit = async () => {
-    if (!selectedReason) {
-      toast.warning("Please select a rejection reason");
-      return;
-    }
+  // const handleRejectSubmit = async () => {
+  //   if (!selectedReason) {
+  //     toast.warning("Please select a rejection reason");
+  //     return;
+  //   }
 
-    if (selectedReason === "Other" && !otherReason.trim()) {
-      toast.warning("Please enter rejection reason");
-      return;
-    }
+  //   if (selectedReason === "Other" && !otherReason.trim()) {
+  //     toast.warning("Please enter rejection reason");
+  //     return;
+  //   }
 
-    const token = localStorage.getItem("token");
+  //   const token = localStorage.getItem("token");
 
-    const payload = {
-      answerPdfId: currentBookletId,
-      taskId: taskDetails._id,
-      userId: props.taskdetails.userId,
-      reason: selectedReason === "Other" ? otherReason.trim() : selectedReason,
-      rejectedAt: new Date().toISOString(),
-    };
+  //   const payload = {
+  //     questiondefinitionId: evaluatorState.currentQuestionDefinitionId, // from redux
+  //     subjectCode: taskDetails?.subjectCode, // make sure this exists in taskDetails
+  //     reviewerid: evaluatorState?.reviewerId || props.taskdetails?.reviewerId,
+  //     answerPdfId: currentBookletId,
+  //     reason: selectedReason === "Other" ? otherReason.trim() : selectedReason,
+  //   };
 
+  //   try {
+  //     setRejectLoading(true);
+
+  //     const res = await axios.post(
+  //       `${process.env.REACT_APP_API_URL}/api/tasks/reviewer/assignToPrincipal`,
+  //       payload, // ✅ BODY goes here
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
+
+  //     toast.success(res.data?.message || "Assigned to Principal successfully");
+
+  //     setShowRejectModal(false);
+  //     setSelectedReason("");
+  //     setOtherReason("");
+  //     navigate("/evaluator/assignedtasks");
+  //   } catch (error) {
+  //     console.error("Assign to principal failed", error);
+  //     toast.error(
+  //       error?.response?.data?.message || "Failed to assign to principal"
+  //     );
+  //   } finally {
+  //     setRejectLoading(false);
+  //   }
+  // };
+
+  const handleAssignToPrincipal = async () => {
     try {
-      setRejectLoading(true);
+      const token = localStorage.getItem("token");
+
+      const payload = {
+        questiondefinitionId: evaluatorState.currentQuestionDefinitionId,
+        subjectCode: props.taskdetails?.subjectCode,
+        reviewerid: props.taskdetails?.userId, // ✅ reviewerId = task.userId
+        answerPdfId: currentBookletId,
+      };
+
+      console.log("Assign Payload:", payload);
 
       const res = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/tasks/rejectbooklet/${currentBookletId}`,
+        `${process.env.REACT_APP_API_URL}/api/tasks/reviewer/rejectTask`,
         payload,
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         }
       );
 
-      toast.success(res.data?.message || "Booklet rejected successfully");
-
-      setShowRejectModal(false);
-      setSelectedReason("");
-      setOtherReason("");
-      navigate("/evaluator/assignedtasks");
+      toast.success(res.data?.message || "Assigned to Principal successfully");
+      navigate("/reviewer/assignedtasks");
     } catch (error) {
-      console.error("Reject booklet failed", error);
-      toast.error(error?.response?.data?.message || "Failed to reject booklet");
-    } finally {
-      setRejectLoading(false);
+      console.error("Assign to principal failed", error);
+      toast.error(
+        error?.response?.data?.message || "Failed to assign to principal"
+      );
     }
   };
 
@@ -571,11 +611,12 @@ const ReviewerQuestion = (props) => {
       <div className=" mt-2 h-[10%]">
         <button
           type="button"
-          onClick={() => setShowRejectModal(true)}
-          className="mb-2  w-[100%] border border-red-700 px-5 py-2.5 text-center text-sm font-medium text-red-700 hover:bg-red-800 hover:text-white focus:outline-none focus:ring-4 focus:ring-red-300 dark:border-red-500 dark:text-red-500 dark:hover:bg-red-600 dark:hover:text-white dark:focus:ring-red-900"
+          onClick={handleAssignToPrincipal}
+          className="mb-2 w-full border border-red-700 px-5 py-2.5 text-center text-sm font-medium text-red-700 hover:bg-red-800 hover:text-white focus:outline-none focus:ring-4 focus:ring-red-300 dark:border-red-500 dark:text-red-500 dark:hover:bg-red-600 dark:hover:text-white dark:focus:ring-red-900"
         >
           Assign to Principal
         </button>
+
         <button
           type="button"
           disabled={
@@ -690,14 +731,12 @@ const ReviewerQuestion = (props) => {
         </div>
       )}
 
-      {showRejectModal && (
+      {/* {showRejectModal && (
         <div className="bg-black fixed inset-0 z-50 flex items-center justify-center bg-opacity-50">
           <div className="w-[420px] rounded-lg bg-white p-6 shadow-lg">
             <h2 className="mb-4 text-lg font-semibold text-gray-800">
               Reject Booklet
             </h2>
-
-            {/* Reasons */}
             <div className="space-y-3">
               {rejectionReasons.map((reason, index) => (
                 <label
@@ -716,8 +755,6 @@ const ReviewerQuestion = (props) => {
                 </label>
               ))}
             </div>
-
-            {/* Other reason textarea */}
             {selectedReason === "Other" && (
               <textarea
                 className="mt-4 w-full rounded-md border border-gray-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
@@ -727,18 +764,13 @@ const ReviewerQuestion = (props) => {
                 onChange={(e) => setOtherReason(e.target.value)}
               />
             )}
-
-            {/* Actions */}
             <div className="mt-6 flex justify-end gap-3">
               <button
-                onClick={() => {
-                  setShowRejectModal(false);
-                  setSelectedReason("");
-                  setOtherReason("");
-                }}
-                className="rounded-md border px-4 py-2 text-sm hover:bg-gray-100"
+                type="button"
+                onClick={() => setShowRejectModal(true)}
+                className="mb-2 w-full border border-red-700 px-5 py-2.5 text-center text-sm font-medium text-red-700 hover:bg-red-800 hover:text-white focus:outline-none focus:ring-4 focus:ring-red-300 dark:border-red-500 dark:text-red-500 dark:hover:bg-red-600 dark:hover:text-white dark:focus:ring-red-900"
               >
-                Cancel
+                Assign to Principal
               </button>
 
               <button
@@ -751,7 +783,7 @@ const ReviewerQuestion = (props) => {
             </div>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 };
