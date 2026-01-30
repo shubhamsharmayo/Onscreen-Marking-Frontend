@@ -26,7 +26,7 @@ export const getTaskById = async (taskId) => {
 
   try {
     const response = await axios.get(
-      `${process.env.REACT_APP_API_URL}/api/tasks/get/reviewerTask/${taskId}`,
+      `${process.env.REACT_APP_API_URL}/api/tasks/get/task/${taskId}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -39,6 +39,25 @@ export const getTaskById = async (taskId) => {
     return error.response; // return full error response to handle status outside
   }
 };
+
+// export const getTaskById = async (taskId) => {
+//   const token = localStorage.getItem("token");
+
+//   try {
+//     const response = await axios.get(
+//       `${process.env.REACT_APP_API_URL}/api/tasks/get/reviewerTask/${taskId}`,
+//       {
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//         },
+//       }
+//     );
+//     return response.data; // return the full response to handle status outside
+//   } catch (error) {
+//     console.error(error);
+//     return error.response; // return full error response to handle status outside
+//   }
+// };
 
 export const getAnswerPdfById = async (answerPdfId) => {
   const token = localStorage.getItem("token");
@@ -81,7 +100,7 @@ export const updateAnswerPdfById = async (answerPdfId, status) => {
 
   try {
     const response = await axios.put(
-      `${process.env.REACT_APP_API_URL}/api/evaluation/answerimages/update/answerpdfimage/${answerPdfId}`,
+      `${process.env.REACT_APP_API_URL}/api/evaluation/revieweranswerimages/update/answerpdfimage/${answerPdfId}`,
       { status: status },
       {
         headers: {
