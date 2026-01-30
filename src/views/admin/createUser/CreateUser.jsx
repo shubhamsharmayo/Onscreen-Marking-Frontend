@@ -57,25 +57,14 @@ const CreateUser = () => {
         });
         setShowSubjects(true);
         setShowMaximumAllot(true);
-      } else if (userDetails?.role === "reviewer") {
-        setUserDetails({
-          ...userDetails,
-          subjectCode: selectedChips,
-          permissions: hardcodedPermissions[userDetails?.role] || [],
-        });
-        setShowSubjects(true);
-        setShowMaximumAllot(true);
-      } else if(userDetails?.role === "Principal"){
+      } else if (userDetails?.role === "Principal") {
         setUserDetails({
           ...userDetails,
           permissions: routes.map((route) => route.name),
         });
         setShowSubjects(false);
         setShowMaximumAllot(false);
-      }
-        
-        
-        else{
+      } else {
         setUserDetails({
           ...userDetails,
           permissions: hardcodedPermissions[userDetails?.role] || [],
