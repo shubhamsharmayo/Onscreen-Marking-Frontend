@@ -58,8 +58,7 @@ const CreateUser = () => {
         });
         setShowSubjects(true);
         setShowMaximumAllot(true);
-      } else {
-      } else if(userDetails?.role === "Principal"){
+      }  else if(userDetails?.role === "Principal"){
         setUserDetails({
           ...userDetails,
           permissions: routes.map((route) => route.name),
