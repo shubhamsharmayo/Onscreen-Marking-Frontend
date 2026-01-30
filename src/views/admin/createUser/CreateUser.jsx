@@ -28,9 +28,8 @@ const CreateUser = () => {
 
   const hardcodedPermissions = {
     evaluator: ["Evaluator Dashboard", "Assigned Tasks", "Profile"],
-    moderator: ["Evaluator Dashboard", "Assigned Tasks", "Profile"],
-    reviewer: ["Reviewer Dashboard", "Reviewer Tasks", "Profile"],
     principal: ["Principal Dashboard", "Statistics", "Profile"],
+    reviewer: ["Reviewer Dashboard", "Reviewer Tasks", "Profile"],
   };
 
   useEffect(() => {
@@ -58,18 +57,14 @@ const CreateUser = () => {
         });
         setShowSubjects(true);
         setShowMaximumAllot(true);
-      } else {
-      } else if(userDetails?.role === "Principal"){
+      } else if (userDetails?.role === "Principal") {
         setUserDetails({
           ...userDetails,
           permissions: routes.map((route) => route.name),
         });
         setShowSubjects(false);
         setShowMaximumAllot(false);
-      }
-        
-        
-        else{
+      } else {
         setUserDetails({
           ...userDetails,
           permissions: hardcodedPermissions[userDetails?.role] || [],
