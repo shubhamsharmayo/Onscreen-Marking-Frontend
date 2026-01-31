@@ -77,6 +77,7 @@ const CheckModule = () => {
   const [socket, setSocket] = useState(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [questionDef, setquestionDef] = useState({});
 
   // console.log(totalMarksToDisplay);
   // console.log(TotalMarks);
@@ -286,29 +287,29 @@ const CheckModule = () => {
       try {
         setShowLoader(true);
         const response = await getTaskById(id);
-
-        // 🛑 If task is already active
+        console.log(response)
         if (response?.status === "active") {
           toast.warning(response?.message || "This task is already active.");
           navigate("/reviewer/assignedtasks"); // or wherever you want to send back
           return; // ❗ STOP further execution
         }
-
-        // // ✅ Only continue if success
-        // if (response?.status !== "success") {
-        //   toast.error("Unable to start task. Please try again.");
-        //   return;
-        // }
-
         console.log(response?.task);
         settaskdetails(response?.task);
-        const { answerPdfDetails, extractedBookletPath, task } = response;
+        const {
+          answerPdfDetails,
+          extractedBookletPath,
+          task,
+          questionImagesFolderUrl,
+          questionDef,
+          questionImages,
+        } = response;
+        setquestionDef(questionDef);
         setAnswerPdfDetails(answerPdfDetails);
         dispatch(setCurrentAnswerPdfId(answerPdfDetails._id));
         dispatch(setCurrentTaskDetails(task));
         dispatch(setCurrentBookletIndex(task.currentFileIndex));
         dispatch(setCurrentBookletId(answerPdfDetails._id));
-        dispatch(setBaseImageUrl(extractedBookletPath));
+        dispatch(setBaseImageUrl(questionImagesFolderUrl));
         setAnswerSheetCount(answerPdfDetails);
       } catch (error) {
         console.log(error);
@@ -317,7 +318,8 @@ const CheckModule = () => {
       }
     };
     if (id) getTaskDetails();
-  }, [id, currentBookletIndex, dispatch]);
+  }, [id, dispatch]);
+  console.log(questionDef);
 
   useEffect(() => {
     if (
@@ -343,7 +345,7 @@ const CheckModule = () => {
           setCurrentAnswerPdfImageId(res[evaluatorState.currentIndex]._id)
         );
         setAnswerImageDetails(res);
-        // console.log(res)
+        console.log(res);
       } catch (error) {
         console.log(error);
       }
@@ -493,7 +495,7 @@ const CheckModule = () => {
           <div className="flex w-[70%] items-center justify-between rounded-sm py-1 text-lg font-bold backdrop-blur-2xl">
             <section className="flex-1 basis-1/3 space-y-1 overflow-hidden px-4">
               <div className="truncate">
-                <span className="text-black font-semibold">Reviewer ID</span>:{" "}
+                <span className="text-black font-semibold">Evaluator ID</span>:{" "}
                 <span className="text-black font-bold">46758390</span>
               </div>
               <div className="truncate">
