@@ -68,8 +68,8 @@ const ReassignModal = ({
       setCompletedCount(completed);
       setPendingCount(pending);
 
-      setTransferCount(pending); // default input value
-      setMaxTransferCount(pending); // max allowed
+      setTransferCount(completed); // default input value
+      setMaxTransferCount(completed); // max allowed
     }
   }, [userTaskStatus, currentTask]);
 
@@ -118,7 +118,7 @@ const ReassignModal = ({
     } finally {
       setSubmitting(false);
     }
-    window.location.reload();
+    // window.location.reload();
   };
 
   if (!showReAssignModal || !currentTask) return null;
@@ -205,12 +205,12 @@ const ReassignModal = ({
         {/* ACTION */}
         <div className="px-4 pb-4">
           <button
-            disabled={
-              !selectedUserId ||
-              submitting ||
-              transferCount < 1 ||
-              transferCount > maxTransferCount
-            }
+            // disabled={
+            //   !selectedUserId ||
+            //   submitting ||
+            //   transferCount < 1 ||
+            //   transferCount > maxTransferCount
+            // }
             onClick={handleReassign}
             className="w-full rounded-md bg-indigo-600 py-2 font-bold text-white hover:bg-indigo-700 disabled:opacity-50"
           >

@@ -6,7 +6,7 @@ import { FiSearch } from "react-icons/fi";
 import { RiMoonFill, RiSunFill } from "react-icons/ri";
 import Dropdown from "components/dropdown";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import QuestionSection from "components/QuestionSection/ReviewerQuestion";
+import ReviewerQuestion from "components/QuestionSection/ReviewerQuestion";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../../../store/authSlice";
 import avatar from "assets/img/avatars/avatar4.png";
@@ -682,7 +682,7 @@ const CheckModule = () => {
           </div>
 
           <div className=" h-full sm:w-[30%] md:w-[25%] lg:block lg:w-[20%]">
-            <QuestionSection
+            <ReviewerQuestion
               answerPdfDetails={answerSheetCount}
               taskdetails={taskdetails}
               remainingSecondsRef={remainingSecondsRef.current}
