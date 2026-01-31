@@ -43,10 +43,10 @@ const ReviewerQuestion = (props) => {
   const [selectedReason, setSelectedReason] = useState("");
   const [otherReason, setOtherReason] = useState("");
   const [rejectLoading, setRejectLoading] = useState(false);
-
-  const evaluatorState = useSelector((state) => state.evaluator);
   const [showRollbackModel, setshowRollbackModel] = useState(false);
   const [selectedUser, setSelectedUser] = useState("");
+
+  const evaluatorState = useSelector((state) => state.evaluator);
   const taskDetails = evaluatorState.currentTaskDetails;
   const [userData, setuserData] = useState([]);
   const currentBookletIndex = evaluatorState.currentBookletIndex;
@@ -59,7 +59,7 @@ const ReviewerQuestion = (props) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   // const {socket} = props
-  console.log(props.taskdetails);
+  console.log(currentBookletId);
 
   const sortByQuestionNumber = (a, b) => {
     const aParts = a.questionsName.split(".").map(Number);
@@ -174,8 +174,6 @@ const ReviewerQuestion = (props) => {
     }
   }, [props.answerPdfDetails, marked, evaluatorState.rerender]);
 
-
-
   useEffect(() => {
     const allUsers = async () => {
       const response = await getAllUsers();
@@ -197,82 +195,39 @@ const ReviewerQuestion = (props) => {
     setTotalMarks(reducedArr);
     props.settotalMarksToDisplay(reducedArr);
     props.setTotalMarks(total);
-    const qMatch = data.marks.find(
-      (q) => parseFloat(q.questionsName) === currentQuestion
+    const qID = data.marks.filter(
+      (id) => parseFloat(id.questionsName) === currentQuestion
     );
-
-    if (qMatch) {
-      dispatch(setCurrentQuestionDefinitionId(qMatch._id));
-    }
-
+    dispatch(setCurrentQuestionDefinitionId(qID._id));
     // console.log(qID);
   });
 
-  // const handleRejectSubmit = async () => {
-  //   if (!selectedReason) {
-  //     toast.warning("Please select a rejection reason");
-  //     return;
-  //   }
+  const handleRejectSubmit = async () => {
+    if (!selectedReason) {
+      toast.warning("Please select a rejection reason");
+      return;
+    }
 
-  //   if (selectedReason === "Other" && !otherReason.trim()) {
-  //     toast.warning("Please enter rejection reason");
-  //     return;
-  //   }
+    if (selectedReason === "Other" && !otherReason.trim()) {
+      toast.warning("Please enter rejection reason");
+      return;
+    }
 
-  //   const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token");
 
-  //   const payload = {
-  //     questiondefinitionId: evaluatorState.currentQuestionDefinitionId, // from redux
-  //     subjectCode: taskDetails?.subjectCode, // make sure this exists in taskDetails
-  //     reviewerid: evaluatorState?.reviewerId || props.taskdetails?.reviewerId,
-  //     answerPdfId: currentBookletId,
-  //     reason: selectedReason === "Other" ? otherReason.trim() : selectedReason,
-  //   };
+    const payload = {
+      answerPdfId: currentBookletId,
+      taskId: taskDetails._id,
+      userId: props.taskdetails.userId,
+      reason: selectedReason === "Other" ? otherReason.trim() : selectedReason,
+      rejectedAt: new Date().toISOString(),
+    };
 
-  //   try {
-  //     setRejectLoading(true);
-
-  //     const res = await axios.post(
-  //       `${process.env.REACT_APP_API_URL}/api/tasks/reviewer/assignToPrincipal`,
-  //       payload, // ✅ BODY goes here
-  //       {
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //       }
-  //     );
-
-  //     toast.success(res.data?.message || "Assigned to Principal successfully");
-
-  //     setShowRejectModal(false);
-  //     setSelectedReason("");
-  //     setOtherReason("");
-  //     navigate("/evaluator/assignedtasks");
-  //   } catch (error) {
-  //     console.error("Assign to principal failed", error);
-  //     toast.error(
-  //       error?.response?.data?.message || "Failed to assign to principal"
-  //     );
-  //   } finally {
-  //     setRejectLoading(false);
-  //   }
-  // };
-
-  const handleAssignToPrincipal = async () => {
     try {
-      const token = localStorage.getItem("token");
-
-      const payload = {
-        questiondefinitionId: evaluatorState.currentQuestionDefinitionId,
-        subjectCode: props.taskdetails?.subjectCode,
-        reviewerid: props.taskdetails?.userId, // ✅ reviewerId = task.userId
-        answerPdfId: currentBookletId,
-      };
-
-      console.log("Assign Payload:", payload);
+      setRejectLoading(true);
 
       const res = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/tasks/reviewer/rejectTask`,
+        `${process.env.REACT_APP_API_URL}/api/tasks/rejectbooklet/${currentBookletId}`,
         payload,
         {
           headers: {
@@ -599,6 +554,86 @@ const ReviewerQuestion = (props) => {
       toast.error("Failed to submit booklet");
     }
   };
+
+ const rollback = async () => {
+  console.log("ROLLBACK CLICKED");
+
+  if (!selectedUser) {
+    console.log("No user selected");
+    return;
+  }
+
+  const obj = {
+    assignments: [
+      {
+        evaluatorId: selectedUser,
+        reviewerId: props.taskdetails.userId,
+        subjectCode: props.taskdetails.subjectCode,
+        questiondefinitionId:
+          props.taskdetails.questiondefinitionId,
+        bookletsToAssign: [currentBookletId],
+      },
+    ],
+  };
+
+  console.log("Payload:", obj);
+
+  try {
+    const response = await axios.post(
+      `${process.env.REACT_APP_API_URL}/api/tasks/assign/reviewer-rollback`,
+      obj,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    console.log("API success:", response.data);
+  } catch (error) {
+    console.log(
+      "API error:",
+      error?.response?.data || error.message
+    );
+  }
+};
+
+
+const handleAssignToPrincipal = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const payload = {
+        questiondefinitionId: evaluatorState.currentQuestionDefinitionId,
+        subjectCode: props.taskdetails?.subjectCode,
+        reviewerid: props.taskdetails?.userId, // ✅ reviewerId = task.userId
+        answerPdfId: currentBookletId,
+      };
+
+      console.log("Assign Payload:", payload);
+
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/tasks/reviewer/rejectTask`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      toast.success(res.data?.message || "Assigned to Principal successfully");
+      navigate("/reviewer/assignedtasks");
+    } catch (error) {
+      console.error("Assign to principal failed", error);
+      toast.error(
+        error?.response?.data?.message || "Failed to assign to principal"
+      );
+    }
+  };
+
+
   return (
     <div className="h-[100%] ">
       {/* <div className="flex  h-[7%] w-[100%]">
@@ -739,7 +774,7 @@ const ReviewerQuestion = (props) => {
 
               <button
                 // disabled={!selectedUser}
-
+               
                 className="rounded bg-blue-600 px-4 py-2 text-white disabled:opacity-50"
                 onClick={rollback}
               >
