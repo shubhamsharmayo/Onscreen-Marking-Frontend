@@ -119,8 +119,8 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
       !formData.numberOfPage ||
       formData?.hiddenPage?.length === 0 ||
       !formData?.minTime ||
-      !formData?.numberOfSupplement === 0 ||
-      !formData?.PageofSupplement === 0 ||
+      // !formData?.numberOfSupplement === 0 ||
+      // !formData?.PageofSupplement === 0 ||
       !formData?.perPage ||
       !formData?.maxTime
     ) {
@@ -162,13 +162,19 @@ const SchemaCreateModal = ({ setCreateShowModal, createShowModal }) => {
       return;
     }
 
-    if (Number(formData?.numberOfSupplement) <= 0) {
-      toast.error("Number of Supplimentary Sheet must be positive.");
+    if (
+      formData.numberOfSupplement !== "" &&
+      Number(formData.numberOfSupplement) < 0
+    ) {
+      toast.error("Number of Supplement cannot be negative.");
       return;
     }
 
-    if (Number(formData?.PageofSupplement) <= 0) {
-      toast.error("Number of pages in Supplimentary must be positive.");
+    if (
+      formData.PageofSupplement !== "" &&
+      Number(formData.PageofSupplement) < 0
+    ) {
+      toast.error("Pages in Supplement cannot be negative.");
       return;
     }
 

@@ -26,6 +26,7 @@ import { generateNumbers } from "services/Evaluator/generateNumber";
 import { submitBookletById } from "components/Helper/Evaluator/EvalRoute";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import { getAllUsers } from "../../services/common";
 function sortByQuestionsName(arr) {
   return arr.sort((a, b) => {
     return Number(a.questionsName) - Number(b.questionsName);
@@ -44,7 +45,10 @@ const ReviewerQuestion = (props) => {
   const [rejectLoading, setRejectLoading] = useState(false);
 
   const evaluatorState = useSelector((state) => state.evaluator);
+  const [showRollbackModel, setshowRollbackModel] = useState(false);
+  const [selectedUser, setSelectedUser] = useState("");
   const taskDetails = evaluatorState.currentTaskDetails;
+  const [userData, setuserData] = useState([]);
   const currentBookletIndex = evaluatorState.currentBookletIndex;
   const currentQuestion = evaluatorState.currentQuestion;
   const currentAnswerPdfImageId = evaluatorState.currentAnswerPdfImageId;
@@ -169,6 +173,17 @@ const ReviewerQuestion = (props) => {
       );
     }
   }, [props.answerPdfDetails, marked, evaluatorState.rerender]);
+
+
+
+  useEffect(() => {
+    const allUsers = async () => {
+      const response = await getAllUsers();
+      console.log(response);
+      setuserData(response);
+    };
+    allUsers();
+  }, []);
 
   socket.on("questions-data", (data) => {
     console.log(data);
@@ -520,6 +535,45 @@ const ReviewerQuestion = (props) => {
     }
   };
 
+  const rollback = async () => {
+    console.log("ROLLBACK CLICKED");
+
+    if (!selectedUser) {
+      console.log("No user selected");
+      return;
+    }
+
+    const obj = {
+      assignments: [
+        {
+          evaluatorId: selectedUser,
+          reviewerId: props.taskdetails.userId,
+          subjectCode: props.taskdetails.subjectCode,
+          questiondefinitionId: props.taskdetails.questiondefinitionId,
+          bookletsToAssign: [currentBookletId],
+        },
+      ],
+    };
+
+    console.log("Payload:", obj);
+
+    try {
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/tasks/assign/reviewer-rollback`,
+        obj,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("API success:", response.data);
+    } catch (error) {
+      console.log("API error:", error?.response?.data || error.message);
+    }
+  };
+
   const submitHandler = async () => {
     try {
       // remainingSecondsRef = seconds left
@@ -622,7 +676,7 @@ const ReviewerQuestion = (props) => {
           disabled={
             props.remainingSecondsRef / 60 < props.userTimerData.minTime
           }
-          onClick={handleSubmitConfirm}
+          onClick={() => setshowRollbackModel(true)}
           className={`w-full border px-5 py-2.5 text-center text-sm font-medium
     ${
       props.remainingSecondsRef / 60 < props.userTimerData.minTime
@@ -652,6 +706,49 @@ const ReviewerQuestion = (props) => {
           SUBMIT BOOKLET AND NEXT
         </button>
       </div>
+
+      {showRollbackModel && (
+        <div className="bg-black fixed inset-0 z-50 flex items-center justify-center bg-opacity-50">
+          <div className="w-[50%] rounded-lg bg-white p-6 shadow-lg">
+            <h2 className="mb-4 text-lg font-semibold">Select User</h2>
+
+            <div className="w-full rounded-lg border border-gray-300 bg-white p-3">
+              <select
+                value={selectedUser}
+                onChange={(e) => setSelectedUser(e.target.value)}
+                className="w-full rounded-md border border-gray-300 p-2 outline-none focus:border-blue-500"
+              >
+                <option value="">-- Select User --</option>
+
+                {userData?.map((user) => (
+                  <option key={user._id} value={user._id}>
+                    {user.name} — {user.email}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* footer */}
+            <div className="mt-4 flex justify-end gap-3">
+              <button
+                onClick={() => setshowRollbackModel(false)}
+                className="rounded bg-gray-200 px-4 py-2"
+              >
+                Cancel
+              </button>
+
+              <button
+                // disabled={!selectedUser}
+
+                className="rounded bg-blue-600 px-4 py-2 text-white disabled:opacity-50"
+                onClick={rollback}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {props.submitModel && (
         <div className="bg-black fixed inset-0 z-50 flex items-center justify-center bg-opacity-50">

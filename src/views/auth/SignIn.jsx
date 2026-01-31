@@ -286,7 +286,7 @@ export function SignIn() {
               "Forgot Password"
             ) : (
               <div>
-                Hello, <br /> Welcome Back
+                {/* Hello, <br /> Welcome Back */}
               </div>
             )}
           </h1>

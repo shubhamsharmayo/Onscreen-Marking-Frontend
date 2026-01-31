@@ -48,7 +48,7 @@ const Tasks = () => {
         const response = await getAllUsers(localStorage.getItem("token"));
         setUsers(
           response.filter(
-            (user) => user.role === "moderator" || user.role === "evaluator"
+            (user) => user.role === "moderator" || user.role === "reviewer"
           )
         );
       } catch (error) {

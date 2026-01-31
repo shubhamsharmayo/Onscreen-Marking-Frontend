@@ -121,6 +121,29 @@ const CreateUser = () => {
     );
   };
 
+  const generatePassword = (length = 10) => {
+    const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const lower = "abcdefghijklmnopqrstuvwxyz";
+    const numbers = "0123456789";
+    const symbols = "@$!%*?&";
+    const all = upper + lower + numbers + symbols;
+
+    let password =
+      upper[Math.floor(Math.random() * upper.length)] +
+      lower[Math.floor(Math.random() * lower.length)] +
+      numbers[Math.floor(Math.random() * numbers.length)] +
+      symbols[Math.floor(Math.random() * symbols.length)];
+
+    for (let i = password.length; i < length; i++) {
+      password += all[Math.floor(Math.random() * all.length)];
+    }
+
+    return password
+      .split("")
+      .sort(() => 0.5 - Math.random())
+      .join("");
+  };
+
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -538,40 +561,55 @@ const CreateUser = () => {
                 </div>
               </div>
               <div className="col-span-6 sm:col-span-3">
-                <label
-                  htmlFor="Password"
-                  className="sm:text-md block text-sm font-medium text-gray-700 dark:text-white"
-                >
+                <label className="sm:text-md block text-sm font-medium text-gray-700 dark:text-white">
                   Password
                 </label>
-                <div className="relative flex items-center justify-center">
+
+                <div className="relative flex items-center">
                   <input
                     type={visibility ? "text" : "password"}
-                    id="Password"
                     name="password"
-                    placeholder="Enter 8 Digit Password"
-                    className="mt-1 w-full rounded-md border border-gray-300 bg-gray-50 p-1 text-gray-700 focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-2"
-                    //                     className="mt-1 w-full rounded-md border-gray-300 bg-gray-50 p-1 text-gray-700 focus:border-blue-500 focus:ring focus:ring-blue-500 dark:bg-navy-900 dark:text-white sm:p-2"
-
+                    placeholder="Enter Password"
+                    className="mt-1 w-full rounded-md border border-gray-300 bg-gray-50 p-1 pr-24 text-gray-700 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-2"
+                    value={userDetails.password}
                     onChange={(e) =>
                       setUserDetails({
                         ...userDetails,
                         password: e.target.value,
                       })
                     }
-                    value={userDetails.password}
                   />
-                  {visibility ? (
-                    <MdOutlineVisibility
-                      className="absolute right-2 cursor-pointer text-gray-600"
-                      onClick={() => setVisibility(!visibility)}
-                    />
-                  ) : (
-                    <MdOutlineVisibilityOff
-                      className="absolute right-2 cursor-pointer text-gray-600"
-                      onClick={() => setVisibility(!visibility)}
-                    />
-                  )}
+
+                  {/* Show/Hide */}
+                  <div className="absolute right-20 cursor-pointer text-gray-600">
+                    {visibility ? (
+                      <MdOutlineVisibility
+                        onClick={() => setVisibility(false)}
+                      />
+                    ) : (
+                      <MdOutlineVisibilityOff
+                        onClick={() => setVisibility(true)}
+                      />
+                    )}
+                  </div>
+
+                  {/* Generate Button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newPass = generatePassword(10);
+                      setUserDetails({
+                        ...userDetails,
+                        password: newPass,
+                        password_confirmation: newPass,
+                      });
+                      setVisibility(true);
+                      toast.success("Password generated");
+                    }}
+                    className="absolute right-0 mr-1 rounded bg-indigo-600 px-2 py-1 text-xs text-white hover:bg-indigo-700"
+                  >
+                    Generate
+                  </button>
                 </div>
               </div>
               <div className="col-span-6 sm:col-span-3">
