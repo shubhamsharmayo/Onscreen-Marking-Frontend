@@ -185,7 +185,7 @@ const QuestionMappingModal = ({
 
   const imageUrl = `${
     process.env.REACT_APP_API_URL
-  }/uploadedPdfs/extractedSupplimentaryPdfImages/${encodeURIComponent(
+  }/api/schemas/get/answer-pdf-images/${encodeURIComponent(
     schemaId
   )}/image_${currentPage}.png`;
 

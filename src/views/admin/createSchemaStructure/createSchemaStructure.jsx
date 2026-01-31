@@ -22,6 +22,9 @@ const CreateSchemaStructure = () => {
   const [editShowModal, setEditShowModal] = useState(false);
   const [selectedSchema, setSelectedSchema] = useState(null);
   const [schemaId, setSchemaId] = useState("");
+  const [openPageDropdown, setOpenPageDropdown] = useState(null);
+  // stores folderId of opened dropdown
+
   const [loading, setLoading] = useState(false);
 
   const [savingStatus, setSavingStatus] = useState({});
@@ -128,6 +131,16 @@ const CreateSchemaStructure = () => {
     fetchData();
   }, [id, token, schemaData, setSavedQuestionData, parentId]);
 
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!e.target.closest(".relative")) {
+        setOpenPageDropdown(null);
+      }
+    };
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
+
   const handleSchemaFileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -198,6 +211,28 @@ const CreateSchemaStructure = () => {
   const hiddenPages = useMemo(() => {
     return (schemaData?.hiddenPage || []).map((p) => Number(p) + 1);
   }, [schemaData]);
+
+  const allPages = useMemo(() => {
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  }, [totalPages]);
+
+  const usedPages = useMemo(() => {
+    const set = new Set();
+    savedQuestionData.forEach((q) => {
+      if (Array.isArray(q.page)) {
+        q.page.forEach((p) => set.add(Number(p)));
+      }
+    });
+    return set;
+  }, [savedQuestionData]);
+
+  const getAvailablePages = (currentPages = []) => {
+    return allPages.filter(
+      (p) =>
+        !hiddenPages.includes(p) && // not hidden
+        (!usedPages.has(p) || currentPages.includes(p)) // allow editing existing
+    );
+  };
 
   const clampMarks = (value, min, max) => {
     if (value === "" || value === null) return "";
@@ -1105,39 +1140,67 @@ const CreateSchemaStructure = () => {
               />
             </div>
 
-            <div className="w-40">
-              <input
-                key={`${folderId}-page-${displayData[0]?._id || "new"}`}
-                type="text"
-                placeholder="Pages (e.g. 1,3,5)"
-                defaultValue={
-                  Array.isArray(displayData[0]?.page)
-                    ? displayData[0].page.join(",")
-                    : ""
+            <div className="relative w-44">
+              {/* Button */}
+              <div
+                onClick={() =>
+                  setOpenPageDropdown(
+                    openPageDropdown === folderId ? null : folderId
+                  )
                 }
-                onChange={(e) => {
-                  const value = e.target.value;
+                className="cursor-pointer rounded border border-gray-300 px-2 py-1 text-center dark:border-gray-700 dark:bg-navy-900"
+              >
+                {Array.isArray(displayData[0]?.page) &&
+                displayData[0]?.page.length > 0
+                  ? `Pages: ${displayData[0].page.join(", ")}`
+                  : "Select Pages"}
+              </div>
 
-                  // allow empty
-                  if (value.trim() === "") {
-                    formRefs.current[`${folderId}-page`] = [];
-                    return;
-                  }
+              {/* Dropdown Panel */}
+              {openPageDropdown === folderId && (
+                <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-gray-300 bg-white shadow-lg dark:border-gray-700 dark:bg-navy-800">
+                  {getAvailablePages(displayData[0]?.page || []).map((page) => {
+                    const selectedPages =
+                      formRefs.current[`${folderId}-page`] ??
+                      displayData[0]?.page ??
+                      [];
 
-                  // allow numbers + comma only
-                  if (!/^[\d,\s]+$/.test(value)) return;
+                    const isChecked = selectedPages.includes(page);
 
-                  const pages = value
-                    .split(",")
-                    .map((p) => Number(p.trim()))
-                    .filter((p) => !Number.isNaN(p));
+                    return (
+                      <label
+                        key={page}
+                        className="flex cursor-pointer items-center gap-2 px-3 py-1 hover:bg-indigo-100 dark:hover:bg-navy-700"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => {
+                            let updated = [...selectedPages];
 
-                  formRefs.current[`${folderId}-page`] = pages;
-                }}
-                className="w-full rounded border border-gray-300 py-1 text-center
-      focus:outline-none focus:ring focus:ring-indigo-500
-      dark:border-gray-700 dark:bg-navy-900 dark:text-white"
-              />
+                            if (isChecked) {
+                              updated = updated.filter((p) => p !== page);
+                            } else {
+                              updated.push(page);
+                            }
+
+                            formRefs.current[`${folderId}-page`] = updated;
+                            setSchemaData((prev) => ({ ...prev })); // force re-render
+                          }}
+                        />
+                        <span>Page {page}</span>
+                      </label>
+                    );
+                  })}
+
+                  {getAvailablePages(displayData[0]?.page || []).length ===
+                    0 && (
+                    <div className="px-3 py-2 text-sm text-gray-500">
+                      No pages available
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="flex w-12 items-center justify-center">
