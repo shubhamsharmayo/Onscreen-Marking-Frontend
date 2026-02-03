@@ -149,14 +149,20 @@ const SchemaQuestion = ({
       return;
     }
 
-    if (Number(formData?.numberOfSupplement) <= 0) {
-      toast.error("Min Time must be positive.");
-      return;
+    if (
+     formData.numberOfSupplement !== "" &&
+     Number(formData.numberOfSupplement) <= 0
+    ) {
+     toast.error("Number of Supplement must be greater than 0.");
+     return;
     }
 
-    if (Number(formData?.PageofSupplement) <= 0) {
-      toast.error("Min Time must be positive.");
-      return;
+    if (
+     formData.PageofSupplement !== "" &&
+     Number(formData.PageofSupplement) <= 0
+    ) {
+     toast.error("Pages in Supplement must be greater than 0.");
+     return;
     }
 
     if (
