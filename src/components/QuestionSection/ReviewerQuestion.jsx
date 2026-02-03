@@ -490,44 +490,44 @@ const ReviewerQuestion = (props) => {
     }
   };
 
-  const rollback = async () => {
-    console.log("ROLLBACK CLICKED");
+  // const rollback = async () => {
+  //   console.log("ROLLBACK CLICKED");
 
-    if (!selectedUser) {
-      console.log("No user selected");
-      return;
-    }
+  //   if (!selectedUser) {
+  //     console.log("No user selected");
+  //     return;
+  //   }
 
-    const obj = {
-      assignments: [
-        {
-          evaluatorId: selectedUser,
-          reviewerId: props.taskdetails.userId,
-          subjectCode: props.taskdetails.subjectCode,
-          questiondefinitionId: props.taskdetails.questiondefinitionId,
-          bookletsToAssign: [currentBookletId],
-        },
-      ],
-    };
+  //   const obj = {
+  //     assignments: [
+  //       {
+  //         evaluatorId: selectedUser,
+  //         reviewerId: props.taskdetails.userId,
+  //         subjectCode: props.taskdetails.subjectCode,
+  //         questiondefinitionId: props.taskdetails.questiondefinitionId,
+  //         bookletsToAssign: [currentBookletId],
+  //       },
+  //     ],
+  //   };
 
-    console.log("Payload:", obj);
+  //   console.log("Payload:", obj);
 
-    try {
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/tasks/assign/reviewer-rollback`,
-        obj,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+  //   try {
+  //     const response = await axios.post(
+  //       `${process.env.REACT_APP_API_URL}/api/tasks/assign/reviewer-rollback`,
+  //       obj,
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
 
-      console.log("API success:", response.data);
-    } catch (error) {
-      console.log("API error:", error?.response?.data || error.message);
-    }
-  };
+  //     console.log("API success:", response.data);
+  //   } catch (error) {
+  //     console.log("API error:", error?.response?.data || error.message);
+  //   }
+  // };
 
   const submitHandler = async () => {
     try {

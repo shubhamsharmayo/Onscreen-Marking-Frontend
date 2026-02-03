@@ -31,6 +31,8 @@ import LineLoader from "UI/LineLoader/LineLoader";
 import { io } from "socket.io-client";
 import useInactivityLogout from "../../../hook/InactivityTracker";
 import { toast } from "react-toastify";
+import axios from "axios";
+// import socket from '../../../services/socket/socket'
 const CheckModule = () => {
   const [answerSheetCount, setAnswerSheetCount] = useState(null);
   const [answerImageDetails, setAnswerImageDetails] = useState([]);
@@ -42,6 +44,8 @@ const CheckModule = () => {
   const [TotalMarks, setTotalMarks] = useState(null);
   const hasInitializedIndex = useRef(false);
   const [submitModel, setsubmitModel] = useState(false);
+  const [evalToRevData, setevalToRevData] = useState([]);
+  console.log(taskdetails);
 
   // Local timer display string (HH:MM:SS)
   const [remainingTimeStr, setRemainingTimeStr] = useState("00:00:00");
@@ -278,6 +282,49 @@ const CheckModule = () => {
 
   // console.log(confirmationData)
 
+  useEffect(() => {
+    const fetchTaskData = async () => {
+      if (!taskDetails?._id) return;
+
+      try {
+        const response = await axios.get(
+          `${process.env.REACT_APP_API_URL}/api/tasks/getReassignedBooklets/${taskDetails._id}`
+        );
+        setevalToRevData(response?.data?.data || null);
+      } catch (err) {
+        console.error("Failed to fetch reassigned booklets", err);
+      }
+    };
+
+    fetchTaskData();
+  }, [taskDetails]);
+  console.log(evalToRevData);
+
+  console.log({
+    taskId: evalToRevData[0]?.toTaskId,
+    userId: evalToRevData[0]?.toUserId,
+    evaluatorId: evalToRevData[0]?.fromUserId,
+    answerPdfId: answerPdfDetails?._id,
+    page: currentIndex,
+  });
+  useEffect(() => {
+    if (!socket) {
+      return;
+    }
+
+    const payload = {
+      taskId: evalToRevData[0]?.toTaskId,
+      userId: evalToRevData[0]?.toUserId,
+      evaluatorId: evalToRevData[0]?.fromUserId,
+      answerPdfId: answerPdfDetails?._id,
+      page: currentIndex,
+    };
+    console.log("socket.connected =", socket.connected);
+    console.log("🔥 EMITTING fetch-reviewerData", payload);
+    socket.emit("fetch-reviewerData", payload);
+  }, [socket, currentIndex, evalToRevData, answerPdfDetails]);
+
+  console.log(taskDetails);
   // -----------------------------------------------------------------
   // Keep your existing data-fetching useEffects — only change: after
   // fetch of task and answerPdfDetails the socket useEffect above will run.
@@ -287,7 +334,7 @@ const CheckModule = () => {
       try {
         setShowLoader(true);
         const response = await getTaskById(id);
-        console.log(response)
+        console.log(response);
         if (response?.status === "active") {
           toast.warning(response?.message || "This task is already active.");
           navigate("/reviewer/assignedtasks"); // or wherever you want to send back
@@ -319,7 +366,8 @@ const CheckModule = () => {
     };
     if (id) getTaskDetails();
   }, [id, dispatch]);
-  console.log(questionDef);
+
+  console.log(answerImageDetails);
 
   useEffect(() => {
     if (
@@ -336,6 +384,8 @@ const CheckModule = () => {
 
     hasInitializedIndex.current = true; // ✅ lock it forever
   }, [answerImageDetails, dispatch]);
+
+  console.log(evaluatorState.currentIndex)
 
   useEffect(() => {
     const getEvaluatorTasks = async (taskId) => {
