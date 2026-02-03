@@ -45,27 +45,42 @@ const QuestionMappingModal = ({
   }, [currentPage]);
 
   /* ---------------- Fetch Schema Pages Count ---------------- */
+  // useEffect(() => {
+  //   if (!schemaId || !showImageModal) return;
+
+  //   const fetchSchema = async () => {
+  //     try {
+  //       const res = await axios.get(
+  //         `${process.env.REACT_APP_API_URL}/api/schemas/get/schema/${schemaId}`,
+  //         { headers: { Authorization: `Bearer ${token}` } }
+  //       );
+
+  //       setTotalPages(res.data?.supplimentaryImageCount || 0);
+  //       setCurrentPage(1);
+  //       setSelectedPages({});
+  //       setSelections({});
+  //     } catch {
+  //       toast.error("Failed to load supplementary PDF");
+  //     }
+  //   };
+
+  //   fetchSchema();
+  // }, [schemaId, showImageModal, token]);
+
+
   useEffect(() => {
     if (!schemaId || !showImageModal) return;
 
-    const fetchSchema = async () => {
-      try {
-        const res = await axios.get(
-          `${process.env.REACT_APP_API_URL}/api/schemas/get/schema/${schemaId}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-
-        setTotalPages(res.data?.supplimentaryImageCount || 0);
-        setCurrentPage(1);
-        setSelectedPages({});
-        setSelections({});
-      } catch {
-        toast.error("Failed to load supplementary PDF");
-      }
+    const fetchPageCount = async () => {
+     const res = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/schemas/get/answer-pdf-page-count/${schemaId}`
+     );
+     setTotalPages(res.data.totalPages);
+     setCurrentPage(1);
     };
 
-    fetchSchema();
-  }, [schemaId, showImageModal, token]);
+    fetchPageCount();
+}, [schemaId, showImageModal]);
 
   /* ---------------- Whole Page Toggle ---------------- */
   const togglePageSelection = (page) => {
@@ -183,11 +198,7 @@ const QuestionMappingModal = ({
 
   if (!showImageModal) return null;
 
-  const imageUrl = `${
-    process.env.REACT_APP_API_URL
-  }/uploadedPdfs/extractedSupplimentaryPdfImages/${encodeURIComponent(
-    schemaId
-  )}/image_${currentPage}.png`;
+const imageUrl = `${process.env.REACT_APP_API_URL}/uploadedPdfs/extractedAnswerPdfImages/${schemaId}/image_${currentPage}.png`;
 
   return (
     <div className="bg-black fixed inset-0 z-50 flex items-center justify-center bg-opacity-50">

@@ -136,6 +136,7 @@ const SelectSchemaModal = ({
       navigate(
         `/admin/schema/create/structure/coordinates/${response.data?.relationId}`
       );
+      window.location.reload()
     } catch (error) {
       if (error.name === "CanceledError") {
         console.log("Request canceled by the user.");

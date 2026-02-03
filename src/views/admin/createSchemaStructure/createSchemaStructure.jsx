@@ -23,6 +23,7 @@ const CreateSchemaStructure = () => {
   const [selectedSchema, setSelectedSchema] = useState(null);
   const [schemaId, setSchemaId] = useState("");
   const [openPageDropdown, setOpenPageDropdown] = useState(null);
+  const [, forceRender] = useState(0);
   // stores folderId of opened dropdown
 
   const [loading, setLoading] = useState(false);
@@ -1140,9 +1141,9 @@ const CreateSchemaStructure = () => {
               />
             </div>
 
-            <div className="relative w-44">
-              {/* Button */}
-              <div
+            {/* <div className="relative w-44"> */}
+              
+              {/* <div
                 onClick={() =>
                   setOpenPageDropdown(
                     openPageDropdown === folderId ? null : folderId
@@ -1156,7 +1157,7 @@ const CreateSchemaStructure = () => {
                   : "Select Pages"}
               </div>
 
-              {/* Dropdown Panel */}
+            
               {openPageDropdown === folderId && (
                 <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-gray-300 bg-white shadow-lg dark:border-gray-700 dark:bg-navy-800">
                   {getAvailablePages(displayData[0]?.page || []).map((page) => {
@@ -1201,7 +1202,84 @@ const CreateSchemaStructure = () => {
                   )}
                 </div>
               )}
-            </div>
+            </div> */}
+
+            {Number(schemaData?.totalQuestions) > 1 && (
+             <div className="relative w-44">
+                {/* Button */}
+                <div
+                 onClick={() =>
+                    setOpenPageDropdown(
+                     openPageDropdown === folderId ? null : folderId
+                    )
+                 }
+                 className="cursor-pointer rounded border border-gray-300 px-2 py-1 text-center dark:border-gray-700 dark:bg-navy-900"
+                >
+                 {(() => {
+                    const selectedPages =
+                     formRefs.current[`${folderId}-page`] ??
+                     displayData[0]?.page ??
+                     [];
+
+                    return selectedPages.length > 0
+                     ? `Pages: ${selectedPages
+                         .sort((a, b) => a - b)
+                         .join(", ")}`
+                     : "Select Pages";
+                 })()}
+                </div>
+
+                {/* Dropdown Panel */}
+                {openPageDropdown === folderId && (
+                 <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-gray-300 bg-white shadow-lg dark:border-gray-700 dark:bg-navy-800">
+                    {getAvailablePages(displayData[0]?.page || []).map(
+                     (page) => {
+                        const selectedPages =
+                         formRefs.current[`${folderId}-page`] ??
+                         displayData[0]?.page ??
+                         [];
+
+                        const isChecked = selectedPages.includes(page);
+
+                        return (
+                         <label
+                            key={page}
+                            className="flex cursor-pointer items-center gap-2 px-3 py-1 hover:bg-indigo-100 dark:hover:bg-navy-700"
+                         >
+                            <input
+                             type="checkbox"
+                             checked={isChecked}
+                             onChange={() => {
+                                let updated = [...selectedPages];
+
+                                if (isChecked) {
+                                 updated = updated.filter((p) => p !== page);
+                                } else {
+                                 updated.push(page);
+                                }
+
+                                formRefs.current[`${folderId}-page`] = updated;
+                                forceRender((n) => n + 1);
+                                setSchemaData((prev) => ({ ...prev })); // force re-render
+                             }}
+                            />
+                            <span>Page {page}</span>
+                         </label>
+                        );
+                     }
+                    )}
+
+                    {getAvailablePages(displayData[0]?.page || []).length ===
+                     0 && (
+                     <div className="px-3 py-2 text-sm text-gray-500">
+                        No pages available
+                     </div>
+                    )}
+                 </div>
+                )}
+             </div>
+            )}
+
 
             <div className="flex w-12 items-center justify-center">
               <Tooltip title="Map Supplementary PDF" arrow>
