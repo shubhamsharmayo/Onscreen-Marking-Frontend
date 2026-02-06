@@ -42,7 +42,6 @@ const CheckModule = () => {
   const [TotalMarks, setTotalMarks] = useState(null);
   const hasInitializedIndex = useRef(false);
   const [submitModel, setsubmitModel] = useState(false);
-  
 
   // Local timer display string (HH:MM:SS)
   const [remainingTimeStr, setRemainingTimeStr] = useState("00:00:00");
@@ -71,15 +70,14 @@ const CheckModule = () => {
   const [pageTimerCount, setpageTimerCount] = useState("00:00:00");
   const [blankCheck, setblankCheck] = useState(false);
   const [confirmationData, setconfirmationData] = useState({
-  marks: [],
-  marksData: []
-})
+    marks: [],
+    marksData: [],
+  });
 
   const [socket, setSocket] = useState(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [questionDef, setquestionDef] = useState({})
-
+  const [questionDef, setquestionDef] = useState({});
 
   // console.log(totalMarksToDisplay);
   // console.log(TotalMarks);
@@ -175,8 +173,6 @@ const CheckModule = () => {
     });
     setSocket(newSocket);
 
-  
-
     newSocket.on("room-joined", (data) => {
       console.log("room-joined:", data);
     });
@@ -191,7 +187,7 @@ const CheckModule = () => {
       // Start ticking as soon as we get timer
       startLocalTick();
     });
-      newSocket.on("connect", () => {
+    newSocket.on("connect", () => {
       // console.log("Socket connected:", newSocket.id);
 
       newSocket.emit("join-timerRoom", { taskId });
@@ -251,38 +247,36 @@ const CheckModule = () => {
     navigate("/auth/sign-in");
   });
 
-//   useEffect(() => {
-//   if (!id || !answerPdfDetails || !socket) return;
+  //   useEffect(() => {
+  //   if (!id || !answerPdfDetails || !socket) return;
 
-//   const taskId = id;
-//   const answerPdfId = answerPdfDetails._id;
+  //   const taskId = id;
+  //   const answerPdfId = answerPdfDetails._id;
 
-//   // ✅ emit request
-//   socket.emit("get-marks-data", {
-//     taskId,
-//     answerPdfId,
-//     userId: currentTaskDetails?.userId,
-//   });
+  //   // ✅ emit request
+  //   socket.emit("get-marks-data", {
+  //     taskId,
+  //     answerPdfId,
+  //     userId: currentTaskDetails?.userId,
+  //   });
 
-//   // ✅ named handler
-//   const handleFinalMarksData = (data) => {
-//     console.log("final-marks-data:", data);
-//     setconfirmationData(data);
-//   };
+  //   // ✅ named handler
+  //   const handleFinalMarksData = (data) => {
+  //     console.log("final-marks-data:", data);
+  //     setconfirmationData(data);
+  //   };
 
-//   // ✅ register listener
-//   socket.on("final-marks-data", handleFinalMarksData);
+  //   // ✅ register listener
+  //   socket.on("final-marks-data", handleFinalMarksData);
 
-//   // ✅ cleanup (VERY IMPORTANT)
-//   return () => {
-//     socket.off("final-marks-data", handleFinalMarksData);
-//   };
+  //   // ✅ cleanup (VERY IMPORTANT)
+  //   return () => {
+  //     socket.off("final-marks-data", handleFinalMarksData);
+  //   };
 
-// }, [id, answerPdfDetails, submitModel, socket]);
-  
+  // }, [id, answerPdfDetails, submitModel, socket]);
 
-
-console.log(answerPdfDetails)
+  console.log(answerPdfDetails);
 
   // -----------------------------------------------------------------
   // Keep your existing data-fetching useEffects — only change: after
@@ -295,8 +289,15 @@ console.log(answerPdfDetails)
         const response = await getTaskById(id);
         console.log(response?.task);
         settaskdetails(response?.task);
-        const { answerPdfDetails, extractedBookletPath, task, questionImagesFolderUrl, questionDef, questionImages } = response;
-        setquestionDef(questionDef)
+        const {
+          answerPdfDetails,
+          extractedBookletPath,
+          task,
+          questionImagesFolderUrl,
+          questionDef,
+          questionImages,
+        } = response;
+        setquestionDef(questionDef);
         setAnswerPdfDetails(answerPdfDetails);
         dispatch(setCurrentAnswerPdfId(answerPdfDetails._id));
         dispatch(setCurrentTaskDetails(task));
@@ -312,7 +313,7 @@ console.log(answerPdfDetails)
     };
     if (id) getTaskDetails();
   }, [id, currentBookletIndex, dispatch]);
-  console.log(questionDef)
+  console.log(questionDef);
 
   useEffect(() => {
     if (
@@ -324,19 +325,19 @@ console.log(answerPdfDetails)
     }
 
     const index = answerImageDetails[0].name.split("_")[1].split(".")[0];
-    console.log(index)
+    console.log(index);
     dispatch(setIndex({ index }));
 
     hasInitializedIndex.current = true; // ✅ lock it forever
-  }, [answerImageDetails, dispatch,taskDetails]);
+  }, [answerImageDetails, dispatch, taskDetails]);
 
-  console.log(evaluatorState.currentIndex)
+  console.log(evaluatorState.currentIndex);
 
   useEffect(() => {
     const getEvaluatorTasks = async (taskId) => {
       try {
         const res = await getAnswerPdfById(taskId);
-        console.log(res)
+        console.log(res);
         // dispatch(
         //   setCurrentAnswerPdfImageId(res[evaluatorState.currentIndex]._id)
         // );
@@ -360,8 +361,6 @@ console.log(answerPdfDetails)
     dispatch,
     icons,
   ]);
-
-
 
   // console.log(answerPdfDetails)
   // console.log(currentTaskDetails)
@@ -677,8 +676,6 @@ console.log(answerPdfDetails)
               id={id}
               taskdetails={taskdetails}
               setblankCheck={setblankCheck}
-              
-              
             />
           </div>
 
@@ -697,7 +694,6 @@ console.log(answerPdfDetails)
               setconfirmationData={setconfirmationData}
               confirmationData={confirmationData}
               answerPdfDetailsId={answerPdfDetails}
-             
             />
           </div>
         </div>

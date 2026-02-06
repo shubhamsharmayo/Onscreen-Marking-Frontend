@@ -46,3 +46,13 @@ input:checked.defaultCheckbox::before {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #0284c7; /* Scrollbar color on hover */
 }
+
+.viewer-outer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100%;
+}
+.viewer-stage {
+  position: relative;
+}

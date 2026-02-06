@@ -106,6 +106,31 @@ const ReviewerQuestion = (props) => {
   // }, [allQuestions, currentQuestion]);
   // console.log(props.userTimerData);
 
+  const goToNextBookletOrFinish = async () => {
+    try {
+      const isLastBooklet =
+        Number(taskDetails.currentFileIndex) >=
+        Number(taskDetails.totalBooklets);
+
+      // ✅ If last booklet → task complete
+      if (isLastBooklet) {
+        toast.success("All booklets processed. Task completed.");
+        navigate("/reviewer/assignedtasks");
+        return;
+      }
+
+      // ✅ Otherwise move to next booklet
+      const nextIndex = Number(taskDetails.currentFileIndex) + 1;
+      const response = await changeCurrentIndexById(taskDetails._id, nextIndex);
+
+      dispatch(setCurrentBookletIndex(response));
+      toast.success("Moved to next booklet");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to load next booklet");
+    }
+  };
+
   const handleSubmitConfirm = () => {
     if (!socket) return;
 
@@ -184,22 +209,27 @@ const ReviewerQuestion = (props) => {
   }, []);
 
   socket.on("questions-data", (data) => {
-    console.log(data);
-    setAllQuestions(sortByQuestionsName(data.marks));
-    const reducedArr = data.marks
-      .filter((item) => item.isSubQuestion === false)
+    const sorted = sortByQuestionsName(data.marks);
+    setAllQuestions(sorted);
+
+    const reducedArr = sorted
+      .filter((item) => !item.isSubQuestion)
       .reduce((total, item) => total + item.allottedMarks, 0);
-    const total = data.marks
-      .filter((item) => item.isSubQuestion === false)
+
+    const total = sorted
+      .filter((item) => !item.isSubQuestion)
       .reduce((total, item) => total + item.maxMarks, 0);
+
     setTotalMarks(reducedArr);
     props.settotalMarksToDisplay(reducedArr);
     props.setTotalMarks(total);
-    const qID = data.marks.filter(
-      (id) => parseFloat(id.questionsName) === currentQuestion
-    );
-    dispatch(setCurrentQuestionDefinitionId(qID._id));
-    // console.log(qID);
+
+    // ✅ ALWAYS set first question as default
+    if (sorted.length > 0) {
+      dispatch(setCurrentQuestionDefinitionId(sorted[0]._id));
+      dispatch(setCurrentQuestion(parseFloat(sorted[0].questionsName)));
+      dispatch(setCurrentSubQuestionParentId(sorted[0].parentQuestionId));
+    }
   });
 
   const handleRejectSubmit = async () => {
@@ -412,19 +442,23 @@ const ReviewerQuestion = (props) => {
   // console.log(evaluatorState.isLoading);
   const handleNextBooklet = async () => {
     try {
-      setIsLoadingTrue();
+      dispatch(setIsLoadingTrue());
 
       // ✅ Step 1: Submit current booklet first
       const submitted = await submitCurrentBooklet();
       if (!submitted) return;
 
+      props.setsubmitModel(false);
+
       const isLastBooklet =
         Number(taskDetails.currentFileIndex) >=
         Number(taskDetails.totalBooklets);
 
+      //window.location.reload();
+
       // ✅ Step 2: If LAST booklet → just finish
       if (isLastBooklet) {
-        navigate("/evaluator/assignedtasks");
+        navigate("/reviewer/assignedtasks");
         return;
       }
 
@@ -439,7 +473,7 @@ const ReviewerQuestion = (props) => {
       console.log(error);
       toast.error("Something went wrong");
     } finally {
-      setIsLoadingFalse();
+      dispatch(setIsLoadingFalse());
     }
   };
 
@@ -555,51 +589,105 @@ const ReviewerQuestion = (props) => {
     }
   };
 
- const rollback = async () => {
-  console.log("ROLLBACK CLICKED");
+  // the Important
 
-  if (!selectedUser) {
-    console.log("No user selected");
-    return;
-  }
+  // const rollback = async () => {
+  //   console.log("ROLLBACK CLICKED");
 
-  const obj = {
-    assignments: [
-      {
-        evaluatorId: selectedUser,
-        reviewerId: props.taskdetails.userId,
-        subjectCode: props.taskdetails.subjectCode,
-        questiondefinitionId:
-          props.taskdetails.questiondefinitionId,
-        bookletsToAssign: [currentBookletId],
-      },
-    ],
+  //   if (!selectedUser) {
+  //     console.log("No user selected");
+  //     return;
+  //   }
+
+  //   const obj = {
+  //     assignments: [
+  //       {
+  //         evaluatorId: selectedUser,
+  //         reviewerId: props.taskdetails.userId,
+  //         subjectCode: props.taskdetails.subjectCode,
+  //         questiondefinitionId: props.taskdetails.questiondefinitionId,
+  //         bookletsToAssign: [currentBookletId],
+  //       },
+  //     ],
+  //   };
+
+  //   console.log("Payload:", obj);
+
+  //   try {
+  //     const response = await axios.post(
+  //       `${process.env.REACT_APP_API_URL}/api/tasks/assign/reviewer-rollback`,
+  //       obj,
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
+
+  //     console.log("API success:", response.data);
+  //   } catch (err) {
+  //     console.error("Reassign failed", err);
+
+  //     const message =
+  //       err?.response?.data?.message || // old API format
+  //       err?.response?.data?.error || // new API format
+  //       err?.message || // axios/network errors
+  //       "Something went wrong";
+
+  //     toast.error(message);
+  //   }
+  // };
+
+  const rollback = async () => {
+    console.log("ROLLBACK CLICKED");
+
+    if (!selectedUser) {
+      toast.warning("Please select a user");
+      return;
+    }
+
+    const obj = {
+      assignments: [
+        {
+          evaluatorId: selectedUser,
+          reviewerId: props.taskdetails.userId,
+          subjectCode: props.taskdetails.subjectCode,
+          questiondefinitionId: props.taskdetails.questiondefinitionId,
+          bookletsToAssign: [currentBookletId],
+        },
+      ],
+    };
+
+    try {
+      dispatch(setIsLoadingTrue());
+
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/tasks/assign/reviewer-rollback`,
+        obj,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      toast.success("Booklet reassigned to evaluator");
+
+      setshowRollbackModel(false); // ✅ close modal
+
+      await goToNextBookletOrFinish(); // ✅ move forward like submit flow
+    } catch (err) {
+      console.error("Reassign failed", err);
+
+      const message =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        "Something went wrong";
+
+      toast.error(message);
+    } finally {
+      dispatch(setIsLoadingFalse());
+    }
   };
 
-  console.log("Payload:", obj);
-
-  try {
-    const response = await axios.post(
-      `${process.env.REACT_APP_API_URL}/api/tasks/assign/reviewer-rollback`,
-      obj,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    console.log("API success:", response.data);
-  } catch (error) {
-    console.log(
-      "API error:",
-      error?.response?.data || error.message
-    );
-  }
-};
-
-
-const handleAssignToPrincipal = async () => {
+  const handleAssignToPrincipal = async () => {
     try {
       const token = localStorage.getItem("token");
 
@@ -632,7 +720,6 @@ const handleAssignToPrincipal = async () => {
       );
     }
   };
-
 
   return (
     <div className="h-[100%] ">
@@ -774,7 +861,7 @@ const handleAssignToPrincipal = async () => {
 
               <button
                 // disabled={!selectedUser}
-               
+
                 className="rounded bg-blue-600 px-4 py-2 text-white disabled:opacity-50"
                 onClick={rollback}
               >
