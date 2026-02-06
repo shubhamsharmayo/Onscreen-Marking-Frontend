@@ -11,7 +11,8 @@ const Statistics = () => {
       setLoading(true);
       setError(null);
       const res = await axios.get(
-        "http://192.168.1.74:9000/api/tasks/get/principalsideData"
+        `${process.env.REACT_APP_API_URL}/api/tasks/get/principalsideData`
+
       );
       if (res.data?.status) {
         setTableData(res.data.data);

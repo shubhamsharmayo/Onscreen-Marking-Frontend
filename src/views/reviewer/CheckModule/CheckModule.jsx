@@ -391,11 +391,11 @@ const CheckModule = () => {
     const getEvaluatorTasks = async (taskId) => {
       try {
         const res = await getAnswerPdfById(taskId);
-        dispatch(
-          setCurrentAnswerPdfImageId(res[evaluatorState.currentIndex]._id)
-        );
+        // dispatch(
+        //   setCurrentAnswerPdfImageId(res[evaluatorState.currentIndex]._id)
+        // );
         setAnswerImageDetails(res);
-        console.log(res);
+        // console.log(res);
       } catch (error) {
         console.log(error);
       }

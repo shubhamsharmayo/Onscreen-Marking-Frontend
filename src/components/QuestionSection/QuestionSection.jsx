@@ -426,6 +426,7 @@ const QuestionDefinition = (props) => {
       toast.error("Something went wrong");
     } finally {
       setIsLoadingFalse();
+      props.setsubmitModel(false)
     }
   };
 

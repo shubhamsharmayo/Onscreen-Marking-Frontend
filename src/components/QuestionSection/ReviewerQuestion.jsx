@@ -410,38 +410,76 @@ const ReviewerQuestion = (props) => {
   });
 
   // console.log(evaluatorState.isLoading);
+  // const handleNextBooklet = async () => {
+  //   try {
+  //     setIsLoadingTrue();
+
+  //     // ✅ Step 1: Submit current booklet first
+  //     const submitted = await submitCurrentBooklet();
+  //     if (!submitted) return;
+
+  //     const isLastBooklet =
+  //       Number(taskDetails.currentFileIndex) >=
+  //       Number(taskDetails.totalBooklets);
+
+  //     // ✅ Step 2: If LAST booklet → just finish
+  //     if (isLastBooklet) {
+  //       navigate("/evaluator/assignedtasks");
+  //       return;
+  //     }
+
+  //     // ✅ Step 3: Otherwise move to next booklet
+  //     const taskId = taskDetails._id;
+  //     const nextIndex = Number(taskDetails.currentFileIndex) + 1;
+
+  //     const response = await changeCurrentIndexById(taskId, nextIndex);
+
+  //     dispatch(setCurrentBookletIndex(response));
+  //   } catch (error) {
+  //     console.log(error);
+  //     toast.error("Something went wrong");
+  //   } finally {
+  //     setIsLoadingFalse();
+  //     props.setsubmitModel(false)
+  //   }
+  // };
+
   const handleNextBooklet = async () => {
     try {
-      setIsLoadingTrue();
+     dispatch(setIsLoadingTrue());
 
-      // ✅ Step 1: Submit current booklet first
-      const submitted = await submitCurrentBooklet();
-      if (!submitted) return;
+     // ✅ Step 1: Submit current booklet first
+     const submitted = await submitCurrentBooklet();
+     if (!submitted) return;
 
-      const isLastBooklet =
+     props.setsubmitModel(false);
+
+     const isLastBooklet =
         Number(taskDetails.currentFileIndex) >=
         Number(taskDetails.totalBooklets);
 
-      // ✅ Step 2: If LAST booklet → just finish
-      if (isLastBooklet) {
-        navigate("/evaluator/assignedtasks");
+     //window.location.reload();
+
+     // ✅ Step 2: If LAST booklet → just finish
+     if (isLastBooklet) {
+        navigate("/reviewer/assignedtasks");
         return;
-      }
+     }
 
-      // ✅ Step 3: Otherwise move to next booklet
-      const taskId = taskDetails._id;
-      const nextIndex = Number(taskDetails.currentFileIndex) + 1;
+     // ✅ Step 3: Otherwise move to next booklet
+     const taskId = taskDetails._id;
+     const nextIndex = Number(taskDetails.currentFileIndex) + 1;
 
-      const response = await changeCurrentIndexById(taskId, nextIndex);
+     const response = await changeCurrentIndexById(taskId, nextIndex);
 
-      dispatch(setCurrentBookletIndex(response));
+     dispatch(setCurrentBookletIndex(response));
     } catch (error) {
-      console.log(error);
-      toast.error("Something went wrong");
+     console.log(error);
+     toast.error("Something went wrong");
     } finally {
-      setIsLoadingFalse();
+     dispatch(setIsLoadingFalse());
     }
-  };
+};
 
   // console.log(evaluatorState.isLoading);
   const handlePrevBooklet = async () => {
@@ -529,6 +567,31 @@ const ReviewerQuestion = (props) => {
   //   }
   // };
 
+  const goToNextBookletOrFinish = async () => {
+    try {
+     const isLastBooklet =
+        Number(taskDetails.currentFileIndex) >=
+        Number(taskDetails.totalBooklets);
+
+     // ✅ If last booklet → task complete
+     if (isLastBooklet) {
+        toast.success("All booklets processed. Task completed.");
+        navigate("/reviewer/assignedtasks");
+        return;
+     }
+
+     // ✅ Otherwise move to next booklet
+     const nextIndex = Number(taskDetails.currentFileIndex) + 1;
+     const response = await changeCurrentIndexById(taskDetails._id, nextIndex);
+
+     dispatch(setCurrentBookletIndex(response));
+     toast.success("Moved to next booklet");
+    } catch (error) {
+     console.error(error);
+     toast.error("Failed to load next booklet");
+    }
+};
+
   const submitHandler = async () => {
     try {
       // remainingSecondsRef = seconds left
@@ -555,47 +618,53 @@ const ReviewerQuestion = (props) => {
     }
   };
 
- const rollback = async () => {
-  console.log("ROLLBACK CLICKED");
+const rollback = async () => {
+    console.log("ROLLBACK CLICKED");
 
-  if (!selectedUser) {
-    console.log("No user selected");
-    return;
-  }
+    if (!selectedUser) {
+     toast.warning("Please select a user");
+     return;
+    }
 
-  const obj = {
-    assignments: [
-      {
-        evaluatorId: selectedUser,
-        reviewerId: props.taskdetails.userId,
-        subjectCode: props.taskdetails.subjectCode,
-        questiondefinitionId:
-          props.taskdetails.questiondefinitionId,
-        bookletsToAssign: [currentBookletId],
-      },
-    ],
-  };
-
-  console.log("Payload:", obj);
-
-  try {
-    const response = await axios.post(
-      `${process.env.REACT_APP_API_URL}/api/tasks/assign/reviewer-rollback`,
-      obj,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
+    const obj = {
+     assignments: [
+        {
+         evaluatorId: selectedUser,
+         reviewerId: props.taskdetails.userId,
+         subjectCode: props.taskdetails.subjectCode,
+         questiondefinitionId: props.taskdetails.questiondefinitionId,
+         bookletsToAssign: [currentBookletId],
         },
-      }
-    );
+     ],
+    };
 
-    console.log("API success:", response.data);
-  } catch (error) {
-    console.log(
-      "API error:",
-      error?.response?.data || error.message
-    );
-  }
+    try {
+     dispatch(setIsLoadingTrue());
+
+     await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/tasks/assign/reviewer-rollback`,
+        obj,
+        { headers: { Authorization: `Bearer ${token}` } }
+     );
+
+     toast.success("Booklet reassigned to evaluator");
+
+     setshowRollbackModel(false); // ✅ close modal
+
+     await goToNextBookletOrFinish(); // ✅ move forward like submit flow
+    } catch (err) {
+     console.error("Reassign failed", err);
+
+     const message =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        "Something went wrong";
+
+     toast.error(message);
+    } finally {
+     dispatch(setIsLoadingFalse());
+    }
 };
 
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const ReassignModal = ({
   showReAssignModal,
@@ -114,7 +115,14 @@ const ReassignModal = ({
 
       setShowReAssignModal(false);
     } catch (error) {
-      console.error("Reassign failed", error);
+     console.error("Reassign failed", error);
+
+     const message =
+        error?.response?.data?.message ||
+        "Reassignment failed. Please try again.";
+
+     toast.error(message);
+    
     } finally {
       setSubmitting(false);
     }
