@@ -2,8 +2,11 @@ import React, { useState } from "react";
 import { IoIosArrowDown } from "react-icons/io";
 import { FiZoomIn, FiZoomOut } from "react-icons/fi";
 import { BiCommentAdd } from "react-icons/bi";
+import Tooltip from "@mui/material/Tooltip";
 import { LuPencilLine } from "react-icons/lu";
 import { GrUndo, GrRedo } from "react-icons/gr";
+import { FiRotateCw, FiRotateCcw } from "react-icons/fi";
+import { FiSearch } from "react-icons/fi";
 import { SketchPicker } from "react-color";
 import Slider from "@mui/material/Slider";
 const Tools = ({
@@ -17,26 +20,38 @@ const Tools = ({
   setIsDrawing,
   iconModal,
   setIconModal,
+  setShowLens,
   currentIcon,
   IconModal,
   setSelectedColor,
   setCurrentStrokeWidth,
+  setToolMode,
+  setOpacity,
+  toolMode,
   currentStrokeWidth,
   comments,
-  setcomments
+  setRotation,
+  setcomments,
 }) => {
   const [pencilIconModal, setShowPencilIconModal] = useState(false);
   const [color, setColor] = useState("#fff");
   const [strokeValue, setStrokeValue] = useState(20);
+  const [magnifier, setMagnifier] = useState(false);
+  const [tempColor, setTempColor] = useState("#ff0000");
+  const [tempStroke, setTempStroke] = useState(10);
+  const [tempOpacity, setTempOpacity] = useState(1);
+
   const [showAI, setShowAI] = useState(false);
   const handleChangeComplete = (newColor) => {
-    setSelectedColor(newColor.hex);
-    setColor(newColor.hex);
+    setTempColor(newColor.hex);
+    setColor(newColor.hex); // just for preview in picker
   };
+
   const handleSliderChange = (event, newValue) => {
-    setStrokeValue(newValue);
-    setCurrentStrokeWidth(newValue);
+    setTempStroke(newValue);
+    setStrokeValue(newValue); // just for label display
   };
+
   const aiEvaluatorHandler = () => {
     setShowAI(!showAI);
   };
@@ -45,15 +60,17 @@ const Tools = ({
       {/* Zoom Menu */}
       <aside className="me-2 flex justify-center">
         <div className="">
-          <button
-            className="mb-2 me-2 rounded-md bg-white px-2.5 py-1.5 text-sm font-medium text-gray-900 hover:bg-gray-100 focus:outline-none"
-            onClick={handleZoomMenu}
-          >
-            <span className="flex items-center justify-center">
-              <span className="mr-1">{scalePercent}%</span>
-              <IoIosArrowDown />
-            </span>
-          </button>
+          <Tooltip title="Zoom options" arrow>
+            <button
+              className="mb-2 me-2 rounded-md bg-white px-2.5 py-1.5 text-sm font-medium text-gray-900 hover:bg-gray-100 focus:outline-none"
+              onClick={handleZoomMenu}
+            >
+              <span className="flex items-center justify-center">
+                <span className="mr-1">{scalePercent}%</span>
+                <IoIosArrowDown />
+              </span>
+            </button>
+          </Tooltip>
           {isZoomMenuOpen && (
             <div className="absolute z-10 h-[200px] w-[65px] border-spacing-1 cursor-pointer overflow-auto border bg-gray-50 p-2 shadow-md">
               <ul>{ZoomModal}</ul>
@@ -61,47 +78,70 @@ const Tools = ({
           )}
         </div>
         <div>
-          <button
-            className="mb-2 me-1 rounded-md px-2.5 py-2.5 text-sm font-medium text-gray-900 opacity-70 hover:bg-gray-100 focus:outline-none"
-            onClick={zoomIn}
-          >
-            <FiZoomIn />
-          </button>
+          <Tooltip title="Zoom in" arrow>
+            <button
+              className="mb-2 me-1 rounded-md px-2.5 py-2.5 text-sm font-medium text-gray-900 opacity-70 hover:bg-gray-100 focus:outline-none"
+              onClick={zoomIn}
+            >
+              <FiZoomIn />
+            </button>
+          </Tooltip>
 
-          <button
-            className="mb-2 rounded-md px-2.5 py-2.5 text-sm font-medium text-gray-900 opacity-70 focus:outline-none"
-            onClick={zoomOut}
-          >
-            <FiZoomOut />
-          </button>
+          <Tooltip title="Zoom Out" arrow>
+            <button
+              className="mb-2 rounded-md px-2.5 py-2.5 text-sm font-medium text-gray-900 opacity-70 focus:outline-none"
+              onClick={zoomOut}
+            >
+              <FiZoomOut />
+            </button>
+          </Tooltip>
         </div>
       </aside>
       {/* Drawing and Icon Selection */}
       <div className="align-center mb-2 me-2 flex justify-between gap-1 rounded-md bg-gray-300 px-2 py-1">
-        <button
-          className={`flex rounded-md px-2 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 focus:outline-none ${
-            isDrawing
-              ? "bg-gray-300 hover:bg-gray-400 "
-              : "bg-white hover:bg-gray-100 "
-          }`}
-          onClick={() => setIsDrawing((prev) => !prev)}
-        >
-          <LuPencilLine />
-        </button>
-        <button
-          className={`flex rounded-md px-2 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 focus:outline-none ${"bg-white hover:bg-gray-100 "}`}
-          onClick={() => {
-            setShowPencilIconModal(!pencilIconModal);
-          }}
-        >
-          <span
-            className={`block transition-transform duration-300 ${
-              pencilIconModal ? "rotate-180" : ""
+        <Tooltip title="Pencil" arrow>
+          <button
+            className={`flex rounded-md px-2 py-2 ${
+              toolMode === "draw" ? "bg-gray-300" : "bg-white"
             }`}
+            onClick={() => {
+              setIsDrawing(true);
+              setToolMode("draw");
+            }}
           >
-            <IoIosArrowDown />
-          </span>
-        </button>
+            <LuPencilLine />
+          </button>
+        </Tooltip>
+        <Tooltip title="Eraser" arrow>
+          <button
+            className={`flex rounded-md px-2 py-2 ${
+              toolMode === "erase" ? "bg-red-200" : "bg-white"
+            }`}
+            onClick={() => {
+              setIsDrawing(true);
+              setToolMode("erase");
+            }}
+          >
+            🧽
+          </button>
+        </Tooltip>
+
+        <Tooltip title="Change Colour" arrow>
+          <button
+            className={`flex rounded-md px-2 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 focus:outline-none ${"bg-white hover:bg-gray-100 "}`}
+            onClick={() => {
+              setShowPencilIconModal(!pencilIconModal);
+            }}
+          >
+            <span
+              className={`block transition-transform duration-300 ${
+                pencilIconModal ? "rotate-180" : ""
+              }`}
+            >
+              <IoIosArrowDown />
+            </span>
+          </button>
+        </Tooltip>
         {pencilIconModal && (
           <div className="absolute z-10 mt-9 grid w-[240px] border-spacing-1 grid-cols-1 gap-2 border bg-gray-50 p-2 shadow-md sm:grid-cols-2 md:grid-cols-3">
             {/* <div className="z-12"> */}
@@ -134,20 +174,46 @@ const Tools = ({
                 Opacity
               </label>
               <Slider
-                defaultValue={50}
-                aria-label="Default"
+                defaultValue={100}
+                min={1}
+                max={100}
+                onChange={(e, val) => setTempOpacity(val / 100)}
                 valueLabelDisplay="auto"
               />
               <div className="text-right text-sm text-gray-600">54%</div>
             </div>
             {/* </div> */}
+
+            {/* SAVE BUTTON */}
+            <div className="col-span-6 mt-3">
+              <button
+                className="w-full rounded bg-blue-500 px-3 py-2 text-white hover:bg-blue-600"
+                onClick={() => {
+                  setSelectedColor(tempColor);
+                  setCurrentStrokeWidth(tempStroke);
+                  setOpacity(tempOpacity);
+                  setShowPencilIconModal(false);
+                }}
+              >
+                Save Settings
+              </button>
+            </div>
           </div>
         )}
       </div>
       {/* Add Comment Button */}
-      <button className={comments?"mb-2 me-2 rounded-md bg-gray-400 px-2.5 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-500 focus:outline-none":"mb-2 me-2 rounded-md bg-white px-2.5 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 focus:outline-none"} onClick={()=>setcomments(!comments)}>
-        <BiCommentAdd />
-      </button>
+      <Tooltip title="Comment" arrow>
+        <button
+          className={
+            comments
+              ? "mb-2 me-2 rounded-md bg-gray-400 px-2.5 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-500 focus:outline-none"
+              : "mb-2 me-2 rounded-md bg-white px-2.5 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 focus:outline-none"
+          }
+          onClick={() => setcomments(!comments)}
+        >
+          <BiCommentAdd />
+        </button>
+      </Tooltip>
       {/* Icon Modal Button and Modal */}
       <div className="relative flex">
         <div className="mb-2 me-2 flex w-[200px] justify-center bg-white">
@@ -164,6 +230,7 @@ const Tools = ({
             />
           )}
         </div>
+
         <button
           onClick={() => setIconModal(!iconModal)}
           className="mb-2 me-2 rounded-md bg-white px-2.5 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 focus:outline-none"
@@ -183,14 +250,27 @@ const Tools = ({
         )}
       </div>
       {/* Undo and Redo Buttons */}
-      <button className="mb-2 me-2 rounded-md bg-white px-2.5 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 focus:outline-none">
+      {/* <button className="mb-2 me-2 rounded-md bg-white px-2.5 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 focus:outline-none">
         <GrUndo />
       </button>
       <button className="mb-2 me-2 rounded-md bg-white px-2.5 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 focus:outline-none">
         <GrRedo />
-      </button>
+      </button> */}
+      <Tooltip title="Zoom Particular Place" arrow>
+        <button
+          className={`mb-2 me-2 rounded-md px-2.5 py-2.5 ${
+            magnifier ? "bg-blue-200" : "bg-white"
+          }`}
+          onClick={() => {
+            setMagnifier((m) => !m);
+            setShowLens((s) => !s);
+          }}
+        >
+          <FiSearch />
+        </button>
+      </Tooltip>
 
-      <button
+      {/* <button
         style={{ opacity: showAI ? "0.5" : 1 }}
         class="border-transparent group relative flex aspect-square h-[var(--sz-btn)] w-[var(--sz-btn)] cursor-pointer items-center justify-center rounded-xl border border-solid bg-blue-200 bg-[linear-gradient(45deg,#3b82f6,#2563eb)] outline-0 transition-transform duration-200 [--gen-sz:calc(var(--space)*1.5)] [--space:calc(var(--sz-btn)/6)] [--sz-btn:40px] [--sz-text:calc(var(--sz-btn)-var(--gen-sz))] [box-shadow:#3c40434d_0_1px_2px_0,#3c404326_0_2px_6px_2px,#0000004d_0_30px_60px_-30px,#34343459_0_-2px_6px_0_inset] active:scale-[0.95]"
         onClick={aiEvaluatorHandler}
@@ -210,7 +290,24 @@ const Tools = ({
         <span class="font-extrabold leading-none text-white transition-all duration-200 [font-size:var(--sz-text)] group-hover:opacity-0">
           AI
         </span>
-      </button>
+      </button> */}
+      <Tooltip title="Rotate Left" arrow>
+        <button
+          className="mb-2 me-3 ml-1 rounded-md bg-white px-2.5 py-2.5"
+          onClick={() => setRotation((r) => (r + 90) % 360)}
+        >
+          <FiRotateCw />
+        </button>
+      </Tooltip>
+
+      <Tooltip title="otate Right" arrow>
+        <button
+          className="mb-2 me-2 rounded-md bg-white px-2.5 py-2.5"
+          onClick={() => setRotation((r) => (r - 90 + 360) % 360)}
+        >
+          <FiRotateCcw />
+        </button>
+      </Tooltip>
     </div>
   );
 };

@@ -7,6 +7,10 @@ import { FaFileUpload, FaMapMarkerAlt } from "react-icons/fa";
 import SubQuestionModal from "../../../components/modal/QuestionMappingModal";
 import Tooltip from "@mui/material/Tooltip";
 import { FaCloudUploadAlt } from "react-icons/fa";
+import { createPortal } from "react-dom";
+
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCircleQuestion } from "@fortawesome/free-solid-svg-icons";
 
 const CreateSchemaStructure = () => {
   const [schemaData, setSchemaData] = useState(null);
@@ -24,6 +28,7 @@ const CreateSchemaStructure = () => {
   const [schemaId, setSchemaId] = useState("");
   const [openPageDropdown, setOpenPageDropdown] = useState(null);
   const [, forceRender] = useState(0);
+  const [dropdownStyle, setDropdownStyle] = useState({});
   // stores folderId of opened dropdown
 
   const [loading, setLoading] = useState(false);
@@ -45,6 +50,10 @@ const CreateSchemaStructure = () => {
   const hasRunRef = useRef(false);
   const fileInputRef = useRef(null);
   const coordinateStore = useRef({});
+  const dropdownRefs = useRef({});
+  const [dropdownDirection, setDropdownDirection] = useState({});
+  const [dropdownMaxHeight, setDropdownMaxHeight] = useState({});
+  const buttonRefs = useRef({});
 
   const navigate = useNavigate();
 
@@ -142,6 +151,40 @@ const CreateSchemaStructure = () => {
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
+  const updateDropdownPosition = (folderId) => {
+    const buttonEl = buttonRefs.current[folderId];
+    if (!buttonEl) return;
+
+    const rect = buttonEl.getBoundingClientRect();
+
+    const DROPDOWN_HEIGHT = 200;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+
+    const openUp = spaceBelow < DROPDOWN_HEIGHT && spaceAbove > spaceBelow;
+
+    const top = openUp
+      ? rect.top - Math.min(spaceAbove - 10, DROPDOWN_HEIGHT)
+      : rect.bottom;
+
+    setDropdownDirection((prev) => ({
+      ...prev,
+      [folderId]: openUp ? "up" : "down",
+    }));
+
+    setDropdownStyle((prev) => ({
+      ...prev,
+      [folderId]: {
+        position: "fixed",
+        left: rect.left,
+        top: top,
+        width: rect.width,
+        maxHeight: Math.min(openUp ? spaceAbove - 10 : spaceBelow - 10, 180),
+        zIndex: 9999,
+      },
+    }));
+  };
+
   const handleSchemaFileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -229,9 +272,8 @@ const CreateSchemaStructure = () => {
 
   const getAvailablePages = (currentPages = []) => {
     return allPages.filter(
-      (p) =>
-        !hiddenPages.includes(p) && // not hidden
-        (!usedPages.has(p) || currentPages.includes(p)) // allow editing existing
+      (p) => !hiddenPages.includes(p)
+      // (!usedPages.has(p) || currentPages.includes(p)) // allow editing existing
     );
   };
 
@@ -1071,10 +1113,14 @@ const CreateSchemaStructure = () => {
           <div className="flex items-center justify-start gap-6">
             <div className="w-20">
               <span
-                className="text-black-500 cursor-pointer font-semibold"
+                className="text-black-500 flex cursor-pointer items-center gap-2 font-semibold"
                 onClick={() => handleFolderClick(folder.id)}
               >
-                📁 {folder?.name}
+                {/* <FontAwesomeIcon
+                  icon={faCircleQuestion}
+                  style={{ color: "#ff0026" }}
+                /> */}
+                {folder?.name}
               </span>
             </div>
 
@@ -1142,8 +1188,8 @@ const CreateSchemaStructure = () => {
             </div>
 
             {/* <div className="relative w-44"> */}
-              
-              {/* <div
+
+            {/* <div
                 onClick={() =>
                   setOpenPageDropdown(
                     openPageDropdown === folderId ? null : folderId
@@ -1205,81 +1251,79 @@ const CreateSchemaStructure = () => {
             </div> */}
 
             {Number(schemaData?.totalQuestions) > 1 && (
-             <div className="relative w-44">
+              <div className="relative w-44">
                 {/* Button */}
                 <div
-                 onClick={() =>
-                    setOpenPageDropdown(
-                     openPageDropdown === folderId ? null : folderId
-                    )
-                 }
-                 className="cursor-pointer rounded border border-gray-300 px-2 py-1 text-center dark:border-gray-700 dark:bg-navy-900"
+                  ref={(el) => (buttonRefs.current[folderId] = el)}
+                  onClick={() => {
+                    const newId =
+                      openPageDropdown === folderId ? null : folderId;
+                    setOpenPageDropdown(newId);
+
+                    if (newId) {
+                      setTimeout(() => updateDropdownPosition(folderId), 0);
+                    }
+                  }}
+                  className="cursor-pointer rounded border border-gray-300 px-2 py-1 text-center dark:border-gray-700 dark:bg-navy-900"
                 >
-                 {(() => {
+                  {(() => {
                     const selectedPages =
-                     formRefs.current[`${folderId}-page`] ??
-                     displayData[0]?.page ??
-                     [];
+                      formRefs.current[`${folderId}-page`] ??
+                      displayData[0]?.page ??
+                      [];
 
                     return selectedPages.length > 0
-                     ? `Pages: ${selectedPages
-                         .sort((a, b) => a - b)
-                         .join(", ")}`
-                     : "Select Pages";
-                 })()}
+                      ? `Pages: ${selectedPages
+                          .sort((a, b) => a - b)
+                          .join(", ")}`
+                      : "Select Pages";
+                  })()}
                 </div>
 
-                {/* Dropdown Panel */}
-                {openPageDropdown === folderId && (
-                 <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-gray-300 bg-white shadow-lg dark:border-gray-700 dark:bg-navy-800">
-                    {getAvailablePages(displayData[0]?.page || []).map(
-                     (page) => {
+                {openPageDropdown &&
+                  createPortal(
+                    <div
+                      style={dropdownStyle[openPageDropdown]}
+                      className="overflow-y-auto rounded-md border border-gray-300 bg-white shadow-lg dark:border-gray-700 dark:bg-navy-800"
+                    >
+                      {getAvailablePages(
+                        savedQuestionData.find(
+                          (q) => parseInt(q.questionsName) === openPageDropdown
+                        )?.page || []
+                      ).map((page) => {
                         const selectedPages =
-                         formRefs.current[`${folderId}-page`] ??
-                         displayData[0]?.page ??
-                         [];
+                          formRefs.current[`${openPageDropdown}-page`] ?? [];
 
                         const isChecked = selectedPages.includes(page);
 
                         return (
-                         <label
+                          <label
                             key={page}
                             className="flex cursor-pointer items-center gap-2 px-3 py-1 hover:bg-indigo-100 dark:hover:bg-navy-700"
-                         >
+                          >
                             <input
-                             type="checkbox"
-                             checked={isChecked}
-                             onChange={() => {
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => {
                                 let updated = [...selectedPages];
+                                if (isChecked)
+                                  updated = updated.filter((p) => p !== page);
+                                else updated.push(page);
 
-                                if (isChecked) {
-                                 updated = updated.filter((p) => p !== page);
-                                } else {
-                                 updated.push(page);
-                                }
-
-                                formRefs.current[`${folderId}-page`] = updated;
+                                formRefs.current[`${openPageDropdown}-page`] =
+                                  updated;
                                 forceRender((n) => n + 1);
-                                setSchemaData((prev) => ({ ...prev })); // force re-render
-                             }}
+                              }}
                             />
                             <span>Page {page}</span>
-                         </label>
+                          </label>
                         );
-                     }
-                    )}
-
-                    {getAvailablePages(displayData[0]?.page || []).length ===
-                     0 && (
-                     <div className="px-3 py-2 text-sm text-gray-500">
-                        No pages available
-                     </div>
-                    )}
-                 </div>
-                )}
-             </div>
+                      })}
+                    </div>,
+                    document.body
+                  )}
+              </div>
             )}
-
 
             <div className="flex w-12 items-center justify-center">
               <Tooltip title="Map Supplementary PDF" arrow>

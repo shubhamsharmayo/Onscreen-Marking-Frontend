@@ -37,7 +37,7 @@ import html2canvas from "html2canvas";
 import { submitImageById } from "components/Helper/Evaluator/EvalRoute";
 import useAnnotationSync from "../../hook/useAnnotationSync";
 
-const IconsData = [{ imgUrl: "/blank.jpg" }, { imgUrl: "/not_attempt.png" }];
+const IconsData = [{ imgUrl: "/blank.png" }, { imgUrl: "/not_attempt.png" }];
 
 const preprocessImage = (canvas) => {
   const context = canvas.getContext("2d");
@@ -63,6 +63,7 @@ const ImageContainer = (props) => {
   // const [currentIcon, setCurrentIcon] = useState(null); // Store the currently selected icon
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 }); // Track mouse position for preview
   const [iconModal, setIconModal] = useState(false);
+  const [rotation, setRotation] = useState(0);
   const [draggedIconIndex, setDraggedIconIndex] = useState(null);
   const [isDrawing, setIsDrawing] = useState(false); // Drawing mode toggle
   const [drawing, setDrawing] = useState([]); // Store strokes
@@ -70,14 +71,19 @@ const ImageContainer = (props) => {
   const [scalePercent, setScalePercent] = useState(100);
   const [isZoomMenuOpen, setIsZoomMenuOpen] = useState(false);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
-  const [canvasStates, setCanvasStates] = useState({});
+  // const [canvasStates, setCanvasStates] = useState({});
   const [currentImage, setCurrentImage] = useState(null);
+  const [drawingsByPage, setDrawingsByPage] = useState({});
   const [startDrawing, setStartDrawing] = useState(false);
+  const [showLens, setShowLens] = useState(false);
+  const [lensPos, setLensPos] = useState({ x: 0, y: 0 });
   const [selectedIcon, setSelectedIcon] = useState(null);
   const [mouseBasePos, setMouseBasePos] = useState({ x: 0, y: 0 });
   const [mouseUp, setMouseUp] = useState(false);
   const [selectedColor, setSelectedColor] = useState("red");
   const [isCursorInside, setIsCursorInside] = useState(false);
+  const [toolMode, setToolMode] = useState("draw"); // "draw" | "erase"
+  const [opacity, setOpacity] = useState(1); // 0 → 1
   const [currentStrokeWidth, setCurrentStrokeWidth] = useState(10);
   const [comments, setcomments] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -93,6 +99,7 @@ const ImageContainer = (props) => {
     evaluatorState?.currentQuestionDefinitionId;
   const currentAnswerPdfId = evaluatorState.currentAnswerPdfId;
   const currentParentId = evaluatorState.currentSubQuestionParentId;
+  const [lensImage, setLensImage] = useState(null);
   const canvasRef = useRef(null);
   const iconRefs = useRef([]);
   const dispatch = useDispatch();
@@ -103,6 +110,9 @@ const ImageContainer = (props) => {
   // console.log(currentMarkDetails);
   // console.log(props.id)
   const imgRef = useRef(null);
+  const lensSize = 150;
+  const lensZoom = 2.5;
+
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const imageRef = useRef(null);
   const imageWrapperRef = useRef(null);
@@ -157,6 +167,57 @@ const ImageContainer = (props) => {
   console.log(commentStore);
 
   useEffect(() => {
+    let lastRightClickTime = 0;
+
+    const handleMouseDown = (e) => {
+      // 🖊 LEFT DOUBLE CLICK → TOGGLE PEN
+      if (e.button === 0 && e.detail === 2) {
+        setIsDrawing((prev) => {
+          const next = !prev;
+          setToolMode("draw");
+          toast.info(next ? "Pen Tool Enabled" : "Pen Tool Disabled");
+          return next;
+        });
+      }
+
+      // 🖱 RIGHT DOUBLE CLICK → TOGGLE BLANK ICON
+      if (e.button === 2) {
+        e.preventDefault();
+
+        const now = Date.now();
+        if (now - lastRightClickTime < 300) {
+          const nextIcon = currentIcon === "/blank.png" ? null : "/blank.png";
+          dispatch(setCurrentIcon(nextIcon));
+
+          toast.info(
+            nextIcon ? "Blank Icon Selected" : "Blank Icon Deselected"
+          );
+        }
+
+        lastRightClickTime = now;
+      }
+    };
+
+    const handleWheelZoom = (e) => {
+      e.preventDefault();
+
+      setScale((prev) => {
+        const zoomAmount = 0.1;
+        let next = e.deltaY < 0 ? prev + zoomAmount : prev - zoomAmount;
+        return Math.min(Math.max(next, 0.5), 3);
+      });
+    };
+
+    window.addEventListener("mousedown", handleMouseDown);
+    window.addEventListener("wheel", handleWheelZoom, { passive: false });
+
+    return () => {
+      window.removeEventListener("mousedown", handleMouseDown);
+      window.removeEventListener("wheel", handleWheelZoom);
+    };
+  }, [currentIcon]);
+
+  useEffect(() => {
     const img = imgRef.current;
     if (!img) return;
 
@@ -184,6 +245,18 @@ const ImageContainer = (props) => {
 
   // console.log(dimensions);
 
+  useEffect(() => {
+    if (showLens) {
+      getStageImage().then(setLensImage);
+    }
+  }, [showLens, drawing, iconsStore, commentStore]);
+
+  const getStageImage = async () => {
+    if (!containerRef.current) return null;
+    const canvas = await html2canvas(containerRef.current, { useCORS: true });
+    return canvas.toDataURL("image/png");
+  };
+
   const handleAddComments = (e) => {
     const sheetRect = e.currentTarget.getBoundingClientRect();
     const newAnnotation = {
@@ -205,7 +278,7 @@ const ImageContainer = (props) => {
 
   useEffect(() => {
     const blankExists = iconsStore.some(
-      (icon) => icon.page === currentIndex && icon.iconUrl === "/blank.jpg"
+      (icon) => icon.page === currentIndex && icon.iconUrl === "/blank.png"
     );
 
     props.setblankCheck(blankExists);
@@ -289,32 +362,32 @@ const ImageContainer = (props) => {
   }, [selectedIcon]);
 
   // Load the canvas state when the image changes
-  useEffect(() => {
-    const loadCanvasState = () => {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext("2d");
+  // useEffect(() => {
+  //   const loadCanvasState = () => {
+  //     const canvas = canvasRef.current;
+  //     const ctx = canvas.getContext("2d");
 
-      // Clear the canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+  //     // Clear the canvas
+  //     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Load the saved state for the current index
-      if (canvasStates[currentIndex]) {
-        const img = new Image();
-        img.src = canvasStates[currentIndex];
-        img.onload = () => {
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        };
-      }
-    };
+  //     // Load the saved state for the current index
+  //     if (canvasStates[currentIndex]) {
+  //       const img = new Image();
+  //       img.src = canvasStates[currentIndex];
+  //       img.onload = () => {
+  //         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  //       };
+  //     }
+  //   };
 
-    // Save the current canvas state before changing the index
-    if (currentImage !== null) {
-      saveCanvasState();
-    }
+  //   // Save the current canvas state before changing the index
+  //   if (currentImage !== null) {
+  //     // saveCanvasState();
+  //   }
 
-    setCurrentImage(currentIndex); // Track the currently displayed image
-    loadCanvasState();
-  }, [currentIndex]);
+  //   setCurrentImage(currentIndex); // Track the currently displayed image
+  //   // loadCanvasState();
+  // }, [currentIndex]);
 
   // Function to update canvas size when image is scaled
   useEffect(() => {
@@ -336,43 +409,110 @@ const ImageContainer = (props) => {
     }
   }, [isDrawing]); // Run effect every time scale changes
   // Draw on the canvas
+  // useEffect(() => {
+  //   if (startDrawing) {
+  //     const canvas = canvasRef.current;
+  //     const context = canvas.getContext("2d");
+
+  //     // Clear the canvas for redraw
+  //     context.clearRect(0, 0, canvas.width, canvas.height);
+
+  //     context.lineJoin = "round"; // Smooth line joins
+
+  //     let prevX = null;
+  //     let prevY = null;
+
+  //     // Iterate through the drawing array
+  //     drawing.forEach(({ x, y, mode, strokeWidth, color }) => {
+  //       if (mode === "start") {
+  //         // Update previous coordinates for the start of a new stroke
+  //         prevX = x;
+  //         prevY = y;
+  //       }
+  //       if (mode === "draw") {
+  //         context.beginPath();
+  //         context.lineWidth = strokeWidth || currentStrokeWidth; // Use strokeWidth or default to currentStrokeWidth
+  //         context.strokeStyle = color || selectedColor; // Use color or default to selectedColor
+
+  //         context.moveTo(prevX, prevY); // Start from the previous point
+  //         context.lineTo(x, y); // Draw to the current point
+  //         context.stroke(); // Render the line
+  //         context.closePath();
+
+  //         // Update previous coordinates
+  //         prevX = x;
+  //         prevY = y;
+  //       }
+  //     });
+  //   }
+  // }, [drawing, scale, startDrawing, currentStrokeWidth, selectedColor]);
+
   useEffect(() => {
-    if (startDrawing) {
-      const canvas = canvasRef.current;
-      const context = canvas.getContext("2d");
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
-      // Clear the canvas for redraw
-      context.clearRect(0, 0, canvas.width, canvas.height);
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      context.lineJoin = "round"; // Smooth line joins
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
 
-      let prevX = null;
-      let prevY = null;
+    const points = drawingsByPage[currentIndex] || [];
+    if (points.length === 0) return;
 
-      // Iterate through the drawing array
-      drawing.forEach(({ x, y, mode, strokeWidth, color }) => {
-        if (mode === "start") {
-          // Update previous coordinates for the start of a new stroke
-          prevX = x;
-          prevY = y;
+    let currentStroke = [];
+
+    const drawStroke = (stroke) => {
+      if (stroke.length < 2) return;
+
+      ctx.beginPath();
+
+      for (let i = 1; i < stroke.length; i++) {
+        const prev = stroke[i - 1];
+        const curr = stroke[i];
+
+        const midX = (prev.x + curr.x) / 2;
+        const midY = (prev.y + curr.y) / 2;
+
+        ctx.lineWidth = curr.strokeWidth || currentStrokeWidth;
+
+        if (curr.tool === "erase") {
+          ctx.globalCompositeOperation = "destination-out";
+          ctx.globalAlpha = 1;
+        } else {
+          ctx.globalCompositeOperation = "source-over";
+          ctx.globalAlpha = opacity;
+          ctx.strokeStyle = curr.color || selectedColor;
         }
-        if (mode === "draw") {
-          context.beginPath();
-          context.lineWidth = strokeWidth || currentStrokeWidth; // Use strokeWidth or default to currentStrokeWidth
-          context.strokeStyle = color || selectedColor; // Use color or default to selectedColor
 
-          context.moveTo(prevX, prevY); // Start from the previous point
-          context.lineTo(x, y); // Draw to the current point
-          context.stroke(); // Render the line
-          context.closePath();
+        ctx.moveTo(prev.x, prev.y);
+        ctx.quadraticCurveTo(prev.x, prev.y, midX, midY);
+      }
 
-          // Update previous coordinates
-          prevX = x;
-          prevY = y;
-        }
-      });
-    }
-  }, [drawing, scale, startDrawing, currentStrokeWidth, selectedColor]);
+      ctx.stroke();
+      ctx.closePath();
+    };
+
+    points.forEach((pt) => {
+      if (pt.mode === "start") {
+        if (currentStroke.length) drawStroke(currentStroke);
+        currentStroke = [pt];
+      } else {
+        currentStroke.push(pt);
+      }
+    });
+
+    if (currentStroke.length) drawStroke(currentStroke);
+
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = "source-over";
+  }, [
+    drawingsByPage,
+    currentIndex,
+    currentStrokeWidth,
+    selectedColor,
+    opacity,
+  ]);
 
   useEffect(() => {
     setScalePercent(Math.floor(scale * 100));
@@ -413,6 +553,28 @@ const ImageContainer = (props) => {
     }
   }, []);
 
+  const getImageCoords = (clientX, clientY) => {
+    const rect = canvasRef.current.getBoundingClientRect();
+
+    // Mouse position inside the scaled + rotated stage
+    let x = (clientX - rect.left) / scale;
+    let y = (clientY - rect.top) / scale;
+
+    const w = dimensions.width;
+    const h = dimensions.height;
+
+    switch (rotation % 360) {
+      case 90:
+        return { x: y, y: w - x };
+      case 180:
+        return { x: w - x, y: h - y };
+      case 270:
+        return { x: h - y, y: x };
+      default:
+        return { x, y };
+    }
+  };
+
   // Save the canvas state as a base64 string
   const saveCanvasState = () => {
     const canvas = canvasRef.current;
@@ -421,10 +583,10 @@ const ImageContainer = (props) => {
     const dataURL = canvas.toDataURL("image/png");
 
     // Optionally, store the canvas state
-    setCanvasStates((prevStates) => ({
-      ...prevStates,
-      [currentImage]: dataURL, // Save the canvas state for the current image
-    }));
+    // setCanvasStates((prevStates) => ({
+    //   ...prevStates,
+    //   [currentImage]: dataURL, // Save the canvas state for the current image
+    // }));
   };
 
   const handleDeleteIcon = async (index, icon) => {
@@ -448,25 +610,32 @@ const ImageContainer = (props) => {
   // Start drawing when the mouse is pressed down
 
   const handleCanvasMouseDown = (e) => {
-    setStartDrawing(true); // Set flag for drawing
-    setMouseUp(false); // Reset mouse up state
+    if (!isDrawing || currentIcon) return;
 
-    const rect = canvasRef.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / scale;
-    const y = (e.clientY - rect.top) / scale;
+    setStartDrawing(true);
 
-    setDrawing((prev) => [
+    // const rect = canvasRef.current.getBoundingClientRect();
+    // const x = (e.clientX - rect.left) / scale;
+    // const y = (e.clientY - rect.top) / scale;
+
+    const { x, y } = getImageCoords(e.clientX, e.clientY);
+
+    setDrawingsByPage((prev) => ({
       ...prev,
-      {
-        x,
-        y,
-        mode: "start",
-        strokeWidth: currentStrokeWidth, // Include current stroke width
-        color: selectedColor,
-      },
-      // Add starting point to differentiate new drawing
-    ]);
+      [currentIndex]: [
+        ...(prev[currentIndex] || []),
+        {
+          x,
+          y,
+          mode: "start", // ⭐ IMPORTANT
+          color: selectedColor,
+          strokeWidth: currentStrokeWidth,
+          tool: toolMode,
+        },
+      ],
+    }));
   };
+
   // const handleResizeStart = (index, e) => {
   //   e.preventDefault();
   //   e.stopPropagation();
@@ -511,43 +680,52 @@ const ImageContainer = (props) => {
 
   // Track mouse movement for dragging icons
   const handleMouseMove = (e) => {
-    if (containerRef.current) {
-      const containerRect = containerRef.current.getBoundingClientRect();
-      const scrollOffsetX = containerRef.current.scrollLeft;
-      const scrollOffsetY = containerRef.current.scrollTop;
+    if (!containerRef.current) return;
 
-      if (isDraggingIcon && draggedIconIndex !== null) {
-        const updatedIcons = {
-          x: (e.clientX - containerRect.left) / scale, // Adjust for scaling
-          y: (e.clientY - containerRect.top) / scale,
-        };
-        // updatedIcons[draggedIconIndex] = {
-        //   ...updatedIcons[draggedIconIndex],
-        //   x: (e.clientX - containerRect.left + scrollOffsetX) / scale, // Adjust for scaling
-        //   y: (e.clientY - containerRect.top + scrollOffsetY) / scale, // Adjust for scaling
-        // };
-        // setIcons(updatedIcons);
-        dispatch(updateAnnotation(updatedIcons));
-      } else if (isDraggingIcon) {
-        setMousePos({
-          x: (e.clientX - containerRect.left) / scale, // Adjust for scaling
-          y: (e.clientY - containerRect.top) / scale, // Adjust for scaling
-        });
-      } else if (isDrawing && startDrawing) {
-        const rect = canvasRef.current.getBoundingClientRect();
-        const x = (e.clientX - rect.left) / scale;
-        const y = (e.clientY - rect.top) / scale;
-        setDrawing((prev) => [
-          ...prev,
+    const containerRect = containerRef.current.getBoundingClientRect();
+
+    // 🟢 ICON DRAGGING (existing placed icon)
+    if (isDraggingIcon && draggedIconIndex !== null) {
+      dispatch(
+        updateAnnotation({
+          x: e.clientX - containerRect.left,
+          y: e.clientY - containerRect.top,
+        })
+      );
+      return;
+    }
+
+    // 🟢 ICON PREVIEW FOLLOWING CURSOR
+    if (isDraggingIcon && currentIcon) {
+      setMousePos({
+        x: e.clientX - containerRect.left,
+        y: e.clientY - containerRect.top,
+      });
+      return;
+    }
+
+    // 🟢 DRAWING MODE
+    if (isDrawing && startDrawing && canvasRef.current) {
+      const rect = canvasRef.current.getBoundingClientRect();
+
+      // 🔥 Convert screen coords → canvas coords (fixes zoom offset bug)
+      const x = (e.clientX - rect.left) / scale;
+      const y = (e.clientY - rect.top) / scale;
+
+      setDrawingsByPage((prev) => ({
+        ...prev,
+        [currentIndex]: [
+          ...(prev[currentIndex] || []),
           {
             x,
             y,
             mode: "draw",
-            color: selectedColor, // Store the current color
+            color: selectedColor,
             strokeWidth: currentStrokeWidth,
+            tool: toolMode,
           },
-        ]);
-      }
+        ],
+      }));
     }
   };
 
@@ -566,10 +744,10 @@ const ImageContainer = (props) => {
       const scrollOffsetX = containerRef.current.scrollLeft;
       const scrollOffsetY = containerRef.current.scrollTop;
       const currentTimeStamp = new Date().toLocaleString();
-      const isCurrentBlank = currentIcon === "/blank.jpg";
+      const isCurrentBlank = currentIcon === "/blank.png";
 
       const blankExists = iconsStore.some(
-        (icon) => icon.page === currentIndex && icon.iconUrl === "/blank.jpg"
+        (icon) => icon.page === currentIndex && icon.iconUrl === "/blank.png"
       );
       // console.log(blankExists)
 
@@ -579,7 +757,7 @@ const ImageContainer = (props) => {
         dispatch(setRerender());
       }, 1000);
 
-      if (currentIcon !== "/blank.jpg" && currentIcon !== "/not_attempt.png") {
+      if (currentIcon !== "/blank.png" && currentIcon !== "/not_attempt.png") {
         if (blankExists && !isCurrentBlank) {
           toast.error(
             "This page is already marked as blank. Remove the blank annotation to continue."
@@ -592,8 +770,8 @@ const ImageContainer = (props) => {
             question: currentQuestionNo,
             timeStamps: currentTimeStamp,
             page: currentIndex,
-            x: (e.clientX - containerRect.left) / scale,
-            y: (e.clientY - containerRect.top) / scale,
+            x: e.clientX - containerRect.left,
+            y: e.clientY - containerRect.top,
             width: 150,
             height: 80,
             mark: currentMarkDetails.allottedMarks,
@@ -638,8 +816,8 @@ const ImageContainer = (props) => {
           question: currentQuestionNo,
           timeStamps: currentTimeStamp,
           page: currentIndex,
-          x: (e.clientX - containerRect.left) / scale,
-          y: (e.clientY - containerRect.top) / scale,
+          x: e.clientX - containerRect.left,
+          y: e.clientY - containerRect.top,
           width: 150,
           height: 80,
           taskId: props.id,
@@ -696,7 +874,12 @@ const ImageContainer = (props) => {
     />
   ));
 
-  const handleZoomValueClick = () => {};
+  const handleZoomValueClick = (zoomValue) => {
+    const newScale = zoomValue / 100; // convert % → scale
+    setScale(newScale);
+    setIsZoomMenuOpen(false); // close dropdown after select
+  };
+
   const ZoomModal = Array.from({ length: 12 }, (_, index) => {
     const zoomValue = 40 + index * 10;
     return (
@@ -787,6 +970,14 @@ const ImageContainer = (props) => {
   console.log(commentStore);
   console.log(iconsStore);
   console.log(marksStore);
+
+  const isSideways = rotation % 180 !== 0;
+
+  const stageWidth =
+    (isSideways ? dimensions.height : dimensions.width) * scale;
+  const stageHeight =
+    (isSideways ? dimensions.width : dimensions.height) * scale;
+
   return (
     <>
       <div style={{ height: "8%" }}>
@@ -797,6 +988,7 @@ const ImageContainer = (props) => {
           ZoomModal={ZoomModal}
           zoomIn={zoomIn}
           zoomOut={zoomOut}
+          setShowLens={setShowLens}
           isDrawing={isDrawing}
           setIsDrawing={setIsDrawing}
           iconModal={iconModal}
@@ -805,7 +997,11 @@ const ImageContainer = (props) => {
           IconModal={IconModal}
           setSelectedColor={setSelectedColor}
           setCurrentStrokeWidth={setCurrentStrokeWidth}
+          setToolMode={setToolMode}
+          setOpacity={setOpacity}
+          toolMode={toolMode}
           comments={comments}
+          setRotation={setRotation}
           setcomments={setcomments}
         />
       </div>
@@ -829,239 +1025,268 @@ const ImageContainer = (props) => {
           cursor: isDrawing ? "url('/toolImg/Handwriting.cur'), auto" : "",
         }}
       >
+        {/* ZOOM VIEWPORT (centers content but does NOT scale interaction layer) */}
         <div
-          className="relative"
           style={{
-            transform: `scale(${scale})`,
-            transformOrigin: "top left",
-            transition: "transform 0.2s ease-in-out",
-            // maxWidth: "none",
             display: "flex",
             justifyContent: "center",
-
-            // width: "100%",
+            width: "100%",
           }}
-          id="image-container"
-          onMouseEnter={() => {
-            setIsCursorInside(true);
-          }}
-          onMouseLeave={() => {
-            setIsCursorInside(false);
-          }}
+          onMouseEnter={() => setIsCursorInside(true)}
+          onMouseLeave={() => setIsCursorInside(false)}
         >
-          {/* Render the canvas for drawing */}
-
+          {/* FIXED SIZE STAGE (real coordinates live here) */}
           <div
-            className="flex justify-center"
             style={{
-              width: `${dimensions.width}px`,
-              height: `${dimensions.height}px`,
+              position: "relative",
+              width: stageWidth,
+              height: stageHeight,
+              margin: "0 auto",
             }}
-            onDoubleClick={comments ? handleAddComments : null}
-            onClick={handleImageClick} // Handle image click for dropping the icon
-            onMouseMove={handleMouseMove} // Track mouse move for icon dragging preview
-            onMouseDown={handleCanvasMouseDown} // Only draw when in drawing mode
-            onMouseUp={handleCanvasMouseUp}
           >
-            <img
-              ref={imgRef}
-              src={imageSrc}
-              alt="Viewer"
-              className="block"
-              crossOrigin="anonymous"
-              onLoad={() => {
-                setImageLoaded(true); // mark image as loaded
+            {/* 🔹 VISUAL LAYER (SCALED) */}
+            <div
+              style={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                width: dimensions.width * scale,
+                height: dimensions.height * scale,
+                transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
+                transformOrigin: "center center",
               }}
-              style={{ pointerEvents: "none" }}
-              // width={"70vw"}
-            />
-            <canvas
-              // style={{ backgroundColor: "blue" }}
-              ref={canvasRef}
-              width={canvasSize.width}
-              height={canvasSize.height}
-              className={`absolute top-0 z-10 pointer-events-${
-                isDrawing ? "auto" : "none"
-              }`}
+            >
+              <img
+                ref={imgRef}
+                src={imageSrc}
+                alt="Viewer"
+                className="block"
+                crossOrigin="anonymous"
+                onLoad={() => setImageLoaded(true)}
+                style={{ pointerEvents: "none", width: "100%", height: "100%" }}
+              />
 
-              // style={{
-              //   position: "absolute",
-              //   top: 0,
-              //   left: 0,
-              //   pointerEvents: isDrawing ? "auto" : "none", // Only allow drawing in drawing mode
-              // }}
-            />
+              {/* <canvas
+                ref={canvasRef}
+                width={canvasSize.width}
+                height={canvasSize.height}
+                className={`absolute left-0 top-0 z-10 pointer-events-${
+                  isDrawing ? "auto" : "none"
+                }`}
+              /> */}
+              <canvas
+                ref={canvasRef}
+                width={dimensions.width}
+                height={dimensions.height}
+                className={`absolute left-0 top-0 z-10 ${
+                  isDrawing && !currentIcon
+                    ? "pointer-events-auto"
+                    : "pointer-events-none"
+                }`}
+              />
+            </div>
 
-            {imageLoaded &&
-              commentStore
-                .filter((a) => a.taskId === props.id) // 👈 Only show comments for the current page
-                .filter((a) => a.page === currentIndex)
-                .map((a) => (
-                  <Rnd
-                    key={a.id}
-                    position={{ x: a.x, y: a.y }}
-                    size={{ width: a.width, height: a.height }}
-                    bounds="parent"
-                    onDragStop={(e, d) => handleDragStop(a.id, d.x, d.y)}
-                    onResizeStop={(e, direction, ref, delta, position) => {
-                      const resizedComment = {
-                        ...a,
-                        width: ref.offsetWidth,
-                        height: ref.offsetHeight,
-                        x: position.x,
-                        y: position.y,
-                        synced: false, // mark as unsynced for background sync
-                      };
+            {/* 🔹 INTERACTION LAYER (NOT SCALED) */}
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+              }}
+              onDoubleClick={comments ? handleAddComments : null}
+              onClick={handleImageClick}
+              onMouseMove={(e) => {
+                handleMouseMove(e);
 
-                      dispatch(updateComment(resizedComment));
-                    }}
-                  >
-                    <div className="group relative h-full w-full">
-                      {/* Close button */}
-                      <button
-                        onClick={() => {
-                          dispatch(deleteComment(a));
-
-                          // setAnnotations((prev) =>
-                          //   prev.filter((item) => item.id !== a.id)
-                          // )
-                        }}
-                        className="absolute -right-3 -top-3 z-10 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-red-500 text-white opacity-0 shadow-lg transition-all hover:scale-110 hover:bg-red-600 group-hover:opacity-100"
-                        title="Delete comment"
-                      >
-                        <span className="text-[12px] text-base font-bold leading-none">
-                          ✖
-                        </span>
-                      </button>
-
-                      {/* Comment box */}
-                      <div className="h-full w-full overflow-hidden rounded-md border border-gray-300 bg-white shadow-sm">
-                        <textarea
-                          className="comment-box bg-transparent h-full w-full resize-none border-none p-3 text-sm outline-none"
-                          value={a.text}
-                          onChange={(e) => handleCommentChange(a.id, e)}
-                          placeholder="Write comment..."
-                        />
-                      </div>
-                    </div>
-                  </Rnd>
-                ))}
-
-            {/* Render all placed icons */}
-            {imageLoaded &&
-              iconsStore
-                .filter((a) => a.page === currentIndex)
-                .map((icon, index) => {
-                  const isCheck = icon.iconUrl === "/check.png";
-                  const checkClass = isCheck
-                    ? "text-green-600 ring-2 ring-green-600"
-                    : "text-red-600 ring-2 ring-red-600";
-                  const blankClass =
-                    icon.iconUrl === "/blank.jpg" ? "none" : "";
-
-                  return (
+                if (showLens) {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  setLensPos({
+                    x: e.clientX - rect.left,
+                    y: e.clientY - rect.top,
+                  });
+                }
+              }}
+              onMouseDown={handleCanvasMouseDown}
+              onMouseUp={handleCanvasMouseUp}
+            >
+              {/* COMMENTS */}
+              {imageLoaded &&
+                commentStore
+                  .filter((a) => a.taskId === props.id)
+                  .filter((a) => a.page === currentIndex)
+                  .map((a) => (
                     <Rnd
-                      key={icon.timeStamps}
-                      size={{ width: icon.width, height: icon.height }}
-                      position={{ x: icon.x, y: icon.y }}
+                      key={a.id}
+                      position={{ x: a.x, y: a.y }}
+                      size={{ width: a.width, height: a.height }}
                       bounds="parent"
-                      onDragStop={(e, d) => {
-                        const updated = {
-                          ...icon,
-                          x: d.x,
-                          y: d.y,
-                          synced: false,
-                        };
-                        // updated[index] = { ...updated[index], };
-                        // console.log(icon);
-                        // setIcons(updated);
-                        dispatch(updateAnnotation(updated));
+                      style={{
+                        pointerEvents: isDrawing ? "none" : "auto",
                       }}
+                      onDragStop={(e, d) => handleDragStop(a.id, d.x, d.y)}
                       onResizeStop={(e, direction, ref, delta, position) => {
-                        const updated = {
-                          ...icon,
-                          width: ref.offsetWidth,
-                          height: ref.offsetHeight,
-                        };
-                        // updated[index] = {
-                        //   ...updated[index],
-                        //   width: ref.offsetWidth,
-                        //   height: ref.offsetHeight,
-                        //   x: position.x,
-                        //   y: position.y,
-                        // };
-                        // setIcons(updated);
-                        dispatch(updateAnnotation(updated));
+                        dispatch(
+                          updateComment({
+                            ...a,
+                            width: ref.offsetWidth,
+                            height: ref.offsetHeight,
+                            x: position.x,
+                            y: position.y,
+                            synced: false,
+                          })
+                        );
                       }}
-                      onClick={() => handleIconSingleClick(icon)}
-                      onDoubleClick={() => handleIconDoubleClick(icon)}
-                      className={`absolute z-10 rounded-lg p-2  ${
-                        selectedIcon ===
-                        iconsStore.findIndex((index) => index === icon)
-                          ? "border-2 border-blue-500"
-                          : ""
-                      }`}
-                      // style={{
-                      //   transformOrigin: "top left",
-                      // }}
                     >
-                      <div className="relative h-full w-full">
-                        {/* Delete Button */}
-                        {selectedIcon ===
-                          iconsStore.findIndex((index) => index === icon) && (
-                          <button
-                            className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white shadow hover:bg-red-600"
-                            onClick={() => handleDeleteIcon(index, icon)}
-                          >
-                            ✖
-                          </button>
-                        )}
-
-                        {/* Icon Image */}
-                        <img
-                          src={icon.iconUrl}
-                          alt="icon"
-                          className="mx-auto"
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "contain",
+                      <div className="group relative h-full w-full">
+                        <button
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            dispatch(deleteComment(a));
                           }}
-                        />
-
-                        {/* Question & Marks */}
-                        <div
-                          className="mt-2 text-center text-xl font-semibold text-gray-700"
-                          style={{ display: blankClass }}
+                          className="absolute -right-3 -top-3 z-10 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-red-500 text-white opacity-0 shadow-lg transition-all hover:scale-110 hover:bg-red-600 group-hover:opacity-100"
                         >
-                          <span className="mr-1">{`Q${icon.question}`}</span>→
-                          <span
-                            className={`ml-1 inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-gray-50 p-1 font-extrabold ${checkClass}`}
-                          >
-                            {`${icon?.mark ? icon?.mark : 0}`}
-                          </span>
-                        </div>
+                          ✖
+                        </button>
 
-                        {/* Timestamp */}
-                        <div className="text-md mt-1 text-center font-extrabold italic text-gray-700 opacity-75">
-                          {icon.timeStamps || "No Timestamp"}
+                        <div className="h-full w-full overflow-hidden rounded-md border border-gray-300 bg-white shadow-sm">
+                          <textarea
+                            className="comment-box bg-transparent h-full w-full resize-none border-none p-3 text-sm outline-none"
+                            value={a.text}
+                            onChange={(e) => handleCommentChange(a.id, e)}
+                            placeholder="Write comment..."
+                          />
                         </div>
                       </div>
                     </Rnd>
-                  );
-                })}
+                  ))}
+
+              {/* ICONS */}
+              {imageLoaded &&
+                iconsStore
+                  .filter((a) => a.page === currentIndex)
+                  .map((icon) => {
+                    const isCheck = icon.iconUrl === "/check.png";
+                    const checkClass = isCheck
+                      ? "text-green-600 ring-2 ring-green-600"
+                      : "text-red-600 ring-2 ring-red-600";
+                    const blankClass =
+                      icon.iconUrl === "/blank.png" ? "none" : "";
+
+                    return (
+                      <Rnd
+                        key={icon.timeStamps}
+                        size={{ width: icon.width, height: icon.height }}
+                        position={{ x: icon.x, y: icon.y }}
+                        bounds="parent"
+                        style={{
+                          pointerEvents: isDrawing ? "none" : "auto",
+                        }}
+                        onDragStop={(e, d) =>
+                          dispatch(
+                            updateAnnotation({ ...icon, x: d.x, y: d.y })
+                          )
+                        }
+                        onResizeStop={(e, direction, ref) =>
+                          dispatch(
+                            updateAnnotation({
+                              ...icon,
+                              width: ref.offsetWidth,
+                              height: ref.offsetHeight,
+                            })
+                          )
+                        }
+                        onClick={() => handleIconSingleClick(icon)}
+                        onDoubleClick={() => handleIconDoubleClick(icon)}
+                        className="absolute z-10 rounded-lg p-2"
+                      >
+                        <div className="relative h-full w-full">
+                          {selectedIcon ===
+                            iconsStore.findIndex((i) => i === icon) && (
+                            <button
+                              onMouseDown={(e) => e.stopPropagation()}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteIcon(null, icon);
+                              }}
+                              className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white shadow hover:bg-red-600"
+                            >
+                              ✖
+                            </button>
+                          )}
+
+                          <img
+                            src={icon.iconUrl}
+                            alt="icon"
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "contain",
+                            }}
+                          />
+
+                          <div
+                            className="mt-2 text-center text-xl font-semibold text-gray-700"
+                            style={{ display: blankClass }}
+                          >
+                            <span className="mr-1">{`Q${icon.question}`}</span>→
+                            <span
+                              className={`ml-1 inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-gray-50 p-1 font-extrabold ${checkClass}`}
+                            >
+                              {icon?.mark ?? 0}
+                            </span>
+                          </div>
+
+                          <div className="text-md mt-1 text-center font-extrabold italic text-gray-700 opacity-75">
+                            {icon.timeStamps}
+                          </div>
+                        </div>
+                      </Rnd>
+                    );
+                  })}
+            </div>
+
+            {/* 🔍 MAGNIFIER LENS */}
+            {showLens && (
+              <div
+                style={{
+                  position: "absolute",
+                  left: lensPos.x - lensSize / 2,
+                  top: lensPos.y - lensSize / 2,
+                  width: lensSize,
+                  height: lensSize,
+                  borderRadius: "50%",
+                  border: "2px solid #333",
+                  overflow: "hidden",
+                  pointerEvents: "none",
+                  zIndex: 2000,
+                  backgroundImage: `url(${lensImage || imageSrc})`,
+                  backgroundRepeat: "no-repeat",
+                  backgroundSize: `${dimensions.width * scale * lensZoom}px ${
+                    dimensions.height * scale * lensZoom
+                  }px`,
+                  backgroundPosition: `-${lensPos.x * lensZoom}px -${
+                    lensPos.y * lensZoom
+                  }px`,
+                  transform: `rotate(${rotation}deg)`,
+                }}
+              />
+            )}
           </div>
         </div>
+
         {/* Icon following the mouse while dragging */}
         {isDraggingIcon && currentIcon && (
           <div
             style={{
               position: "absolute",
-              top: `${mousePos.y * scale}px`, // Adjust for scaling
-              left: `${mousePos.x * scale}px`, // Adjust for scaling
+              top: `${mousePos.y}px`, // Adjust for scaling
+              left: `${mousePos.x}px`, // Adjust for scaling
               zIndex: 1000,
               pointerEvents: "none",
-              transform: `scale(${scale})`, // Scale the preview
+              // transform: `scale(${scale})`, // Scale the preview
               transition: "transform 0.2s ease-in-out", // Smooth transition
             }}
           >

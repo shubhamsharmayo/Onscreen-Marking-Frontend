@@ -379,21 +379,21 @@ const CheckModule = () => {
     }
 
     const index = answerImageDetails[0].name.split("_")[1].split(".")[0];
-
+    console.log(index);
     dispatch(setIndex({ index }));
 
     hasInitializedIndex.current = true; // ✅ lock it forever
   }, [answerImageDetails, dispatch]);
 
-  console.log(evaluatorState.currentIndex)
+  console.log(evaluatorState.currentIndex);
 
   useEffect(() => {
     const getEvaluatorTasks = async (taskId) => {
       try {
         const res = await getAnswerPdfById(taskId);
-        dispatch(
-          setCurrentAnswerPdfImageId(res[evaluatorState.currentIndex]._id)
-        );
+        // dispatch(
+        //   setCurrentAnswerPdfImageId(res[evaluatorState.currentIndex]._id)
+        // );
         setAnswerImageDetails(res);
         console.log(res);
       } catch (error) {

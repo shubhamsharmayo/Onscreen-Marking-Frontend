@@ -67,20 +67,19 @@ const QuestionMappingModal = ({
   //   fetchSchema();
   // }, [schemaId, showImageModal, token]);
 
-
   useEffect(() => {
     if (!schemaId || !showImageModal) return;
 
     const fetchPageCount = async () => {
-     const res = await axios.get(
+      const res = await axios.get(
         `${process.env.REACT_APP_API_URL}/api/schemas/get/answer-pdf-page-count/${schemaId}`
-     );
-     setTotalPages(res.data.totalPages);
-     setCurrentPage(1);
+      );
+      setTotalPages(res.data.totalPages);
+      setCurrentPage(1);
     };
 
     fetchPageCount();
-}, [schemaId, showImageModal]);
+  }, [schemaId, showImageModal]);
 
   /* ---------------- Whole Page Toggle ---------------- */
   const togglePageSelection = (page) => {
@@ -198,10 +197,10 @@ const QuestionMappingModal = ({
 
   if (!showImageModal) return null;
 
-const imageUrl = `${process.env.REACT_APP_API_URL}/uploadedPdfs/extractedAnswerPdfImages/${schemaId}/image_${currentPage}.png`;
+  const imageUrl = `${process.env.REACT_APP_API_URL}/uploadedPdfs/extractedAnswerPdfImages/${schemaId}/image_${currentPage}.png`;
 
   return (
-    <div className="bg-black fixed inset-0 z-50 flex items-center justify-center bg-opacity-50">
+    <div className="bg-black/40 fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md">
       <div className="relative w-11/12 max-w-4xl rounded bg-white p-4">
         <button
           className="absolute right-2 top-1 text-2xl"
@@ -210,7 +209,7 @@ const imageUrl = `${process.env.REACT_APP_API_URL}/uploadedPdfs/extractedAnswerP
           ×
         </button>
 
-        <h2 className="mb-3 text-lg font-bold">Supplementary PDF Mapping</h2>
+        <h2 className="mb-3 text-lg font-bold">Question Pages Mapping</h2>
 
         <div className="mb-3 flex justify-center gap-3">
           <button
