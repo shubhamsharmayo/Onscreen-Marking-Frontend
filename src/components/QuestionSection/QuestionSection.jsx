@@ -162,12 +162,16 @@ const QuestionDefinition = (props) => {
     };
 
     if (props.answerPdfDetails) {
-      fetchQuestionDetails(props.answerPdfDetails, props.taskdetails.userId, props.taskdetails.questiondefinitionId);
+      fetchQuestionDetails(
+        props.answerPdfDetails,
+        props.taskdetails.userId,
+        props.taskdetails.questiondefinitionId
+      );
     }
   }, [props.answerPdfDetails, marked, evaluatorState.rerender]);
 
   socket.on("questions-data", (data) => {
-    console.log(data)
+    console.log(data);
     setAllQuestions(sortByQuestionsName(data.marks));
     const reducedArr = data.marks
       .filter((item) => item.isSubQuestion === false)
@@ -430,6 +434,21 @@ const QuestionDefinition = (props) => {
     }
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      const tag = document.activeElement.tagName.toLowerCase();
+      if (tag === "input" || tag === "textarea") return;
+
+      if (e.ctrlKey && e.key.toLowerCase() === "s") {
+        e.preventDefault(); // Stop browser save
+        handleSubmitConfirm(); // ✅ Open confirmation modal ONLY
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleSubmitConfirm]);
+
   // console.log(evaluatorState.isLoading);
   const handlePrevBooklet = async () => {
     try {
@@ -521,7 +540,7 @@ const QuestionDefinition = (props) => {
         </button>
       </div> */}
 
-      <div className="relative h-[87%] overflow-hidden shadow-md sm:rounded-lg">
+      <div className="relative h-[93%] overflow-hidden shadow-md sm:rounded-lg">
         {/* Scrollable content */}
         <div className="h-[calc(100%-4rem)] overflow-y-auto">
           {" "}
@@ -565,28 +584,19 @@ const QuestionDefinition = (props) => {
         </div>
       </div>
 
-      <div className=" mt-2 h-[10%]">
-        <button
-          type="button"
-          onClick={() => setShowRejectModal(true)}
-          className="mb-2  w-[100%] border border-red-700 px-5 py-2.5 text-center text-sm font-medium text-red-700 hover:bg-red-800 hover:text-white focus:outline-none focus:ring-4 focus:ring-red-300 dark:border-red-500 dark:text-red-500 dark:hover:bg-red-600 dark:hover:text-white dark:focus:ring-red-900"
-        >
-          REJECT BOOKLET
-        </button>
+      <div className="mt-3">
         <button
           type="button"
           disabled={
             props.remainingSecondsRef / 60 < props.userTimerData.minTime
           }
           onClick={handleSubmitConfirm}
-          className={`w-full border px-5 py-2.5 text-center text-sm font-medium
-    ${
-      props.remainingSecondsRef / 60 < props.userTimerData.minTime
-        ? "cursor-not-allowed border-green-700 bg-green-700 opacity-60"
-        : "cursor-pointer bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300"
-    }
-    text-white focus:outline-none
-  `}
+          className={`w-full rounded-lg border px-5 py-3 text-sm font-semibold text-white transition
+      ${
+        props.remainingSecondsRef / 60 < props.userTimerData.minTime
+          ? "cursor-not-allowed border-green-700 bg-green-700 opacity-60"
+          : "cursor-pointer bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300"
+      }`}
         >
           SUBMIT BOOKLET AND NEXT
         </button>
@@ -670,14 +680,12 @@ const QuestionDefinition = (props) => {
         </div>
       )}
 
-      {showRejectModal && (
+      {/* {showRejectModal && (
         <div className="bg-black fixed inset-0 z-50 flex items-center justify-center bg-opacity-50">
           <div className="w-[420px] rounded-lg bg-white p-6 shadow-lg">
             <h2 className="mb-4 text-lg font-semibold text-gray-800">
               Reject Booklet
             </h2>
-
-            {/* Reasons */}
             <div className="space-y-3">
               {rejectionReasons.map((reason, index) => (
                 <label
@@ -696,8 +704,6 @@ const QuestionDefinition = (props) => {
                 </label>
               ))}
             </div>
-
-            {/* Other reason textarea */}
             {selectedReason === "Other" && (
               <textarea
                 className="mt-4 w-full rounded-md border border-gray-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
@@ -707,8 +713,6 @@ const QuestionDefinition = (props) => {
                 onChange={(e) => setOtherReason(e.target.value)}
               />
             )}
-
-            {/* Actions */}
             <div className="mt-6 flex justify-end gap-3">
               <button
                 onClick={() => {
@@ -731,7 +735,7 @@ const QuestionDefinition = (props) => {
             </div>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 };

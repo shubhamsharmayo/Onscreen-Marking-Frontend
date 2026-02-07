@@ -115,14 +115,13 @@ const ReassignModal = ({
 
       setShowReAssignModal(false);
     } catch (error) {
-     console.error("Reassign failed", error);
+      console.error("Reassign failed", error);
 
-     const message =
+      const message =
         error?.response?.data?.message ||
         "Reassignment failed. Please try again.";
 
-     toast.error(message);
-    
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }

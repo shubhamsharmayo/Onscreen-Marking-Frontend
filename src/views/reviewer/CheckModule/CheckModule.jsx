@@ -379,13 +379,13 @@ const CheckModule = () => {
     }
 
     const index = answerImageDetails[0].name.split("_")[1].split(".")[0];
-
+    console.log(index);
     dispatch(setIndex({ index }));
 
     hasInitializedIndex.current = true; // ✅ lock it forever
   }, [answerImageDetails, dispatch]);
 
-  console.log(evaluatorState.currentIndex)
+  console.log(evaluatorState.currentIndex);
 
   useEffect(() => {
     const getEvaluatorTasks = async (taskId) => {

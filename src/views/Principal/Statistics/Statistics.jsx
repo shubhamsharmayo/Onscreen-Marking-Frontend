@@ -12,7 +12,6 @@ const Statistics = () => {
       setError(null);
       const res = await axios.get(
         `${process.env.REACT_APP_API_URL}/api/tasks/get/principalsideData`
-
       );
       if (res.data?.status) {
         setTableData(res.data.data);
@@ -31,10 +30,10 @@ const Statistics = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
-      <div className="max-w-7xl mx-auto">
+      <div className="mx-auto max-w-7xl">
         {/* Header Section */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">
+          <h1 className="mb-2 text-4xl font-bold text-gray-800">
             Statistics Dashboard
           </h1>
           <p className="text-gray-600">
@@ -43,20 +42,20 @@ const Statistics = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500">
+        <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div className="rounded-xl border-l-4 border-blue-500 bg-white p-6 shadow-md">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-500 text-sm font-medium uppercase">
+                <p className="text-sm font-medium uppercase text-gray-500">
                   Total Entries
                 </p>
-                <p className="text-3xl font-bold text-gray-800 mt-1">
+                <p className="mt-1 text-3xl font-bold text-gray-800">
                   {tableData.length}
                 </p>
               </div>
-              <div className="bg-blue-100 rounded-full p-3">
+              <div className="rounded-full bg-blue-100 p-3">
                 <svg
-                  className="w-8 h-8 text-blue-500"
+                  className="h-8 w-8 text-blue-500"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -143,7 +142,7 @@ const Statistics = () => {
         </div>
 
         {/* Table Section */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="overflow-hidden rounded-xl bg-white shadow-lg">
           {/* Table Header */}
           <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
             <h2 className="text-xl font-semibold text-white">
@@ -155,8 +154,8 @@ const Statistics = () => {
           {loading && (
             <div className="flex items-center justify-center py-16">
               <div className="relative">
-                <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-                <p className="text-gray-600 mt-4 text-center">
+                <div className="h-16 w-16 animate-spin rounded-full border-4 border-indigo-200 border-t-indigo-600"></div>
+                <p className="mt-4 text-center text-gray-600">
                   Loading statistics...
                 </p>
               </div>
@@ -166,9 +165,9 @@ const Statistics = () => {
           {/* Error State */}
           {error && !loading && (
             <div className="p-8 text-center">
-              <div className="bg-red-50 border border-red-200 rounded-lg p-6 inline-block">
+              <div className="inline-block rounded-lg border border-red-200 bg-red-50 p-6">
                 <svg
-                  className="w-12 h-12 text-red-500 mx-auto mb-3"
+                  className="mx-auto mb-3 h-12 w-12 text-red-500"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -180,10 +179,10 @@ const Statistics = () => {
                     d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                <p className="text-red-700 font-medium">{error}</p>
+                <p className="font-medium text-red-700">{error}</p>
                 <button
                   onClick={fetchStatistics}
-                  className="mt-4 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  className="mt-4 rounded-lg bg-red-600 px-6 py-2 text-white transition-colors hover:bg-red-700"
                 >
                   Retry
                 </button>
@@ -196,20 +195,20 @@ const Statistics = () => {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <tr className="border-b border-gray-200 bg-gray-50">
+                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
                       #
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
                       Booklet Name
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
                       Question Number
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
                       Marks
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
                       status
                     </th>
                   </tr>
@@ -219,18 +218,18 @@ const Statistics = () => {
                     tableData.map((item, index) => (
                       <tr
                         key={index}
-                        className="hover:bg-indigo-50 transition-colors duration-150"
+                        className="transition-colors duration-150 hover:bg-indigo-50"
                       >
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="flex items-center justify-center w-8 h-8 bg-indigo-100 text-indigo-600 rounded-full text-sm font-medium">
+                        <td className="whitespace-nowrap px-6 py-4">
+                          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-sm font-medium text-indigo-600">
                             {index + 1}
                           </span>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center">
-                            <div className="bg-blue-100 rounded-lg p-2 mr-3">
+                            <div className="mr-3 rounded-lg bg-blue-100 p-2">
                               <svg
-                                className="w-5 h-5 text-blue-600"
+                                className="h-5 w-5 text-blue-600"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -243,20 +242,20 @@ const Statistics = () => {
                                 />
                               </svg>
                             </div>
-                            <span className="text-gray-800 font-medium">
+                            <span className="font-medium text-gray-800">
                               {item.answerPdfName}
                             </span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-mono">
+                        <td className="whitespace-nowrap px-6 py-4">
+                          <span className="rounded-full bg-gray-100 px-3 py-1 font-mono text-sm text-gray-700">
                             {item.questionName || "-"}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
+                        <td className="whitespace-nowrap px-6 py-4">
+                          <span className="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-sm font-semibold text-green-800">
                             <svg
-                              className="w-4 h-4 mr-1"
+                              className="mr-1 h-4 w-4"
                               fill="currentColor"
                               viewBox="0 0 20 20"
                             >
@@ -270,8 +269,8 @@ const Statistics = () => {
                             {item.allottedMarks || 0}
                           </span>
                         </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-3 py-1 bg-red-400 text-white rounded-full text-sm font-mono">
+                        <td className="whitespace-nowrap px-6 py-4">
+                          <span className="rounded-full bg-red-400 px-3 py-1 font-mono text-sm text-white">
                             {item.status || "-"}
                           </span>
                         </td>
@@ -282,7 +281,7 @@ const Statistics = () => {
                       <td colSpan="4" className="px-6 py-16 text-center">
                         <div className="flex flex-col items-center">
                           <svg
-                            className="w-16 h-16 text-gray-300 mb-4"
+                            className="mb-4 h-16 w-16 text-gray-300"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -294,10 +293,10 @@ const Statistics = () => {
                               d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                             />
                           </svg>
-                          <p className="text-gray-500 text-lg font-medium">
+                          <p className="text-lg font-medium text-gray-500">
                             No data found
                           </p>
-                          <p className="text-gray-400 text-sm mt-1">
+                          <p className="mt-1 text-sm text-gray-400">
                             There are no statistics to display at the moment
                           </p>
                         </div>
@@ -312,8 +311,9 @@ const Statistics = () => {
 
         {/* Footer */}
         {!loading && tableData.length > 0 && (
-          <div className="mt-6 text-center text-gray-500 text-sm">
-            Showing {tableData.length} {tableData.length === 1 ? "entry" : "entries"}
+          <div className="mt-6 text-center text-sm text-gray-500">
+            Showing {tableData.length}{" "}
+            {tableData.length === 1 ? "entry" : "entries"}
           </div>
         )}
       </div>

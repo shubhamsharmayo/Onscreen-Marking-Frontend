@@ -91,42 +91,51 @@ const AssignModelComp = ({ setassignModel, currentBookletDetails }) => {
 
   const { allAssigned, count: assignedCount, total } = getAssignmentStatus();
 
-  const handleAssignAll = async () => {
-    if (!allAssigned) {
-      toast.warn(
-        `Please assign ${assignRole} for all ${total} questions (${assignedCount}/${total} done)`
-      );
+  const getFilledAssignments = () => {
+    return (questionDefData?.questions || [])
+      .map((q) => {
+        const a = assignments[q._id];
+        if (a?.userId && Number(a.bookletCount) > 0) {
+          return {
+            questiondefinitionId: q._id,
+            userId: a.userId,
+            bookletsToAssign: Number(a.bookletCount),
+            subjectCode: currentBookletDetails?.folderName,
+            role: assignRole,
+          };
+        }
+        return null;
+      })
+      .filter(Boolean);
+  };
+
+  const handleAssignSelected = async () => {
+    const payload = getFilledAssignments();
+
+    if (payload.length === 0) {
+      toast.warn(`Please assign at least one question to a ${assignRole}`);
       return;
     }
 
-    const payload = questionDefData.questions.map((q) => {
-      const a = assignments[q._id];
-      return {
-        questiondefinitionId: q._id,
-        userId: a.userId,
-        bookletsToAssign: Number(a.bookletCount),
-        subjectCode: currentBookletDetails?.folderName,
-        role: assignRole, // ← important: send role
-      };
-    });
-
     setLoading(true);
-
     try {
       const res = await axios.post(
         `${process.env.REACT_APP_API_URL}/api/tasks/create/task`,
-        { assignments: payload }, // or change endpoint to bulk if you have one
+        { assignments: payload },
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
       );
 
-      toast.success(
-        res.data.message || `All ${assignRole} assignments completed`
-      );
-      setassignModel(false);
+      toast.success(res.data.message || `${assignRole} assigned successfully`);
+
+      // Remove assigned questions from UI
+      setAssignments((prev) => {
+        const updated = { ...prev };
+        payload.forEach((p) => delete updated[p.questiondefinitionId]);
+        return updated;
+      });
     } catch (error) {
-      console.error("Assign error:", error);
       toast.error(error?.response?.data?.message || "Failed to assign tasks");
     } finally {
       setLoading(false);
@@ -274,12 +283,8 @@ const AssignModelComp = ({ setassignModel, currentBookletDetails }) => {
                         >
                           <option value="">Select {assignRole}</option>
                           {users.map((u) => (
-                            <option
-                             
-                              key={u.userId}
-                              value={u.userId}
-                            >
-                             {u.email.padEnd(30, " ")} {u.role}
+                            <option key={u.userId} value={u.userId}>
+                              {u.email.padEnd(30, " ")} {u.role}
                             </option>
                           ))}
                         </select>
@@ -323,21 +328,19 @@ const AssignModelComp = ({ setassignModel, currentBookletDetails }) => {
                 <div className="mt-10 flex flex-col items-center gap-3">
                   <button
                     className={`rounded-xl px-12 py-4 text-lg font-bold text-white transition ${
-                      allAssigned && !loading
-                        ? "bg-green-600 shadow-md hover:bg-green-700"
-                        : "cursor-not-allowed bg-gray-400"
-                    } disabled:opacity-70`}
-                    disabled={loading || !allAssigned}
-                    onClick={handleAssignAll}
+                      loading
+                        ? "bg-gray-400"
+                        : "bg-green-600 shadow-md hover:bg-green-700"
+                    }`}
+                    disabled={loading}
+                    onClick={handleAssignSelected}
                   >
                     {loading
                       ? "Assigning..."
-                      : allAssigned
-                      ? `Assign All ${total} as ${
+                      : `Assign Selected Questions as ${
                           assignRole.charAt(0).toUpperCase() +
                           assignRole.slice(1)
-                        }`
-                      : `Complete ${assignRole} assignments (${assignedCount}/${total})`}
+                        }`}
                   </button>
 
                   {!allAssigned && assignedCount > 0 && (
