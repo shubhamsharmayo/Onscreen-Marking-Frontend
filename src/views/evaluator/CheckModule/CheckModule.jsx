@@ -113,7 +113,7 @@ const CheckModule = () => {
         settimeInSeconds(remainingSecondsRef.current);
       }
     }, 1000);
-  }, []);
+  }, [answerPdfDetails]);
   const startLocalTickPage = useCallback(() => {
     if (PagetickIntervalRef.current) return;
     pageTimer.current = 0;
@@ -124,7 +124,7 @@ const CheckModule = () => {
         setpageTimerCount(formatSeconds(pageTimer.current));
       }
     }, 1000);
-  }, []);
+  }, [answerPdfDetails]);
 
   const stopLocalTickPage = useCallback(() => {
     if (PagetickIntervalRef.current) {
@@ -132,6 +132,17 @@ const CheckModule = () => {
       PagetickIntervalRef.current = null;
     }
   }, []);
+   const stopLocalTick = useCallback(() => {
+    if (remainingSecondsRef.current) {
+      
+      remainingSecondsRef.current = null;
+    }
+  }, []);
+  // useEffect(() => {
+  //   return () => {
+  //     stopLocalTick();
+  //   };
+  // }, [answerPdfDetails]);
 
   useEffect(() => {
     if (blankCheck) {
@@ -150,7 +161,10 @@ const CheckModule = () => {
     return () => {
       stopLocalTickPage();
     };
-  }, [evaluatorState.currentIndex, stopLocalTickPage]);
+  }, [evaluatorState.currentIndex, stopLocalTickPage,answerPdfDetails]);
+
+
+  
   // console.log(pageTimerCount);
 
   // const stopLocalTick = useCallback(() => {
@@ -198,6 +212,9 @@ const CheckModule = () => {
       newSocket.disconnect();
     };
   }, [id, answerPdfDetails, token]);
+
+  
+  
 
   // console.log(remainingSecondsRef.current);
   useEffect(() => {
