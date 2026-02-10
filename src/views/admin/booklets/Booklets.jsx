@@ -250,6 +250,14 @@ const Booklets = () => {
 
   const columns = [
     // 🔽 First 3 columns – smaller
+
+    {
+      field: "subjectName", // make sure this matches backend key
+      headerName: "Subject Name",
+      flex: 1,
+      minWidth: 1,
+      renderHeader: () => <TwoLineHeader title="Subject Name" />,
+    },
     {
       field: "folderName",
       headerName: "Subject Code",
@@ -402,7 +410,7 @@ const Booklets = () => {
   ];
 
   return (
-    <div className="mt-12">
+    <div className="ml-6 mt-12">
       {isDarkMode ? (
         <ThemeProvider theme={darkTheme}>
           <div style={{ height: "600px", width: "98%" }}>

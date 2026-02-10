@@ -368,8 +368,6 @@
 
 // export default QuestionMappingModal;
 
-
-
 import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -394,6 +392,7 @@ const QuestionMappingModal = ({
   const containerRef = useRef(null);
 
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const storageKey = `questionMapping_${schemaId}_${questionId}`;
 
   /* ---------------- Image Dimensions ---------------- */
   useEffect(() => {
@@ -411,6 +410,49 @@ const QuestionMappingModal = ({
     return () => (img.onload = null);
   }, [currentPage]);
 
+  useEffect(() => {
+    if (!showImageModal) return;
+
+    // Avoid saving empty state over existing data
+    const hasData =
+      Object.keys(selectedPages).length > 0 ||
+      Object.keys(selections).length > 0;
+
+    if (!hasData) return;
+
+    localStorage.setItem(
+      storageKey,
+      JSON.stringify({ selectedPages, selections, currentPage, selectionType })
+    );
+  }, [
+    selectedPages,
+    selections,
+    currentPage,
+    selectionType,
+    showImageModal,
+    storageKey,
+  ]);
+
+  useEffect(() => {
+    if (!showImageModal) return;
+
+    const dataToSave = {
+      selectedPages,
+      selections,
+      currentPage,
+      selectionType,
+    };
+
+    localStorage.setItem(storageKey, JSON.stringify(dataToSave));
+  }, [
+    selectedPages,
+    selections,
+    currentPage,
+    selectionType,
+    showImageModal,
+    storageKey,
+  ]);
+
   /* ---------------- Fetch Page Count ---------------- */
   useEffect(() => {
     if (!schemaId || !showImageModal) return;
@@ -421,10 +463,12 @@ const QuestionMappingModal = ({
       )
       .then((res) => {
         setTotalPages(res.data.totalPages);
-        setCurrentPage(1);
+
+        const saved = localStorage.getItem(storageKey);
+        if (!saved) setCurrentPage(1); // ✅ don’t override restored page
       })
       .catch(() => toast.error("Failed to load pages"));
-  }, [schemaId, showImageModal]);
+  }, [schemaId, showImageModal, storageKey]);
 
   /* ---------------- Helpers ---------------- */
   const getPercentCoords = (e) => {
@@ -546,7 +590,7 @@ const QuestionMappingModal = ({
       toast.error("Please select at least one whole or partial page");
       return;
     }
-
+    localStorage.removeItem(storageKey);
     setShowImageModal(false);
 
     window.dispatchEvent(
@@ -567,21 +611,13 @@ const QuestionMappingModal = ({
   const imageUrl = `${process.env.REACT_APP_API_URL}/uploadedPdfs/extractedAnswerPdfImages/${schemaId}/image_${currentPage}.png`;
 
   return (
-    <div className="bg-black/60 fixed inset-0 z-50 backdrop-blur-sm">
+    <div className="bg-black/60 fixed inset-0 z-50 pt-4 backdrop-blur-sm">
       <div className="flex h-full flex-col bg-white">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b px-4 py-3">
-          <h2 className="text-lg font-bold">Question Pages Mapping</h2>
-          <button
-            onClick={() => setShowImageModal(false)}
-            className="text-2xl font-bold text-gray-600"
-          >
-            ×
-          </button>
-        </div>
-
         {/* Controls */}
-        <div className="flex justify-center gap-3 border-b p-3">
+        <div className="mt-16 flex justify-around gap-3 border-b p-3">
+          <h2 className="text-black ml-96 text-center  text-lg font-bold">
+            Question Pages Mapping
+          </h2>
           <button
             onClick={() => setSelectionType(1)}
             className={`rounded px-4 py-2 text-white ${
@@ -598,6 +634,12 @@ const QuestionMappingModal = ({
           >
             Partial Area
           </button>
+          <button
+            onClick={() => setShowImageModal(false)}
+            className="text-black text-2xl font-bold"
+          >
+            ×
+          </button>
         </div>
 
         {/* Image Area */}
@@ -612,7 +654,7 @@ const QuestionMappingModal = ({
               draggable={false}
               onClick={toggleWholePage}
               style={{
-                maxHeight: "calc(100vh - 260px)", // 🔑 viewport fit
+                maxHeight: "calc(100vh - 260px)",
                 width: "auto",
                 height: "auto",
                 objectFit: "contain",
@@ -665,7 +707,7 @@ const QuestionMappingModal = ({
         <div className="flex items-center justify-between border-t px-4 py-3">
           <button
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            className="rounded bg-indigo-600 px-4 py-2 text-white"
+            className="ml-96 rounded bg-indigo-600 px-4 py-2 text-white"
           >
             Previous
           </button>

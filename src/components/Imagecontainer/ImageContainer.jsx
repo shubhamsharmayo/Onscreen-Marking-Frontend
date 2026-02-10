@@ -590,20 +590,34 @@ const ImageContainer = (props) => {
   };
 
   const handleDeleteIcon = async (index, icon) => {
-    if (icon?.id) {
-      console.log(icon);
-      // const res = await deleteIconByImageId(icon?._id, currentAnswerPdfId);
+    try {
+      // 1️⃣ Remove annotation visually
       dispatch(deleteAnnotation(icon));
-      // setIcons((prevIcons) => prevIcons.filter((_, i) => i !== index)); // Remove the icon
-      setSelectedIcon(null); // Reset selected icon
-    } else {
-      dispatch(deleteAnnotation(icon));
-      // setIcons((prevIcons) => prevIcons.filter((_, i) => i !== index)); // Remove the icon
-      setSelectedIcon(null);
-    }
 
-    dispatch(setRerender());
+      // 2️⃣ If icon had marks → remove mark record
+      if (icon.mark !== undefined && icon.questionDefinitionId) {
+        const markPayload = {
+          questionDefinitionId: icon.questionDefinitionId,
+          answerPdfId: currentAnswerPdfId,
+          page: icon.page,
+          taskId: props.id,
+          userId: props.taskdetails?.userId,
+        };
+
+        // Remove from redux
+        dispatch(deleteMark(markPayload));
+
+        // Remove from backend via socket
+        socket.emit("delete-mark", markPayload);
+      }
+
+      setSelectedIcon(null);
+      dispatch(setRerender());
+    } catch (err) {
+      console.error("Delete icon error", err);
+    }
   };
+
   // Zoom in and out with smooth transition
   const zoomIn = () => setScale((prevScale) => prevScale + 0.1);
   const zoomOut = () => setScale((prevScale) => prevScale - 0.1);
@@ -1018,7 +1032,7 @@ const ImageContainer = (props) => {
         style={{
           border: "1px solid #ccc",
           overflowY: "auto",
-          overflowX: "hidden",
+          overflowX: "auto",
           position: "relative",
           width: "100%",
           height: `92%`,
@@ -1031,6 +1045,7 @@ const ImageContainer = (props) => {
             display: "flex",
             justifyContent: "center",
             width: "100%",
+            position: "relative",
           }}
           onMouseEnter={() => setIsCursorInside(true)}
           onMouseLeave={() => setIsCursorInside(false)}

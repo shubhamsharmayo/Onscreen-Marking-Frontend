@@ -102,7 +102,7 @@ const Index = () => {
   };
 
   return (
-    <div>
+    <div className="ml-10 mr-10">
       <div
         className="hover:bg-transparent hover:text-white-600 mt-12 inline-block cursor-pointer rounded border border-indigo-600 bg-indigo-600 px-12 py-3 text-sm font-medium text-white focus:outline-none focus:ring active:text-indigo-500"
         onClick={() => setIsOpen(true)}

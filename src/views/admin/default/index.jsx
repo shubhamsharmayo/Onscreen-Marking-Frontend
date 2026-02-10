@@ -15,6 +15,7 @@ import { toast } from "react-toastify";
 import socket from "../../../services/socket/socket";
 import { getUserDetails } from "../../../services/common";
 import OnlineUserModal from "../../../components/modal/OnlineUsersModal";
+import { motion } from "motion/react";
 
 const Dashboard = () => {
   const [expandedChart, setExpandedChart] = useState(null);
@@ -230,7 +231,20 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="dashboard relative p-5 dark:text-white">
+    <div className="p-4 md:p-6 lg:p-8 space-y-8 dashboard relative dark:text-white">
+      {/* Welcome Section */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-8"
+      >
+        <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-teal-600 bg-clip-text text-transparent mb-2">
+          Welcome back, {user?.name?.split(" ")[0]}! 👋
+        </h1>
+        <p className="text-slate-600 dark:text-slate-400">
+          Here's what's happening with your platform today.
+        </p>
+      </motion.div>
       {/* Boxes Area */}
       {user?.role === "admin" ? (
         <div

@@ -5,16 +5,15 @@ import SchemaCreateModal from "./SchemaCreateModal";
 import ConfirmationModal from "components/modal/ConfirmationModal";
 import { useNavigate } from "react-router-dom";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
-import { MdCreateNewFolder } from "react-icons/md";
-import { FaCloudUploadAlt, FaFileUpload } from "react-icons/fa";
-import { FiEdit } from "react-icons/fi";
 import { MdAutoDelete } from "react-icons/md";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { toast } from "react-toastify";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getAllSchemas, deleteSchema, updateSchema } from "./schemaApi";
+import { motion } from "motion/react";
 import Tooltip from "@mui/material/Tooltip";
 import axios from "axios";
+import { CloudUpload, FileUp, FolderPlus, SquarePen } from "lucide-react";
 
 const Schema = () => {
   const [editShowModal, setEditShowModal] = useState(false);
@@ -282,13 +281,13 @@ const Schema = () => {
       renderCell: (params) => (
         <Tooltip title="update schema structure" arrow placement="top">
           <div
-            className="flex cursor-pointer justify-center rounded px-3 py-2 text-center font-medium text-yellow-600"
+            className="flex cursor-pointer justify-center rounded px-3 py-2 text-center font-medium"
             onClick={() => {
               localStorage.removeItem("navigateFrom");
               navigate(`/admin/schema/create/structure/${params.row.id}`);
             }}
           >
-            <MdCreateNewFolder className="size-8" />
+            <FolderPlus className="size-8 text-yellow-500" />
           </div>
         </Tooltip>
       ),
@@ -308,7 +307,7 @@ const Schema = () => {
                 fileInputRef.current.click(); // ✅ open file picker
               }}
             >
-              <FaCloudUploadAlt className="size-7 text-yellow-600" />
+              <CloudUpload className="size-7 text-blue-600" />
             </div>
           </Tooltip>
 
@@ -335,7 +334,7 @@ const Schema = () => {
               setShowQuestionModal(true);
             }}
           >
-            <FaFileUpload className="size-7 text-yellow-600" />
+            <FileUp className="size-7 text-red-400" />
           </div>
         </Tooltip>
       ),
@@ -354,7 +353,7 @@ const Schema = () => {
               console.log(params.row);
             }}
           >
-            <FiEdit className="size-6" />
+            <SquarePen className="size-6" />
           </div>
         </Tooltip>
       ),
@@ -386,81 +385,120 @@ const Schema = () => {
     );
 
   return (
-    <div className="mt-8 grid grid-cols-1 gap-4 p-4 lg:grid-cols-3 lg:gap-8">
+    <div className="mt-8 grid grid-cols-1 gap-4 space-y-8 p-4 md:p-6 lg:grid-cols-3 lg:gap-8 lg:p-8">
       <div className="h-32 rounded-lg lg:col-span-3">
         <div className="overflow-x-auto rounded-lg">
-          <div className="mb-4 flex items-start justify-start rounded-lg sm:justify-end">
-            <div
-              className="hover:bg-transparent inline-block cursor-pointer items-center rounded border border-indigo-600 bg-indigo-600 px-12 py-3 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring active:text-indigo-500"
+          <div className="mb-4 flex items-start justify-between rounded-lg ">
+            {/* Welcome Section */}
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-8"
+            >
+              <h1 className="text-transparent mb-2 bg-gradient-to-r from-blue-600 via-purple-600 to-teal-600 bg-clip-text text-3xl font-bold md:text-4xl">
+                Schema Management
+              </h1>
+              <p className="text-slate-600 dark:text-slate-400">
+                Create, configure, and manage exam schemas in one place.
+              </p>
+            </motion.div>
+
+            <motion.button
               onClick={() => setCreateShowModal(!createShowModal)}
+              className="flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-teal-500 px-8 py-4 font-semibold text-white shadow-lg transition-all duration-300 hover:shadow-xl"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.9 }}
+              whileTap={{ scale: 0.98 }}
             >
               Create Schema
-            </div>
+            </motion.button>
           </div>
 
-          {isDarkMode ? (
-            <ThemeProvider theme={darkTheme}>
-              <DataGrid
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="dark:bg-slate-800/70 border-slate-200 dark:border-slate-700 overflow-hidden rounded-2xl border bg-white/70 shadow-xl backdrop-blur-xl"
+          >
+            {isDarkMode ? (
+              <ThemeProvider theme={darkTheme}>
+                <DataGrid
+                  className="dark:bg-navy-700"
+                  rows={rows}
+                  columns={columns}
+                  slots={{ toolbar: GridToolbar }}
+                  sx={{
+                    "& .MuiDataGrid-columnHeaders": {
+                      fontWeight: 900,
+                      fontSize: "0.9rem",
+                      backgroundColor: "rgba(255, 255, 255, 0.1)",
+                      color: "#ffffff",
+                      minHeight: 56,
+                      maxHeight: 56,
+                    },
+                    "& .MuiDataGrid-columnHeader": {
+                      padding: "0 16px", // 👈 left-right space
+                    },
+                    "& .MuiDataGrid-columnHeaderTitle": {
+                      fontWeight: 600,
+                      lineHeight: "1.5",
+                    },
+                    "& .MuiDataGrid-cell": {
+                      fontSize: "0.80rem",
+                      color: "#ffffff",
+                      display: "flex",
+                      justifyContent: "center",
+                    },
+                    "& .MuiDataGrid-row:hover": {
+                      backgroundColor: "rgba(255, 255, 255, 0.1)",
+                    },
+                    "& .MuiTablePagination-root": { color: "#ffffff" },
+                    "& .MuiDataGrid-footerContainer": {
+                      backgroundColor: "#111c44",
+                      color: "#ffffff",
+                    },
+                    "& .MuiDataGrid-toolbarContainer button": {
+                      color: "#ffffff",
+                    },
+                    "& .MuiDataGrid-toolbarContainer svg": { fill: "#ffffff" },
+                  }}
+                />
+              </ThemeProvider>
+            ) : (
+              <div
+                style={{ maxHeight: "600px", width: "100%" }}
                 className="dark:bg-navy-700"
-                rows={rows}
-                columns={columns}
-                slots={{ toolbar: GridToolbar }}
-                sx={{
-                  "& .MuiDataGrid-columnHeaders": {
-                    fontWeight: 900,
-                    fontSize: "0.9rem",
-                    backgroundColor: "rgba(255, 255, 255, 0.1)",
-                    color: "#ffffff",
-                  },
-                  "& .MuiDataGrid-cell": {
-                    fontSize: "0.80rem",
-                    color: "#ffffff",
-                    display: "flex",
-                    justifyContent: "center",
-                  },
-                  "& .MuiDataGrid-row:hover": {
-                    backgroundColor: "rgba(255, 255, 255, 0.1)",
-                  },
-                  "& .MuiTablePagination-root": { color: "#ffffff" },
-                  "& .MuiDataGrid-footerContainer": {
-                    backgroundColor: "#111c44",
-                    color: "#ffffff",
-                  },
-                  "& .MuiDataGrid-toolbarContainer button": {
-                    color: "#ffffff",
-                  },
-                  "& .MuiDataGrid-toolbarContainer svg": { fill: "#ffffff" },
-                }}
-              />
-            </ThemeProvider>
-          ) : (
-            <div
-              style={{ maxHeight: "600px", width: "100%" }}
-              className="dark:bg-navy-700"
-            >
-              <DataGrid
-                rows={rows}
-                columns={columns}
-                slots={{ toolbar: GridToolbar }}
-                sx={{
-                  "& .MuiDataGrid-columnHeaders": {
-                    fontWeight: 900,
-                    fontSize: "1rem",
-                    backgroundColor: "#ffffff",
-                    borderBottom: "1px solid rgba(0, 0, 0, 0.2)",
-                  },
-                  "& .MuiTablePagination-root": { color: "#000000" },
-                  "& .MuiDataGrid-cell": {
-                    fontSize: "0.80rem",
-                    color: "#000000",
-                  },
-                  "& .MuiDataGrid-row:hover": {
-                    backgroundColor: "rgba(255, 255, 255, 0.1)",
-                  },
-                }}
-              />
-            </div>
-          )}
+              >
+                <DataGrid
+                  rows={rows}
+                  columns={columns}
+                  slots={{ toolbar: GridToolbar }}
+                  sx={{
+                    "& .MuiDataGrid-columnHeaders": {
+                      fontWeight: 900,
+                      fontSize: "1rem",
+                      backgroundColor: "#ffffff",
+                      borderBottom: "1px solid rgba(0, 0, 0, 0.2)",
+                      minHeight: 56,
+                      maxHeight: 56,
+                    },
+                    "& .MuiDataGrid-columnHeader": {
+                      padding: "0 16px", // 👈 left-right space
+                    },
+                    "& .MuiTablePagination-root": { color: "#000000" },
+                    "& .MuiDataGrid-cell": {
+                      fontSize: "0.80rem",
+                      color: "#000000",
+                    },
+                    "& .MuiDataGrid-row:hover": {
+                      backgroundColor: "rgba(255, 255, 255, 0.1)",
+                    },
+                  }}
+                />
+              </div>
+            )}
+          </motion.div>
         </div>
       </div>
 

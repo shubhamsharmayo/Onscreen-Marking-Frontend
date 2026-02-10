@@ -116,9 +116,9 @@ const Index = () => {
     <div>
       {/* Create Button */}
       <div
-        className="hover:text-white-600 active:text-white-500 mb-4 ml-2 mt-12 
-        inline-block cursor-pointer rounded-md border border-indigo-600 bg-indigo-600 
-        px-12 py-3 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring"
+        className="hover:text-white-600 active:text-white-500 mb-4 ml-10 ml-2 
+        mt-12 inline-block cursor-pointer rounded-md border border-indigo-600 
+        bg-indigo-600 px-12 py-3 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring"
         onClick={() => setIsOpen(true)}
       >
         Create Class
@@ -144,7 +144,7 @@ const Index = () => {
       />
 
       {/* Class Grid */}
-      <div className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+      <div className="ml-7 grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         {classes.length > 0 ? (
           classes.map((class_) => (
             <CardClasses

@@ -8,6 +8,8 @@ import { FaRegFilePdf } from "react-icons/fa";
 import ImageProcessedBookletsModal from "components/modal/ImageProcessedBookletsModal";
 import { toast } from "react-toastify";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { ArrowBack } from "@mui/icons-material";
+import { Button } from "@mui/material";
 
 const ProcessingBooklets = () => {
   const [statusMessages, setStatusMessages] = useState([]);
@@ -19,6 +21,7 @@ const ProcessingBooklets = () => {
   const [pdfName, setPdfName] = useState("");
   const { classId } = useParams();
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Check if the `dark` mode is applied to the `html` element
@@ -180,6 +183,24 @@ const ProcessingBooklets = () => {
   return (
     <div className="position-relative h-full w-full ">
       <div className="container mx-auto px-4 py-6">
+        <div className="mb-4 flex items-center">
+          <Button
+            variant="contained"
+            startIcon={<ArrowBack />}
+            onClick={() => navigate("/admin/booklets")}
+            sx={{
+              textTransform: "none",
+              fontWeight: 600,
+              backgroundColor: isDarkMode ? "#1e293b" : "#1976d2",
+              "&:hover": {
+                backgroundColor: isDarkMode ? "#334155" : "#115293",
+              },
+            }}
+          >
+            Back to Booklets
+          </Button>
+        </div>
+
         {/* Processed Files Details */}
         <div className="mt-4">
           {/* <h2 className="text-xl font-semibold mb-2">Processed Files</h2> */}
