@@ -395,7 +395,7 @@ const CheckModule = () => {
         //   setCurrentAnswerPdfImageId(res[evaluatorState.currentIndex]._id)
         // );
         setAnswerImageDetails(res);
-        console.log(res);
+        // console.log(res);
       } catch (error) {
         console.log(error);
       }

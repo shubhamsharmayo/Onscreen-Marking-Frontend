@@ -440,13 +440,47 @@ const ReviewerQuestion = (props) => {
   });
 
   // console.log(evaluatorState.isLoading);
+  // const handleNextBooklet = async () => {
+  //   try {
+  //     setIsLoadingTrue();
+
+  //     // ✅ Step 1: Submit current booklet first
+  //     const submitted = await submitCurrentBooklet();
+  //     if (!submitted) return;
+
+  //     const isLastBooklet =
+  //       Number(taskDetails.currentFileIndex) >=
+  //       Number(taskDetails.totalBooklets);
+
+  //     // ✅ Step 2: If LAST booklet → just finish
+  //     if (isLastBooklet) {
+  //       navigate("/evaluator/assignedtasks");
+  //       return;
+  //     }
+
+  //     // ✅ Step 3: Otherwise move to next booklet
+  //     const taskId = taskDetails._id;
+  //     const nextIndex = Number(taskDetails.currentFileIndex) + 1;
+
+  //     const response = await changeCurrentIndexById(taskId, nextIndex);
+
+  //     dispatch(setCurrentBookletIndex(response));
+  //   } catch (error) {
+  //     console.log(error);
+  //     toast.error("Something went wrong");
+  //   } finally {
+  //     setIsLoadingFalse();
+  //     props.setsubmitModel(false)
+  //   }
+  // };
+
   const handleNextBooklet = async () => {
     try {
       dispatch(setIsLoadingTrue());
 
-      // ✅ Step 1: Submit current booklet first
-      const submitted = await submitCurrentBooklet();
-      if (!submitted) return;
+     // ✅ Step 1: Submit current booklet first
+     const submitted = await submitCurrentBooklet();
+     if (!submitted) return;
 
       props.setsubmitModel(false);
 
@@ -460,22 +494,22 @@ const ReviewerQuestion = (props) => {
       if (isLastBooklet) {
         navigate("/reviewer/assignedtasks");
         return;
-      }
+     }
 
-      // ✅ Step 3: Otherwise move to next booklet
-      const taskId = taskDetails._id;
-      const nextIndex = Number(taskDetails.currentFileIndex) + 1;
+     // ✅ Step 3: Otherwise move to next booklet
+     const taskId = taskDetails._id;
+     const nextIndex = Number(taskDetails.currentFileIndex) + 1;
 
-      const response = await changeCurrentIndexById(taskId, nextIndex);
+     const response = await changeCurrentIndexById(taskId, nextIndex);
 
-      dispatch(setCurrentBookletIndex(response));
+     dispatch(setCurrentBookletIndex(response));
     } catch (error) {
-      console.log(error);
-      toast.error("Something went wrong");
+     console.log(error);
+     toast.error("Something went wrong");
     } finally {
       dispatch(setIsLoadingFalse());
     }
-  };
+};
 
   // console.log(evaluatorState.isLoading);
   const handlePrevBooklet = async () => {
@@ -562,6 +596,31 @@ const ReviewerQuestion = (props) => {
   //     console.log("API error:", error?.response?.data || error.message);
   //   }
   // };
+
+//   const goToNextBookletOrFinish = async () => {
+//     try {
+//      const isLastBooklet =
+//         Number(taskDetails.currentFileIndex) >=
+//         Number(taskDetails.totalBooklets);
+
+//      // ✅ If last booklet → task complete
+//      if (isLastBooklet) {
+//         toast.success("All booklets processed. Task completed.");
+//         navigate("/reviewer/assignedtasks");
+//         return;
+//      }
+
+//      // ✅ Otherwise move to next booklet
+//      const nextIndex = Number(taskDetails.currentFileIndex) + 1;
+//      const response = await changeCurrentIndexById(taskDetails._id, nextIndex);
+
+//      dispatch(setCurrentBookletIndex(response));
+//      toast.success("Moved to next booklet");
+//     } catch (error) {
+//      console.error(error);
+//      toast.error("Failed to load next booklet");
+//     }
+// };
 
   const submitHandler = async () => {
     try {
