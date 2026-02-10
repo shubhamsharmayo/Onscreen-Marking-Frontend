@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 const AssignModelComp = ({ setassignModel, currentBookletDetails }) => {
   const [users, setUsers] = useState([]);
   const [manualModel, setManualModel] = useState(false);
-  const [assignType, setAssignType] = useState(1);
+  const [assignType, setAssignType] = useState(2);
   const [questionDefData, setQuestionDefData] = useState({ questions: [] });
   const [loading, setLoading] = useState(false);
 
@@ -135,6 +135,8 @@ const AssignModelComp = ({ setassignModel, currentBookletDetails }) => {
         payload.forEach((p) => delete updated[p.questiondefinitionId]);
         return updated;
       });
+
+      setassignModel(false);
     } catch (error) {
       toast.error(error?.response?.data?.message || "Failed to assign tasks");
     } finally {
@@ -156,11 +158,11 @@ const AssignModelComp = ({ setassignModel, currentBookletDetails }) => {
                 value={assignType}
                 onChange={(e) => setAssignType(Number(e.target.value))}
               >
-                <option value={1}>By Booklets</option>
+                {/* <option value={1}>By Booklets</option> */}
                 <option value={2}>By Questions</option>
               </select>
 
-              <div className="flex overflow-hidden rounded-lg border border-gray-300 dark:border-gray-600">
+              {/* <div className="flex overflow-hidden rounded-lg border border-gray-300 dark:border-gray-600">
                 <button
                   className={`px-5 py-2 text-sm font-semibold transition-colors ${
                     assignRole === "evaluator"
@@ -181,7 +183,7 @@ const AssignModelComp = ({ setassignModel, currentBookletDetails }) => {
                 >
                   Reviewer
                 </button>
-              </div>
+              </div> */}
 
               <h3 className="text-lg font-medium">
                 Unallocated:{" "}

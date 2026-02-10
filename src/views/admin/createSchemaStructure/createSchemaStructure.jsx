@@ -1,13 +1,22 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
+import ActionCard from "UI/ActionCard";
+import { Settings, UploadCloud, CheckCircle } from "lucide-react";
 import { toast } from "react-toastify";
 import SchemaQuestion from "../schemas/SchemaQuestion";
 import { FaFileUpload, FaMapMarkerAlt } from "react-icons/fa";
+import { motion } from "motion/react";
 import SubQuestionModal from "../../../components/modal/QuestionMappingModal";
 import Tooltip from "@mui/material/Tooltip";
 import { FaCloudUploadAlt } from "react-icons/fa";
+import { FileQuestion, FileText, HelpCircle } from "lucide-react";
 import { createPortal } from "react-dom";
+import StatCard from "UI/StatCard";
+import IconActionButton from "UI/IconActionButton";
+import RowActionButton from "UI/RowActionButton";
+import { Trash2 } from "lucide-react";
+import { Save } from "lucide-react";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleQuestion } from "@fortawesome/free-solid-svg-icons";
@@ -998,7 +1007,7 @@ const CreateSchemaStructure = () => {
     const isSaving = savingStatus[folderId] || false;
     const isDeleting = deletingStatus[folderId] || false;
     const folderStyle = `relative ml-${level * 4} mt-3`;
-    const color = level % 2 === 0 ? "bg-[#f4f4f4]" : "bg-[#fafafa]";
+    const color = level % 2 === 0 ? "bg-[#ffff]" : "bg-[#fafafa]";
 
     const getAllowedMaxMarks = () => {
       const schemaMax = Number(schemaData?.maxMarks) || 0;
@@ -1103,11 +1112,11 @@ const CreateSchemaStructure = () => {
           <div
             className={`absolute left-[-16px] top-[-16px] ${
               isLastChild ? "h-1/2" : "h-full"
-            } w-[2px] rounded-[12px] border-l-2 border-[#8a8a8a] bg-gradient-to-b from-gray-400 to-gray-500`}
+            } w-[2px] rounded-[12px] border-l-2 border-[#8a8a8a] bg-gradient-to-b from-white to-white`}
           ></div>
         )}
         {level > 0 && (
-          <div className="absolute left-[-16px] top-[16px] h-[2px] w-4 rounded-md bg-gradient-to-r from-gray-400 to-gray-500"></div>
+          <div className="absolute left-[-16px] top-[16px] h-[2px] w-4 rounded-md bg-gradient-to-r from-white to-white"></div>
         )}
         <div className="w-full">
           <div className="flex items-center justify-start gap-6">
@@ -1325,16 +1334,19 @@ const CreateSchemaStructure = () => {
               </div>
             )}
 
-            <div className="flex w-12 items-center justify-center">
-              <Tooltip title="Map Supplementary PDF" arrow>
-                <div
-                  className="flex cursor-pointer justify-center rounded px-3 py-2 hover:bg-yellow-100 dark:hover:bg-yellow-900"
-                  onClick={() => {
-                    setActiveQuestionId(folder.id); // 🔥 USE QUESTION NUMBER
-                    setShowQuestionModal(true);
-                  }}
-                >
-                  <FaFileUpload className="text-yellow-600" size={18} />
+            <div className="flex w-40 justify-center">
+              <Tooltip title="Map Question and Answer PDF" arrow>
+                <div>
+                  <RowActionButton
+                    label="Map PDF"
+                    icon={FaFileUpload}
+                    color="purple"
+                    textColor="text-gray-900"
+                    onClick={() => {
+                      setActiveQuestionId(folder.id);
+                      setShowQuestionModal(true);
+                    }}
+                  />
                 </div>
               </Tooltip>
             </div>
@@ -1362,10 +1374,13 @@ const CreateSchemaStructure = () => {
               </label>
             </div>
 
-            <div className="w-20">
-              <button
-                className="font-md w-20 rounded-lg border-2 border-gray-900 bg-blue-800 px-2 py-1.5 text-white"
-                disabled={isSaving}
+            <div className="w-28">
+              <RowActionButton
+                label={displayData[0]?._id ? "Update" : "Save"}
+                icon={Save}
+                color="blue"
+                loading={isSaving}
+                textColor="text-gray-900"
                 onClick={() =>
                   handleSubQuestionsChange(
                     folder,
@@ -1374,25 +1389,20 @@ const CreateSchemaStructure = () => {
                     parentFolderId
                   )
                 }
-              >
-                {isSaving
-                  ? "Saving..."
-                  : displayData[0]?._id
-                  ? "Update"
-                  : "Save"}
-              </button>
+              />
             </div>
 
-            <div className="w-20">
-              <button
-                className="font-md w-20 rounded-lg border-2 border-gray-900 bg-red-600 px-2 py-1.5 text-white hover:bg-red-700 disabled:bg-gray-400"
-                disabled={isDeleting}
+            <div className="w-28">
+              <RowActionButton
+                label="Delete"
+                icon={Trash2}
+                color="red"
+                loading={isDeleting}
+                textColor="text-gray-900"
                 onClick={() =>
                   handleDeleteQuestion(folder, level, parentFolderId)
                 }
-              >
-                {isDeleting ? "Deleting..." : "Delete"}
-              </button>
+              />
             </div>
           </div>
 
@@ -1463,72 +1473,217 @@ const CreateSchemaStructure = () => {
     );
   };
 
+  // return (
+  //   <div
+  //     className="max-h-[75vh] min-w-[1000px] space-y-4 overflow-x-auto overflow-y-scroll rounded-lg
+  //   border border-gray-300 px-5  dark:border-gray-700 dark:bg-navy-700"
+  //   >
+  //     <motion.div
+  //       initial={{ opacity: 0, y: -20 }}
+  //       animate={{ opacity: 1, y: 0 }}
+  //       className="mb-8"
+  //     >
+  //       <h1 className="text-transparent mb-2 mt-10 bg-gradient-to-r from-blue-600 via-purple-600 to-teal-600 bg-clip-text text-3xl font-bold md:text-4xl">
+  //         Create Schema Structure
+  //       </h1>
+  //       <p className="text-slate-600 dark:text-slate-400">
+  //         Create, configure, and manage exam schemas in one place.
+  //       </p>
+  //     </motion.div>
+
+  //     <div className="sticky top-0 z-20 mb-4 flex justify-between bg-white p-3 shadow dark:bg-navy-700">
+  //       <span className="cursor-pointer rounded-lg bg-blue-600 p-2 text-white hover:bg-blue-700">
+  //         Questions To Allot: {questionToAllot ? questionToAllot : 0}
+  //       </span>
+  //       <span className="cursor-pointer rounded-lg bg-green-600 p-2 text-white hover:bg-green-700">
+  //         Marks To Allot: {remainingMarks ? remainingMarks : 0}
+  //       </span>
+  //       <span>
+  //         <div
+  //           className="hover:bg-transparent inline-block cursor-pointer items-center rounded border border-indigo-600 bg-indigo-600 px-6 py-3 text-sm font-medium text-white hover:bg-indigo-700"
+  //           onClick={() => setEditShowModal(true)}
+  //         >
+  //           Edit Question Schema
+  //         </div>
+  //       </span>
+
+  //       <span>
+  //         <Tooltip title="Upload Answer PDF / ZIP" arrow>
+  //           <div
+  //             className="inline-flex cursor-pointer items-center rounded border border-green-600 bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+  //             onClick={() => fileInputRef.current?.click()}
+  //           >
+  //             <FaCloudUploadAlt className="mr-2" />
+  //             Upload File
+  //           </div>
+  //         </Tooltip>
+  //       </span>
+
+  //       <span
+  //         className="cursor-pointer rounded-lg bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
+  //         onClick={handleFinalSubmit}
+  //       >
+  //         Submit
+  //       </span>
+  //     </div>
+  //     {folders.map((folder) => renderFolder(folder))}
+
+  //     <SchemaQuestion
+  //       editShowModal={editShowModal}
+  //       setEditShowModal={setEditShowModal}
+  //       selectedSchema={selectedSchema}
+  //       handleUpdate={handleUpdate}
+  //       loading={loading}
+  //     />
+
+  //     {showQuestionModal && (
+  //       <SubQuestionModal
+  //         showImageModal={showQuestionModal}
+  //         setShowImageModal={setShowQuestionModal}
+  //         schemaId={id} // ✅ from useParams
+  //         questionId={activeQuestionId} // ✅ selected question
+  //       />
+  //     )}
+
+  //     <input
+  //       type="file"
+  //       ref={fileInputRef}
+  //       accept=".pdf,.zip"
+  //       style={{ display: "none" }}
+  //       onChange={handleSchemaFileUpload}
+  //     />
+  //   </div>
+  // );
+
   return (
-    <div
-      className="max-h-[75vh] min-w-[1000px] space-y-4 overflow-x-auto overflow-y-scroll rounded-lg 
-    border border-gray-300 px-5  dark:border-gray-700 dark:bg-navy-700"
-    >
-      <div className="sticky top-0 z-20 mb-4 flex justify-between bg-white p-3 shadow dark:bg-navy-700">
-        <span className="cursor-pointer rounded-lg bg-blue-600 p-2 text-white hover:bg-blue-700">
-          Questions To Allot: {questionToAllot ? questionToAllot : 0}
-        </span>
-        <span className="cursor-pointer rounded-lg bg-green-600 p-2 text-white hover:bg-green-700">
-          Marks To Allot: {remainingMarks ? remainingMarks : 0}
-        </span>
-        <span>
-          <div
-            className="hover:bg-transparent inline-block cursor-pointer items-center rounded border border-indigo-600 bg-indigo-600 px-6 py-3 text-sm font-medium text-white hover:bg-indigo-700"
-            onClick={() => setEditShowModal(true)}
-          >
-            Edit Question Schema
+    <div className="p-4 md:p-6 lg:p-8">
+      {/* Welcome Section */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-8"
+      >
+        <h1 className="text-transparent mb-2 bg-gradient-to-r from-blue-600 via-purple-600 to-teal-600 bg-clip-text text-3xl font-bold md:text-4xl">
+          Create Schema Structure
+        </h1>
+        <p className="text-slate-600 dark:text-slate-400">
+          Create, configure, and manage exam schemas in one place.
+        </p>
+      </motion.div>
+
+      <div
+        className="max-h-[75vh] min-w-[1000px] overflow-x-auto overflow-y-scroll rounded-lg 
+        border border-gray-300  dark:border-gray-700 dark:bg-navy-700"
+      >
+        <div className="sticky top-0 z-20 mb-4 flex justify-between bg-white p-3 shadow dark:bg-navy-700">
+          {/* Statistics Cards */}
+          <div className="flex flex-wrap gap-4">
+            <StatCard
+              label="Questions To Allot"
+              value={questionToAllot ? questionToAllot : 0}
+              color="blue"
+              icon={HelpCircle}
+            />
+
+            <StatCard
+              label="Marks To Allot"
+              value={remainingMarks ? remainingMarks : 0}
+              color="green"
+              icon={FileText}
+            />
           </div>
-        </span>
 
-        <span>
-          <Tooltip title="Upload Answer PDF / ZIP" arrow>
+          {/* <span>
             <div
-              className="inline-flex cursor-pointer items-center rounded border border-green-600 bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
-              onClick={() => fileInputRef.current?.click()}
+              className="hover:bg-transparent inline-block cursor-pointer items-center rounded border border-indigo-600 bg-indigo-600 px-6 py-3 text-sm font-medium text-white hover:bg-indigo-700"
+              onClick={() => setEditShowModal(true)}
             >
-              <FaCloudUploadAlt className="mr-2" />
-              Upload File
+              Edit Question Schema
             </div>
-          </Tooltip>
-        </span>
+          </span>
 
-        <span
-          className="cursor-pointer rounded-lg bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
-          onClick={handleFinalSubmit}
-        >
-          Submit
-        </span>
-      </div>
-      {folders.map((folder) => renderFolder(folder))}
+          <span>
+            <Tooltip title="Upload Answer PDF / ZIP" arrow>
+              <div
+                className="inline-flex cursor-pointer items-center rounded border border-green-600 bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <FaCloudUploadAlt className="mr-2" />
+                Upload File
+              </div>
+            </Tooltip>
+          </span>
 
-      <SchemaQuestion
-        editShowModal={editShowModal}
-        setEditShowModal={setEditShowModal}
-        selectedSchema={selectedSchema}
-        handleUpdate={handleUpdate}
-        loading={loading}
-      />
+          <span
+            className="cursor-pointer rounded-lg bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
+            onClick={handleFinalSubmit}
+          >
+            Submit
+          </span> */}
 
-      {showQuestionModal && (
-        <SubQuestionModal
-          showImageModal={showQuestionModal}
-          setShowImageModal={setShowQuestionModal}
-          schemaId={id} // ✅ from useParams
-          questionId={activeQuestionId} // ✅ selected question
+          <div className="flex flex-wrap gap-4">
+            {/* Edit Schema */}
+            <ActionCard
+              label="Edit Question Schema"
+              description="Modify structure & rules"
+              color="purple"
+              icon={Settings}
+              onClick={() => setEditShowModal(true)}
+            />
+
+            {/* Upload File */}
+            <Tooltip title="Upload Answer PDF / ZIP" arrow>
+              <div>
+                <ActionCard
+                  label="Upload Answer File"
+                  description="PDF or ZIP"
+                  color="blue"
+                  icon={UploadCloud}
+                  onClick={() => fileInputRef.current?.click()}
+                />
+              </div>
+            </Tooltip>
+
+            {/* Submit */}
+            <ActionCard
+              label="Finalize Schema"
+              description={
+                questionToAllot || remainingMarks ? "Incomplete" : "Submit Now"
+              }
+              color={questionToAllot || remainingMarks ? "red" : "green"}
+              icon={CheckCircle}
+              disabled={questionToAllot || remainingMarks}
+              onClick={handleFinalSubmit}
+            />
+          </div>
+        </div>
+        {folders.map((folder) => renderFolder(folder))}
+
+        <SchemaQuestion
+          editShowModal={editShowModal}
+          setEditShowModal={setEditShowModal}
+          selectedSchema={selectedSchema}
+          handleUpdate={handleUpdate}
+          loading={loading}
         />
-      )}
 
-      <input
-        type="file"
-        ref={fileInputRef}
-        accept=".pdf,.zip"
-        style={{ display: "none" }}
-        onChange={handleSchemaFileUpload}
-      />
+        {showQuestionModal && (
+          <SubQuestionModal
+            showImageModal={showQuestionModal}
+            setShowImageModal={setShowQuestionModal}
+            schemaId={id} // ✅ from useParams
+            questionId={activeQuestionId} // ✅ selected question
+          />
+        )}
+
+        <input
+          type="file"
+          ref={fileInputRef}
+          accept=".pdf,.zip"
+          style={{ display: "none" }}
+          onChange={handleSchemaFileUpload}
+        />
+      </div>
     </div>
   );
 };

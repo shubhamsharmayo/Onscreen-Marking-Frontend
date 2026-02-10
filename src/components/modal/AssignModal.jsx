@@ -110,7 +110,7 @@ const AssignModal = ({
     } catch (error) {
       console.log(error);
       toast.error(error.response.data.message);
-    } finally{
+    } finally {
       setLoading(false);
     }
   };
@@ -120,7 +120,7 @@ const AssignModal = ({
 
   return (
     <div className="bg-black fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 backdrop-blur-md">
-      <div className="mx-3 sm:mx-6 w-full rounded-xl bg-white shadow-lg drop-shadow-md dark:bg-navy-700 dark:text-white md:w-2/3 lg:w-7/12 2xl:w-5/12">
+      <div className="mx-3 w-full rounded-xl bg-white shadow-lg drop-shadow-md dark:bg-navy-700 dark:text-white sm:mx-6 md:w-2/3 lg:w-7/12 2xl:w-5/12">
         <div className="flex justify-between px-7 py-5">
           <div>
             <h2 className="font-bold" style={{ fontSize: "32px" }}>
@@ -152,8 +152,8 @@ const AssignModal = ({
         <hr className="bg-gray-600" />
         <div className="mt-2 space-y-2 px-5 pb-6 pt-3">
           <div className="flex">
-            <div className="flex sm:w-1/2 sm:ml-10 text-sm">
-              <p className="sm:pl-2 font-bold text-gray-700 dark:text-white">
+            <div className="flex text-sm sm:ml-10 sm:w-1/2">
+              <p className="font-bold text-gray-700 dark:text-white sm:pl-2">
                 Relation Name:{" "}
               </p>{" "}
               <p className="mx-2 text-gray-700 dark:text-white">
@@ -162,7 +162,7 @@ const AssignModal = ({
             </div>
 
             <div className="flex w-1/2 text-sm">
-              <p className="sm:pl-2 font-bold text-gray-700 dark:text-white">
+              <p className="font-bold text-gray-700 dark:text-white sm:pl-2">
                 {" "}
                 Answer Images:{" "}
               </p>{" "}
@@ -172,8 +172,8 @@ const AssignModal = ({
             </div>
           </div>
           <div className="flex">
-            <div className="flex w-1/2 sm:ml-10 text-sm">
-              <p className="sm:pl-2 font-bold text-gray-700 dark:text-white">
+            <div className="flex w-1/2 text-sm sm:ml-10">
+              <p className="font-bold text-gray-700 dark:text-white sm:pl-2">
                 {" "}
                 Question Images:{" "}
               </p>{" "}
@@ -183,7 +183,7 @@ const AssignModal = ({
             </div>
 
             <div className="flex w-1/2 text-sm">
-              <p className="sm:pl-2 font-bold text-gray-700 dark:text-white">
+              <p className="font-bold text-gray-700 dark:text-white sm:pl-2">
                 {" "}
                 Status:{" "}
               </p>{" "}
@@ -195,7 +195,7 @@ const AssignModal = ({
           <div className="relative">
             {/* Dropdown Of users */}
 
-            <div className="mt-5 flex items-center gap-5 3xl:gap-9 px-5">
+            <div className="mt-5 flex items-center gap-5 px-5 3xl:gap-9">
               <div className="text-gray-700 dark:text-white">
                 <label htmlFor="">Select User:</label>
               </div>
@@ -229,7 +229,7 @@ const AssignModal = ({
                 <select
                   name="cars"
                   id="cars"
-                  className="bg-transparent h-10 w-full overflow-auto rounded-lg px-2 text-sm text-gray-700 border border-gray-300 dark:border-gray-700 focus:border-none focus:outline-none focus:ring focus:ring-indigo-500 focus:border-indigo-500 dark:bg-navy-900 dark:text-white"
+                  className="bg-transparent h-10 w-full overflow-auto rounded-lg border border-gray-300 px-2 text-sm text-gray-700 focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white"
                   onChange={(e) => {
                     setSelectedUser(e.target.value);
                   }}
@@ -270,7 +270,7 @@ const AssignModal = ({
 
             {/* Dropdown Of users */}
           </div>
-          <div className="flex items-center gap-6 3xl:gap-10 px-5">
+          <div className="flex items-center gap-6 px-5 3xl:gap-10">
             <div className="text-gray-700 dark:text-white">
               <label htmlFor="taskName">Task Name:</label>
             </div>
@@ -283,7 +283,7 @@ const AssignModal = ({
                 autoComplete="off"
                 value={taskName}
                 onChange={(e) => setTaskName(e.target.value)}
-                className="bg-transparent h-10 w-full rounded-lg px-5 text-sm border border-gray-300 dark:border-gray-700 focus:border-none focus:outline-none focus:ring focus:ring-indigo-500 focus:border-indigo-500 dark:bg-navy-900 dark:text-white"
+                className="bg-transparent h-10 w-full rounded-lg border border-gray-300 px-5 text-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white"
               />
             </div>
           </div>
@@ -301,7 +301,7 @@ const AssignModal = ({
                 placeholder="Upload File"
                 autoComplete="off"
                 value={selectedPath}
-                className="bg-transparent h-12 w-full rounded-l-md px-4 text-sm border border-gray-300 dark:border-gray-700 focus:border-none focus:outline-none focus:ring focus:ring-indigo-500 focus:border-indigo-500 dark:bg-navy-900 dark:text-white"
+                className="bg-transparent h-12 w-full rounded-l-md border border-gray-300 px-4 text-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white"
               />
               <button className="duration-250 group  relative z-30 flex cursor-pointer  items-center justify-center overflow-hidden rounded-r-lg rounded-tr-lg bg-indigo-600 px-4 py-2.5 text-white shadow-lg transition-all hover:bg-indigo-700 hover:shadow-xl focus:bg-indigo-600 focus:shadow-xl focus:outline-none focus:ring-0 active:bg-indigo-700 active:shadow-lg ">
                 <svg
@@ -328,13 +328,16 @@ const AssignModal = ({
         </div>
         <div class="px-20 py-3 text-center">
           <button
-            class={`my-2 mb-3 w-full rounded-md py-1 text-lg font-bold text-white ${loading ? "bg-indigo-400" : "bg-indigo-600 hover:bg-indigo-700"}`}
+            class={`my-2 mb-3 w-full rounded-md py-1 text-lg font-bold text-white ${
+              loading ? "bg-indigo-400" : "bg-indigo-600 hover:bg-indigo-700"
+            }`}
             onClick={handleSubmitButton}
             disabled={loading}
           >
             {loading ? (
-              <div className={`flex items-center justify-center w-full`}>
-                <MoonLoader color="white" loading={loading} size={20} /> <span className="ml-3">Submitting...</span>
+              <div className={`flex w-full items-center justify-center`}>
+                <MoonLoader color="white" loading={loading} size={20} />{" "}
+                <span className="ml-3">Submitting...</span>
               </div>
             ) : (
               "Submit"

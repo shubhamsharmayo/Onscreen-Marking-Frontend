@@ -1,7 +1,8 @@
-import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { GiCrossMark } from "react-icons/gi";
 import { toast } from "react-toastify";
+import { motion, AnimatePresence } from "motion/react";
+import { Loader2, X } from "lucide-react";
 
 const SchemaQuestion = ({
   editShowModal,
@@ -150,19 +151,19 @@ const SchemaQuestion = ({
     }
 
     if (
-     formData.numberOfSupplement !== "" &&
-     Number(formData.numberOfSupplement) <= 0
+      formData.numberOfSupplement !== "" &&
+      Number(formData.numberOfSupplement) <= 0
     ) {
-     toast.error("Number of Supplement must be greater than 0.");
-     return;
+      toast.error("Number of Supplement must be greater than 0.");
+      return;
     }
 
     if (
-     formData.PageofSupplement !== "" &&
-     Number(formData.PageofSupplement) <= 0
+      formData.PageofSupplement !== "" &&
+      Number(formData.PageofSupplement) <= 0
     ) {
-     toast.error("Pages in Supplement must be greater than 0.");
-     return;
+      toast.error("Pages in Supplement must be greater than 0.");
+      return;
     }
 
     if (
@@ -199,251 +200,272 @@ const SchemaQuestion = ({
   if (!editShowModal) return null;
 
   return (
-    <div
-      className={`bg-black fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 backdrop-blur-md ${
-        editShowModal ? "block" : "hidden"
-      }`}
-    >
+    <AnimatePresence>
       <div
-        className="fixed inset-0 opacity-60"
-        onClick={() => setEditShowModal(false)}
-      ></div>
-      <div className="relative m-2 transform rounded-lg bg-white p-5 shadow-lg transition-all dark:bg-navy-700 sm:w-full sm:max-w-lg sm:p-8 ">
-        <button
-          className="absolute right-4 top-4 p-2 text-3xl text-gray-700 hover:text-red-800"
-          onClick={() => setEditShowModal(false)} // Close modal
-        >
-          <GiCrossMark />
-        </button>
-        <h2 className="mb-2 text-center text-xl font-semibold text-indigo-600 dark:text-white sm:mb-6 sm:text-3xl">
-          Update Schema
-        </h2>
-
-        <div className="sm:space-y-6">
-          {/* Input for Schema Name */}
-          {/* <div className="mb-2 sm:mb-0">
-            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg">
-              Schema Name
-            </label>
-            <input
-              type="text"
-              name="name"
-              value={formData?.name}
-              onChange={handleInputChange}
-              className="sm:text-md w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:p-3"
-            />
-          </div> */}
-          {/* Input for Maximum Marks */}
-          <div className="flex flex-col justify-between sm:flex-row">
-            <div className="mb-2 sm:mb-0">
-              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg">
-                Maximum Marks
-              </label>
-              <input
-                type="number"
-                name="maxMarks"
-                value={formData?.maxMarks}
-                onChange={handleInputChange}
-                className="sm:text-md w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-3"
-              />
-            </div>
-            <div className="mb-2 sm:mb-0">
-              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg">
-                Minimum Marks
-              </label>
-              <input
-                type="number"
-                name="minMarks"
-                value={formData?.minMarks}
-                onChange={handleInputChange}
-                className="sm:text-md w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-3"
-              />
-            </div>
-          </div>
-          {/* Input for Total Questions */}
-          <div className="flex flex-col justify-between sm:flex-row">
-            <div className="mb-2 sm:mb-0">
-              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg">
-                Total Questions
-              </label>
-              <input
-                type="number"
-                name="totalQuestions"
-                value={formData?.totalQuestions}
-                onChange={handleInputChange}
-                className="sm:text-md w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-3"
-              />
-            </div>
-            {/* Input for Compulsory Questions */}
-            <div className="mb-2 sm:mb-0">
-              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg">
-                Compulsory Questions
-              </label>
-              <input
-                type="number"
-                name="compulsoryQuestions"
-                value={formData?.compulsoryQuestions}
-                onChange={handleInputChange}
-                className="sm:text-md w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-3"
-              />
-            </div>
-          </div>
-          {/* <div className="flex flex-col justify-between sm:flex-row">
-            <div className="mb-2 sm:mb-0">
-              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg">
-                Min Time (in minutes):
-              </label>
-              <input
-                type="number"
-                name="minTime"
-                value={formData?.minTime}
-                onChange={handleInputChange}
-                className="sm:text-md w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-3"
-              />
-            </div>
-            <div className="mb-2 sm:mb-0">
-              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg">
-                Max Time (in minutes):
-              </label>
-              <input
-                type="number"
-                name="maxTime"
-                value={formData?.maxTime}
-                onChange={handleInputChange}
-                className="sm:text-md w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-3"
-              />
-            </div>
-          </div>
-          <div className="flex flex-col justify-between sm:flex-row">
-           
-            <div className="mb-2 sm:mb-0">
-              <label
-                className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg"
-                htmlFor="numberOfPage"
-              >
-                No. of pages in Booklets:
-              </label>
-              <input
-                type="number"
-                id="numberOfPage"
-                name="numberOfPage"
-                value={formData?.numberOfPage}
-                onChange={handleInputChange}
-                className="sm:text-md w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2"
-              />
-            </div>
-
-            <div className="mb-2 sm:mb-0">
-              <label
-                className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg"
-                htmlFor="hiddenPage"
-              >
-                Hidden Pages:
-              </label>
-              <select
-                id="hiddenPage"
-                name="hiddenPage"
-                value={selectedHiddenPage}
-                onChange={(e) => {
-                  const value = Number(e.target.value);
-
-                  if (!formData.hiddenPage.includes(value)) {
-                    setFormData((prev) => ({
-                      ...prev,
-                      hiddenPage: [...prev.hiddenPage, value],
-                    }));
-                  }
-
-                  setSelectedHiddenPage(""); 
-                }}
-                className="sm:text-md max-h-10 w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2"
-              >
-                <option value="" className="px-2 text-sm text-gray-400">
-                  Select Hidden Pages
-                </option>
-                {Array.from({ length: formData?.numberOfPage }, (_, index) => (
-                  <option key={index + 1} value={index + 1}>
-                    {index + 1}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>{" "}
-          
-          {formData?.hiddenPage?.length > 0 && (
-            <div className="flex flex-col justify-between sm:flex-row">
-              <div className="flex w-full flex-wrap gap-2 rounded-md border border-gray-300 px-4 py-1 sm:py-3">
-                {formData?.hiddenPage?.map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex cursor-pointer items-center space-x-1 rounded-lg bg-green-800 px-4 py-2 text-sm text-white "
-                    onClick={() => removeHiddenPageIndex(index)}
-                  >
-                    <span className="">{item}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )} */}
-          {/* Input for Evaluation Time */}
-          {/* <div className="mb-2 sm:mb-0">
-            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg">
-              Evaluation Time (minutes)
-            </label>
-            <input
-              type="number"
-              name="evaluationTime"
-              value={formData.evaluationTime}
-              onChange={handleInputChange}
-              className="sm:text-md w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-3"
-            />
-          </div> */}
-        </div>
-
-        {/* Update button */}
-        <div className="flex justify-end sm:mt-6">
-          {loading ? (
-            <div
-              className={`flex items-center justify-center rounded-md px-3 py-1.5 text-white transition-colors sm:px-6 sm:py-3 ${
-                loading ? "bg-indigo-400" : "bg-indigo-600"
-              }`}
+        className={`bg-black fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 backdrop-blur-md ${
+          editShowModal ? "block" : "hidden"
+        }`}
+      >
+        <div
+          className="fixed inset-0 opacity-60"
+          onClick={() => setEditShowModal(false)}
+        ></div>
+        <div className="dark:bg-slate-900 border-slate-200 dark:border-slate-700 relative m-2 transform overflow-hidden rounded-3xl border bg-white shadow-2xl sm:w-full sm:max-w-lg">
+          {/* Header */}
+          <div className="sticky top-0 z-10 flex items-center justify-between bg-gradient-to-r from-blue-500 via-purple-500 to-teal-500 px-6 py-4">
+            <h2 className="text-2xl font-bold text-white">Update Schema</h2>
+            <motion.button
+              onClick={() => setEditShowModal(false)} // Close modal
+              className="rounded-full bg-white/20 p-2 transition-colors hover:bg-white/30"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
             >
-              <svg
-                className="mr-2 h-5 w-5 animate-spin text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
+              <X size={24} className="text-white" />
+            </motion.button>
+          </div>
+
+          <div className="p-3">
+            <div className="sm:space-y-3">
+              {/* Input for Schema Name */}
+              {/* <div className="mb-2 sm:mb-0">
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg">
+                  Schema Name
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData?.name}
+                  onChange={handleInputChange}
+                  className="sm:text-md w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:p-3"
                 />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+              </div> */}
+              {/* Input for Maximum Marks */}
+              <div className="flex flex-col justify-between sm:flex-row">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                >
+                  <label
+                    className="mb-2 block text-sm font-medium text-gray-800"
+                    htmlFor="maxMarks"
+                  >
+                    Maximum Marks
+                  </label>
+                  <input
+                    id="maxMarks"
+                    type="number"
+                    name="maxMarks"
+                    value={formData?.maxMarks}
+                    onChange={handleInputChange}
+                    className="border-slate-200 w-full rounded-xl border-2 bg-white/60 px-4 py-2 outline-none backdrop-blur-sm transition-all duration-300 focus:border-blue-400 focus:bg-white focus:shadow-lg"
+                  />
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                >
+                  <label
+                    className="mb-2 block text-sm font-medium text-gray-800"
+                    htmlFor="minMarks"
+                  >
+                    Minimum Marks
+                  </label>
+                  <input
+                    id="minMarks"
+                    type="number"
+                    name="minMarks"
+                    value={formData?.minMarks}
+                    onChange={handleInputChange}
+                    className="border-slate-200 w-full rounded-xl border-2 bg-white/60 px-4 py-2 outline-none backdrop-blur-sm transition-all duration-300 focus:border-blue-400 focus:bg-white focus:shadow-lg"
+                  />
+                </motion.div>
+              </div>
+              {/* Input for Total Questions */}
+              <div className="flex flex-col justify-between sm:flex-row">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                >
+                  <label
+                    className="mb-2 block text-sm font-medium text-gray-800"
+                    htmlFor="totalQuestions"
+                  >
+                    Total Questions
+                  </label>
+                  <input
+                    id="totalQuestions"
+                    type="number"
+                    name="totalQuestions"
+                    value={formData?.totalQuestions}
+                    onChange={handleInputChange}
+                    className="border-slate-200 w-full rounded-xl border-2 bg-white/60 px-4 py-2 outline-none backdrop-blur-sm transition-all duration-300 focus:border-blue-400 focus:bg-white focus:shadow-lg"
+                  />
+                </motion.div>
+
+                {/* Input for Compulsory Questions */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                >
+                  <label
+                    className="mb-2 block text-sm font-medium text-gray-800"
+                    htmlFor="compulsoryQuestions"
+                  >
+                    Compulsory Questions
+                  </label>
+                  <input
+                    id="compulsoryQuestions"
+                    type="number"
+                    name="compulsoryQuestions"
+                    value={formData?.compulsoryQuestions}
+                    onChange={handleInputChange}
+                    className="border-slate-200 w-full rounded-xl border-2 bg-white/60 px-4 py-2 outline-none backdrop-blur-sm transition-all duration-300 focus:border-blue-400 focus:bg-white focus:shadow-lg"
+                  />
+                </motion.div>
+              </div>
+              {/* <div className="flex flex-col justify-between sm:flex-row">
+                <div className="mb-2 sm:mb-0">
+                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg">
+                    Min Time (in minutes):
+                  </label>
+                  <input
+                    type="number"
+                    name="minTime"
+                    value={formData?.minTime}
+                    onChange={handleInputChange}
+                    className="sm:text-md w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-3"
+                  />
+                </div>
+                <div className="mb-2 sm:mb-0">
+                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg">
+                    Max Time (in minutes):
+                  </label>
+                  <input
+                    type="number"
+                    name="maxTime"
+                    value={formData?.maxTime}
+                    onChange={handleInputChange}
+                    className="sm:text-md w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-3"
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col justify-between sm:flex-row">
+              
+                <div className="mb-2 sm:mb-0">
+                  <label
+                    className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg"
+                    htmlFor="numberOfPage"
+                  >
+                    No. of pages in Booklets:
+                  </label>
+                  <input
+                    type="number"
+                    id="numberOfPage"
+                    name="numberOfPage"
+                    value={formData?.numberOfPage}
+                    onChange={handleInputChange}
+                    className="sm:text-md w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2"
+                  />
+                </div>
+
+                <div className="mb-2 sm:mb-0">
+                  <label
+                    className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg"
+                    htmlFor="hiddenPage"
+                  >
+                    Hidden Pages:
+                  </label>
+                  <select
+                    id="hiddenPage"
+                    name="hiddenPage"
+                    value={selectedHiddenPage}
+                    onChange={(e) => {
+                      const value = Number(e.target.value);
+
+                      if (!formData.hiddenPage.includes(value)) {
+                        setFormData((prev) => ({
+                          ...prev,
+                          hiddenPage: [...prev.hiddenPage, value],
+                        }));
+                      }
+
+                      setSelectedHiddenPage(""); 
+                    }}
+                    className="sm:text-md max-h-10 w-72 rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:w-full sm:px-4 sm:py-2"
+                  >
+                    <option value="" className="px-2 text-sm text-gray-400">
+                      Select Hidden Pages
+                    </option>
+                    {Array.from({ length: formData?.numberOfPage }, (_, index) => (
+                      <option key={index + 1} value={index + 1}>
+                        {index + 1}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>{" "}
+              
+              {formData?.hiddenPage?.length > 0 && (
+                <div className="flex flex-col justify-between sm:flex-row">
+                  <div className="flex w-full flex-wrap gap-2 rounded-md border border-gray-300 px-4 py-1 sm:py-3">
+                    {formData?.hiddenPage?.map((item, index) => (
+                      <div
+                        key={index}
+                        className="flex cursor-pointer items-center space-x-1 rounded-lg bg-green-800 px-4 py-2 text-sm text-white "
+                        onClick={() => removeHiddenPageIndex(index)}
+                      >
+                        <span className="">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )} */}
+              {/* Input for Evaluation Time */}
+              {/* <div className="mb-2 sm:mb-0">
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-white sm:mb-2 sm:text-lg">
+                  Evaluation Time (minutes)
+                </label>
+                <input
+                  type="number"
+                  name="evaluationTime"
+                  value={formData.evaluationTime}
+                  onChange={handleInputChange}
+                  className="sm:text-md w-full rounded-md border border-gray-300 px-2 py-0.5 text-sm shadow-sm focus:border-none focus:border-indigo-500 focus:outline-none focus:ring focus:ring-indigo-500 dark:border-gray-700 dark:bg-navy-900 dark:text-white sm:p-3"
                 />
-              </svg>
-              Updating Schema...
+              </div> */}
             </div>
-          ) : (
-            <button
+
+            {/* Update button */}
+            <motion.button
+              type="submit"
+              disabled={loading}
               onClick={() => {
                 validationCheck();
               }}
-              disabled={loading}
-              className="rounded-md bg-indigo-600 px-3 py-1.5 text-white transition-colors hover:bg-indigo-700 sm:px-6 sm:py-3"
+              className="w-full transform rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-teal-500 py-4 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70 sm:mt-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.9 }}
+              whileTap={{ scale: 0.98 }}
             >
-              Update Question
-            </button>
-          )}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 className="animate-spin" size={20} />
+                  Updating Schema...
+                </span>
+              ) : (
+                "Update Question"
+              )}
+            </motion.button>
+          </div>
         </div>
       </div>
-    </div>
+    </AnimatePresence>
   );
 };
 

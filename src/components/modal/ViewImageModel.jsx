@@ -127,15 +127,11 @@ const ImageModal = ({
         // setViewquestionImages(response.data[folderid-1].questionImages);
         // setViewanswerImages(response.data[folderid-1].answerImages);
         response.data.filter((item) => {
-            if(item?.questionId === questionId[0]?._id){
-               
-               setViewquestionImages(item?.questionImages);
-               setViewanswerImages(item?.answerImages);
-            }
-            
-          })
-        
-        
+          if (item?.questionId === questionId[0]?._id) {
+            setViewquestionImages(item?.questionImages);
+            setViewanswerImages(item?.answerImages);
+          }
+        });
       } catch (error) {
         console.log(error);
         // toast.error(error?.response?.data?.message);
@@ -155,7 +151,7 @@ const ImageModal = ({
             },
           }
         );
-        console.log(response?.data)
+        console.log(response?.data);
         setQuestionsPdfPath(response?.data?.questionPdfPath);
         setCountQuestions(response?.data?.countOfQuestionImages);
         setAnswersPdfPath(response?.data?.answerPdfPath);
@@ -309,7 +305,7 @@ const ImageModal = ({
     <div>
       {/* Question Image Modal */}
       {showViewImageModal && !showAnswerModel && (
-        <div className="bg-black fixed inset-0 z-50 flex  items-center justify-center bg-opacity-50 backdrop-blur-md">
+        <div className="bg-black fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 pt-20 backdrop-blur-md">
           <div className="h-11/12 relative m-5 w-11/12 rounded-lg border border-gray-900 bg-white p-6 shadow-lg dark:bg-navy-700 sm:w-8/12 lg:w-6/12 xl:w-4/12">
             <div className="mb-4 flex items-center justify-between dark:bg-navy-700">
               <div className="text-lg font-bold text-gray-800 dark:text-white ">
@@ -433,7 +429,7 @@ const ImageModal = ({
 
       {/* Answer Image Modal */}
       {showAnswerModel && (
-        <div className="bg-black fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 backdrop-blur-md">
+        <div className="bg-black fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 pt-20 backdrop-blur-md">
           <div className="h-11/12 relative m-5 w-11/12 rounded-lg border border-gray-900 bg-white p-6 shadow-lg dark:bg-navy-700 sm:w-8/12 lg:w-6/12 xl:w-4/12">
             <div className="mb-4 flex items-center justify-between ">
               <div className="text-lg font-bold text-gray-800 dark:text-white ">

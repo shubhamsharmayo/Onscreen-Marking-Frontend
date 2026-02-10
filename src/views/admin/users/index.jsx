@@ -217,7 +217,7 @@ const Index = () => {
   if (isLoading) return <div>Loading...</div>;
   if (isError) return <div>Error fetching users</div>;
   return (
-    <div className="mt-12 overflow-x-auto rounded-md">
+    <div className="ml-10 mr-4 mt-12 overflow-x-auto rounded-md">
       {/* <table className="min-w-full table-auto divide-y divide-gray-300 bg-white text-sm dark:bg-navy-700">
         <thead className="bg-gray-100 dark:bg-navy-800">
           <tr>

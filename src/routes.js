@@ -5,8 +5,6 @@ import Upload from "views/admin/upload";
 import Classes from "views/admin/classes";
 import Profile from "views/admin/profile";
 import Users from "views/admin/users";
-import { FaUsers } from "react-icons/fa";
-import { SiGnuprivacyguard } from "react-icons/si";
 import { FaFileUpload } from "react-icons/fa";
 import { MdHome, MdPerson } from "react-icons/md";
 import CreateUser from "views/admin/createUser/CreateUser";
@@ -20,19 +18,28 @@ import CoordinateSelection from "views/admin/coordinates/CoordinateSelection";
 import Tasks from "views/admin/tasks/Tasks";
 import AssignPage from "views/admin/assignPage/AssignPage";
 import { BiTask } from "react-icons/bi";
-import CheckModule from "views/evaluator/CheckModule/CheckModule";
 import { CiMemoPad } from "react-icons/ci";
 import Booklets from "views/admin/booklets/Booklets";
 import ProcessingBooklets from "views/admin/booklets/ProcessingBooklets";
 import ResultGeneration from "views/admin/resultGenertion/ResultGeneration";
-import Statistics from 'views/Principal/Statistics/Statistics'
+import Statistics from "views/Principal/Statistics/Statistics";
+import {
+  BookOpen,
+  ClipboardList,
+  Database,
+  FileText,
+  GraduationCap,
+  LayoutDashboard,
+  UserPlus,
+  Users2,
+} from "lucide-react";
 
 const routes = [
   {
     name: "Dashboard",
     layout: "/admin",
     path: "default",
-    icon: <MdHome className="h-6 w-6" />,
+    icon: <LayoutDashboard className="h-6 w-6" />,
     component: <MainDashboard />,
     hidden: false,
   },
@@ -40,7 +47,7 @@ const routes = [
     name: "Schema",
     layout: "/admin",
     path: "schema",
-    icon: <FaFileUpload className="h-6 w-6" />,
+    icon: <Database className="h-6 w-6" />,
     component: <Schema />,
     hidden: false,
   },
@@ -48,7 +55,7 @@ const routes = [
   {
     name: "Classes",
     layout: "/admin",
-    icon: <IoBookSharp className=" h-6 w-6" />,
+    icon: <GraduationCap className=" h-6 w-6" />,
     path: "courses",
     component: <Classes />,
     hidden: false,
@@ -106,7 +113,7 @@ const routes = [
     name: "Users",
     layout: "/admin",
     path: "users",
-    icon: <FaUsers className="h-6 w-6" />,
+    icon: <Users2 className="h-6 w-6" />,
     component: <Users />,
     hidden: false,
   },
@@ -114,7 +121,7 @@ const routes = [
     name: "Create User",
     layout: "/admin",
     path: "createuser",
-    icon: <SiGnuprivacyguard className="h-6 w-6" />,
+    icon: <UserPlus className="h-6 w-6" />,
     component: <CreateUser />,
     hidden: false,
   },
@@ -131,7 +138,7 @@ const routes = [
     name: "Booklets",
     layout: "/admin",
     path: "booklets",
-    icon: <CiMemoPad className="h-6 w-6" />,
+    icon: <BookOpen className="h-6 w-6" />,
     component: <Booklets />,
     hidden: false,
   },
@@ -139,7 +146,7 @@ const routes = [
     name: "Tasks",
     layout: "/admin",
     path: "tasks",
-    icon: <BiTask className="h-6 w-6" />,
+    icon: <ClipboardList className="h-6 w-6" />,
     component: <Tasks />,
     hidden: false,
   },
@@ -201,12 +208,12 @@ const routes = [
     name: "Generate Result",
     layout: "/admin",
     path: "resultgeneration",
-    icon: <BiTask className="h-6 w-6" />,
+    icon: <FileText className="h-6 w-6" />,
     component: <ResultGeneration />,
     hidden: false,
   },
 
-   {
+  {
     name: "Principal Dashboard",
     layout: "/principal",
     path: "default",
@@ -215,16 +222,13 @@ const routes = [
     hidden: false,
   },
   {
-    
     name: "Statistics",
     layout: "/principal",
     path: "statistics",
     icon: <CiMemoPad className="h-6 w-6" />,
     component: <Statistics />,
     hidden: false,
-  
-  }
-
+  },
 ];
 
 export default routes;
